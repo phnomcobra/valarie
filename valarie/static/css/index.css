@@ -1,0 +1,113 @@
+#jqmpage {
+    position: fixed;
+    top: 50px; /** account for nav bar **/
+    left: 0;
+    bottom: 0;
+    right: 0;
+    padding-bottom: 10px;
+    width: 100%;
+    height: 100%;
+}
+
+#menuBarStaticLeft {
+    float: left;
+}
+
+#menuBarDynamic {
+    float: right;
+    margin-right: auto;
+}
+
+#menuBarStaticRight {
+    float: right;
+}
+
+.menuBarItem  {
+    float: left;
+    margin-left: auto;
+    background: #444;
+    color: #FFF;
+    padding: 10px;
+}
+
+.navbar .container {
+  margin-left: 0px;
+}
+.menuBarItem:hover {
+    background: #999;
+}
+
+.controllerCell:hover {
+    background: #999 !important;
+}
+
+.controllerCell {
+    background: #444
+}
+
+#controllerTable {
+    width: 100%;
+    height: calc(100% - 3px);
+    background: #000;
+}
+#left-nav {
+  float: left;
+    height: calc(100% - 150px)
+}
+
+article {
+    margin-left: auto;
+    //background:#FFF;
+    height: calc(100% - 150px);
+    overflow: auto;
+}
+
+.ace_editor {
+    height: 100%;
+    width: 100%;
+}
+
+header {
+    display: inline-block;
+    vertical-align: top;
+    width: 100%;
+    background:#444;
+}
+
+#attributes {
+    background:#F90;
+    height: 50%;
+    overflow: auto;
+}
+
+#inventory {
+    background:#FF0;
+    height: calc(50% - 19px);
+    overflow: auto;
+}
+
+#inventorySearchTextBox {
+    width: calc(100% - 4px);
+    height: 15px;
+    background:#CCC;
+}
+
+footer {
+    display: inline-block;
+    vertical-align: top;
+    width: 100%;
+    background:#99F;
+}
+
+
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+    from {top: -300px; opacity: 0} 
+    to {top: 0; opacity: 1}
+}
+
+@keyframes animatetop {
+    from {top: -300px; opacity: 0}
+    to {top: 0; opacity: 1}
+}

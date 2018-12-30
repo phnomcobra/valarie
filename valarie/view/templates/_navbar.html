@@ -1,0 +1,67 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">valarie</a>
+    </div>
+    <div id="navbar" class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Edit<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+                <li><a href="#" onclick="cutInventoryItems()">Cut</a></li>
+                <li><a href="#" onclick="unCutInventoryItems()">Uncut</a></li>
+                <li><a href="#" onclick="pasteInventoryItems()">Paste</a></li>
+                <li><a href="#" onclick="deleteInventoryItems()">Delete</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="#" onclick="selectDependencies()">Select Dependencies</a></li>
+                <li><a href="#" onclick="$('#inventory').jstree('deselect_all')">Clear Selected</a></li>
+                <li><a href="#" onclick="$('#inventory').jstree('select_all')">Select All</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="#" onclick="$('#inventory').jstree('refresh')">Refresh</a></li>
+            </ul>
+        </li>
+        
+        <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Import<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+                <li><a href="#" onclick="$('#importJSONFormInput').trigger('click');">Objects from JSON</a></li>
+                <li><a href="#" onclick="$('#importObjectsZipFormInput').trigger('click');">Objects from Zip</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="#" onclick="$('#importTextFilesZipFormInput').trigger('click');">Text Files from Zip</a></li>
+                <li><a href="#" onclick="$('#importTextFileFormInput').trigger('click');">Text File</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="#" onclick="$('#importBinaryFileFormInput').trigger('click');">Binary File</a></li>
+            </ul>
+        </li>
+        
+        <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Export<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+                <li><a href="#" onclick="exportJSONFromInventory()">Objects as JSON</a></li>
+                <li><a href="#" onclick="exportObjectsZipFromInventory()">Objects as Zip</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="#" onclick="exportFilesZipFromInventory()">Files as Zip</a></li>
+            </ul>
+        </li>
+        
+        
+        
+        
+        
+        <li><a href="/auth/admin" class="active" data-toggle="modal">Admin</a></li>
+
+        
+      </ul>
+      
+      <ul class="nav navbar-nav navbar-right">
+        <li><p class="navbar-text" id="connectionStatus"></p></li>
+      </ul>
+      
+      <ul class="nav navbar-nav navbar-right" id="menuBarDynamic"></ul>
+      
+    </div><!--/.nav-collapse -->
+  </div>
+</nav>
