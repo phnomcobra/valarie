@@ -2,6 +2,16 @@
 
 from valarie.dao.document import Collection
 
+def get_status_objects():
+    collection = Collection("inventory")
+    
+    status_objects = []
+    
+    for object in collection.find(type = "status"):
+        status_objects.append(object.object)
+        
+    return status_objects
+
 def create_status_code(parent_objuuid, name = "New Status Code", objuuid = None):
     collection = Collection("inventory")
     

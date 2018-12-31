@@ -203,16 +203,6 @@ def copy_object(objuuid):
 
     return clone
     
-def get_status_objects():
-    collection = Collection("inventory")
-    
-    status_objects = []
-    
-    for object in collection.find(type = "status"):
-        status_objects.append(object.object)
-        
-    return status_objects
-
 def import_objects(objects):
     collection = Collection("inventory")
             
@@ -258,7 +248,7 @@ def import_objects(objects):
             
             add_message("imported ({3} of {4}): {0}, type: {1}, name: {2}".format(objuuid, object["type"], object["name"], obj_cnt, obj_ttl))
             obj_cnt = obj_cnt + 1
-        except Exception:
+        except:
             add_message(traceback.format_exc())
             
     objuuids = collection.list_objuuids()

@@ -22,12 +22,12 @@ from valarie.model.procedure import create_procedure
 from valarie.model.controller import create_controller
 from valarie.model.textfile import create_text_file
 from valarie.model.datastore import create_binary_file
-from valarie.model.statuscode import create_status_code
 from valarie.model.host import create_host
 from valarie.model.hostgroup import create_host_group
 from valarie.model.console import create_console
+from valarie.model.statuscode import create_status_code, \
+                                     get_status_objects
 from valarie.model.inventory import get_child_nodes, \
-                                    get_status_objects, \
                                     set_parent_objuuid, \
                                     get_context_menu, \
                                     delete_node, \
