@@ -127,6 +127,12 @@ class File:
     def __del__(self):
         self.close()
     
+    def sequuid(self):
+        return self.__sequence.object["objuuid"]
+    
+    def delete(self):
+        delete_sequence(self.__sequence.object["objuuid"])
+    
     def tell(self):
         return self.__position
     
@@ -139,9 +145,6 @@ class File:
     
     def open(self, **kargs):
         self.__init__(kargs)
-    
-    def fileno(self):
-        return 0
     
     def seek(self, seek_position):
         if seek_position < 0 or seek_position >= self.__sequence.object["size"]:
@@ -191,100 +194,11 @@ class File:
         
         return buffer
 
-    def next(self):        
-        buffer = bytearray()
-        
-        if self.__end_of_sequence == True:
-            raise StopIteration("End of file!")
-        else:
-            b = b''
-            
-            while b != b'\n':
-                b = self.__chunk.object["data"][self.__chunk_position]
-                
-                buffer.append(b)
-                
-                try:
-                    self.seek(1 + self.__position)
-                except IndexError:
-                    self.__end_of_sequence = True
-                    break
-        
-        return buffer
-
-    def readline(self, num_bytes = None):        
-        buffer = bytearray()
-        
-        if self.__end_of_sequence == True:
-            pass
-        else:
-            b = b''
-            c = 0L
-            
-            while b != b'\n':
-                b = self.__chunk.object["data"][self.__chunk_position]
-                
-                buffer.append(b)
-                c += 1
-                
-                if numbytes != None and \
-                   numbytes >= 0 and \
-                   numbytes == c:
-                    break
-                
-                try:
-                    self.seek(1 + self.__position)
-                except IndexError:
-                    self.__end_of_sequence = True
-                    break
-                
-        
-        return buffer
-    
-    def readlines(self, num_bytes = None):        
-        buffers = []
-        buffer = bytearray()
-        
-        if self.__end_of_sequence == True:
-            pass
-        else:
-            b = b''
-            c = 0L
-            
-            while b != b'\n':
-                b = self.__chunk.object["data"][self.__chunk_position]
-                
-                buffer.append(b)
-                c += 1
-                
-                if numbytes != None and \
-                   numbytes >= 0 and \
-                   numbytes == c:
-                    buffers.append(buffer)
-                    buffer = bytearray()
-                    c = 0L
-                
-                try:
-                    self.seek(1 + self.__position)
-                except IndexError:
-                    self.__end_of_sequence = True
-                    break
-        
-        buffers.append(buffer)
-        
-        return buffers
-    
     def truncate(self, num_bytes = None):
         if num_bytes == None:
             self.resize(self.__position + 1)
         else:
             self.resize(num_bytes)
-    
-    def flush(self):
-        pass
-    
-    def isatty(self):
-        return False
     
     def resize(self, num_bytes):
         self.__sequence.object["size"] = num_bytes
@@ -301,10 +215,6 @@ class File:
                 self.__datastore.get_object(self.__sequence.object["chunks"][i]).destroy()
                 self.__sequence.object["chunks"].pop()
     
-    def writelines(raw_buffer_list):
-        for raw_buffer in raw_buffer_list:
-            self.write(raw_buffer)
-    
     def write(self, raw_buffer):
         buffer = bytearray()
         
@@ -312,13 +222,13 @@ class File:
         
         if self.__following_write == True and \
            len(buffer) > 0 and \
-           self.size() < self.__position + len(buffer) + 2:
+           self.size() < self.__position + len(buffer) + 1:
             self.resize(self.__position + len(buffer) + 1)
             self.seek(1 + self.__position)
         elif self.__following_write == False and \
              len(buffer) > 0 and \
-             self.size() < self.__position + len(buffer) + 1:
-            self.resize(self.__position + len(buffer) + 1)
+             self.size() < self.__position + len(buffer):
+            self.resize(self.__position + len(buffer))
         
         for i in range(0, len(buffer)):
             self.__chunk.object["data"][self.__chunk_position] = buffer[i]
