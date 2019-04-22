@@ -39,6 +39,20 @@ def get_child_nodes(objuuid):
     
     return nodes
 
+def __get_fq_name(name, object, collection):
+    if "parent" in object:
+        if object["parent"] is not "#":
+            return __get_fq_name(name, collection.get_object(object["parent"]).object, collection) + "/" + object["name"]
+        else:
+            return name
+    else:
+        return name
+    
+def get_fq_name(objuuid):
+    collection = Collection("inventory")
+    
+    return __get_fq_name("", collection.get_object(objuuid).object, collection)
+    
 def set_parent_objuuid(objuuid, parent_objuuid):
     if objuuid != parent_objuuid:
         collection = Collection("inventory")
