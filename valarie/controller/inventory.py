@@ -32,7 +32,8 @@ from valarie.model.inventory import get_child_nodes, \
                                     get_context_menu, \
                                     delete_node, \
                                     copy_object, \
-                                    import_objects
+                                    import_objects, \
+                                    get_fq_name
 
 class Inventory(object):
     def __init__(self):
@@ -324,25 +325,26 @@ class Inventory(object):
                 for objuuid in objuuids.split(","):
                     current = collection.get_object(objuuid)
                     
+                    fq_name = get_fq_name(objuuid)
+                    
+                    filename = "export" + fq_name
+                    
                     if current.object["type"] == "binary file":
-                        add_message("inventory controller: exported: {0}".format(current.object["name"]))
-                        zf.writestr(current.object["name"], \
-                                    buffer(DatastoreFile(current.object["sequuid"]).read()))
-                    elif current.object["type"] in ["task", "console", "text file"]:
-                        filename = "{0}.py".format(current.object["name"])
-                        add_message("inventory controller: exported: {0}".format(filename))
-                        zf.writestr(filename, current.object["body"])
+                        add_message("inventory controller: exported: " + fq_name)
+                        zf.writestr(filename, buffer(DatastoreFile(current.object["sequuid"]).read()))
+                    
                     elif current.object["type"] == "text file":
-                        add_message("inventory controller: exported: {0}".format(current.object["name"]))
-                        zf.writestr(current.object["name"], current.object["body"])
+                        add_message("inventory controller: exported: " + fq_name)
+                        zf.writestr(filename, current.object["body"])
                     
-                    filename = "{0}.json".format(current.object["name"])
-                    add_message("inventory controller: exported: {0}".format(filename))
-                    zf.writestr(filename, json.dumps({current.object["objuuid"] : current.object}, \
-                                                      indent = 4, \
-                                                      sort_keys = True))
+                    elif current.object["type"] == "task":
+                        add_message("inventory controller: exported: " + fq_name + ".task.py")
+                        zf.writestr(filename + ".task.py", current.object["body"])
                     
-                
+                    elif current.object["type"] == "console":
+                        add_message("inventory controller: exported: " + fq_name + ".console.py")
+                        zf.writestr(filename + ".console.py", current.object["body"])
+
             cherrypy.response.headers['Content-Type'] = "application/x-download"
             cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.files.zip'
             
