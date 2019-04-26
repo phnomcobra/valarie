@@ -121,18 +121,6 @@ $(document).on('dnd_stop.vakata', function (e, data) {
     }
 });
 
-var exportJSONFromInventory = function() {
-    $('.nav-tabs a[href="#console"]').tab('show');
-    
-    var nodes = $('#inventory').jstree().get_selected(true);
-    
-    var objuuids = []
-    for(i in nodes)
-        objuuids.push(nodes[i].id);
-    
-    window.location = 'inventory/export_objects_json?objuuids=' + objuuids.join(',');
-}
-
 var exportObjectsZipFromInventory = function() {
     $('.nav-tabs a[href="#console"]').tab('show');
     
@@ -157,52 +145,14 @@ var exportFilesZipFromInventory = function() {
     window.location = 'inventory/export_files_zip?objuuids=' + objuuids.join(',');
 }
 
-var importJSONToInventory = function(item) {
+var importFileToInventory = function(item) {
     $('.nav-tabs a[href="#console"]').tab('show');
     
     var formData = new FormData();
     formData.append("file", item.files[0], item.files[0].name);
          
     $.ajax({
-        url: 'inventory/import_objects_json',  //Server script to process data
-        type: 'POST',
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function(resp) {
-            $('#inventory').jstree('refresh');
-        }
-    }); 
-}
-
-var importTextFileToInventory = function(item) {
-    $('.nav-tabs a[href="#console"]').tab('show');
-    
-    var formData = new FormData();
-    formData.append("file", item.files[0], item.files[0].name);
-         
-    $.ajax({
-        url: 'inventory/import_text_file',  //Server script to process data
-        type: 'POST',
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function(resp) {
-            $('#inventory').jstree('refresh');
-        }
-    }); 
-}
-
-var importBinaryFileToInventory = function(item) {
-    $('.nav-tabs a[href="#console"]').tab('show');
-    
-    var formData = new FormData();
-    formData.append("file", item.files[0], item.files[0].name);
-         
-    $.ajax({
-        url: 'inventory/import_binary_file',  //Server script to process data
+        url: 'inventory/import_file',  //Server script to process data
         type: 'POST',
         data: formData,
         cache: false,
@@ -233,14 +183,14 @@ var importObjectsZipToInventory = function(item) {
     }); 
 }
 
-var importTextFilesZipToInventory = function(item) {
+var importFilesZipToInventory = function(item) {
     $('.nav-tabs a[href="#console"]').tab('show');
     
     var formData = new FormData();
     formData.append("file", item.files[0], item.files[0].name);
      
     $.ajax({
-        url: 'inventory/import_text_files_zip',  //Server script to process data
+        url: 'inventory/import_files_zip',  //Server script to process data
         type: 'POST',
         data: formData,
         cache: false,

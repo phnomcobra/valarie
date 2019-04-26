@@ -28,32 +28,20 @@
         
         <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Import<span class="caret"></span></a>
             <ul class="dropdown-menu">
-                <li><a href="#" onclick="$('#importJSONFormInput').trigger('click');">Objects from JSON</a></li>
                 <li><a href="#" onclick="$('#importObjectsZipFormInput').trigger('click');">Objects from Zip</a></li>
-                <li role="separator" class="divider"></li>
-                <li><a href="#" onclick="$('#importTextFilesZipFormInput').trigger('click');">Text Files from Zip</a></li>
-                <li><a href="#" onclick="$('#importTextFileFormInput').trigger('click');">Text File</a></li>
-                <li role="separator" class="divider"></li>
-                <li><a href="#" onclick="$('#importBinaryFileFormInput').trigger('click');">Binary File</a></li>
+                <li><a href="#" onclick="$('#importFilesZipFormInput').trigger('click');">Files from Zip</a></li>
+                <li><a href="#" onclick="$('#importFileFormInput').trigger('click');">File</a></li>
             </ul>
         </li>
         
         <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Export<span class="caret"></span></a>
             <ul class="dropdown-menu">
-                <li><a href="#" onclick="exportJSONFromInventory()">Objects as JSON</a></li>
-                <li><a href="#" onclick="exportObjectsZipFromInventory()">Objects as Zip</a></li>
-                <li role="separator" class="divider"></li>
-                <li><a href="#" onclick="exportFilesZipFromInventory()">Files as Zip</a></li>
+                <li><a href="#" onclick="exportObjectsZipFromInventory()">Objects to Zip</a></li>
+                <li><a href="#" onclick="exportFilesZipFromInventory()">Files to Zip</a></li>
             </ul>
         </li>
         
-        
-        
-        
-        
         <li><a href="/auth/admin" class="active" data-toggle="modal">Admin</a></li>
-
-        
       </ul>
       
       <ul class="nav navbar-nav navbar-right">

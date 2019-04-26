@@ -16,7 +16,6 @@ def create_binary_file(parent_objuuid, name = "New Binary File", objuuid = None)
         "name" : name,
         "size" : 0,
         "sha1sum" : 0,
-        "chunks" : 0,
         "sequuid" : File()._File__sequence.objuuid,
         "icon" : "/images/binary_file_icon.png",
         "context" : {

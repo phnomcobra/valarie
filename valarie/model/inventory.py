@@ -284,7 +284,7 @@ def import_objects(objects):
         container.set()
     else:
         container.destroy()
-    
+
 collection = Collection("inventory")
 collection.create_attribute("parent", "['parent']")
 collection.create_attribute("type", "['type']")

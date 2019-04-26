@@ -25,6 +25,8 @@ from valarie.model.datastore import create_binary_file
 from valarie.model.host import create_host
 from valarie.model.hostgroup import create_host_group
 from valarie.model.console import create_console
+from valarie.model.invfile import ZipUpload, \
+                                  is_binary
 from valarie.model.statuscode import create_status_code, \
                                      get_status_objects
 from valarie.model.inventory import get_child_nodes, \
@@ -249,32 +251,6 @@ class Inventory(object):
     
     @cherrypy.expose
     @require()
-    def export_objects_json(self, objuuids):
-        add_message("inventory controller: exporting inventory objects...")
-        
-        try:
-            collection = Collection("inventory")
-        
-            inventory = {}
-            
-            for objuuid in objuuids.split(","):
-                current = collection.get_object(objuuid)
-                
-                if current.object["type"] != "binary file":
-                    inventory[objuuid] = current.object
-                    add_message("inventory controller: exported: {0}, type: {1}, name: {2}".format(objuuid, current.object["type"], current.object["name"]))
-        
-            cherrypy.response.headers['Content-Type'] = "application/x-download"
-            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.json'
-            
-            add_message("INVENTORY EXPORT COMPLETE")
-            
-            return serve_fileobj(json.dumps(inventory, indent = 4, sort_keys = True))
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    @require()
     def export_objects_zip(self, objuuids):
         add_message("inventory controller: exporting inventory objects...")
         
@@ -325,25 +301,17 @@ class Inventory(object):
                 for objuuid in objuuids.split(","):
                     current = collection.get_object(objuuid)
                     
-                    fq_name = get_fq_name(objuuid)
-                    
-                    filename = "export" + fq_name
+                    # zip archive can't take a leading slash
+                    filename = get_fq_name(objuuid)[1:]
                     
                     if current.object["type"] == "binary file":
-                        add_message("inventory controller: exported: " + fq_name)
+                        add_message("inventory controller: exported: " + filename)
                         zf.writestr(filename, buffer(DatastoreFile(current.object["sequuid"]).read()))
                     
                     elif current.object["type"] == "text file":
-                        add_message("inventory controller: exported: " + fq_name)
+                        add_message("inventory controller: exported: " + filename)
                         zf.writestr(filename, current.object["body"])
-                    
-                    elif current.object["type"] == "task":
-                        add_message("inventory controller: exported: " + fq_name + ".task.py")
-                        zf.writestr(filename + ".task.py", current.object["body"])
-                    
-                    elif current.object["type"] == "console":
-                        add_message("inventory controller: exported: " + fq_name + ".console.py")
-                        zf.writestr(filename + ".console.py", current.object["body"])
+
 
             cherrypy.response.headers['Content-Type'] = "application/x-download"
             cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.files.zip'
@@ -354,25 +322,6 @@ class Inventory(object):
         except:
             add_message(traceback.format_exc())
     
-    @cherrypy.expose
-    @require()
-    def import_objects_json(self, file):
-        add_message("inventory controller: importing inventory objects...")
-        
-        try:
-            objects = json.loads(file.file.read())
-        
-            import_objects(objects)
-            
-            objuuids = []
-            for objuuid in objects:
-                objuuids.append(objuuid)
-        except:
-            add_message(traceback.format_exc())
-        
-        add_message("INVENTORY IMPORT COMPLETE")
-        
-        return json.dumps({})
     
     @cherrypy.expose
     @require()
@@ -415,60 +364,45 @@ class Inventory(object):
     
     @cherrypy.expose
     @require()
-    def import_text_files_zip(self, file):
-        add_message("inventory controller: importing text files...")
+    def import_files_zip(self, file):
+        add_message("inventory controller: importing inventory files...")
         
         try:
             archive = zipfile.ZipFile(file.file, 'r')
             
-            for filename in archive.namelist():
-                text_file = create_text_file("#", filename)
-                text_file.object["body"] = archive.read(filename)
+            ZipUpload().execute(archive)
+        except:
+            add_message(traceback.format_exc())
+        
+        add_message("INVENTORY IMPORT COMPLETE")
+        
+        return json.dumps({})
+    
+    @cherrypy.expose
+    @require()
+    def import_file(self, file):
+        add_message("inventory controller: importing inventory file...")
+        
+        fdata = file.file.read()
+        
+        try:
+            if is_binary(fdata):
+                binary_file_inv = create_binary_file("#", file.filename)
+            
+                binary_file_dst = DatastoreFile(binary_file_inv.object["sequuid"])
+            
+                sha1hash = hashlib.sha1()
+            
+                binary_file_dst.write(fdata)
+                sha1hash.update(fdata)
+            
+                binary_file_inv.object["size"] = binary_file_dst.size()
+                binary_file_inv.object["sha1sum"] = sha1hash.hexdigest()
+                binary_file_inv.set()
+            else:
+                text_file = create_text_file("#", file.filename)
+                text_file.object["body"] = fdata
                 text_file.set()
-                
-                #add_message("inventory controller: imported: {0}".format(filename))
-        except:
-            add_message(traceback.format_exc())
-        
-        add_message("INVENTORY IMPORT COMPLETE")
-        
-        return json.dumps({})
-    
-    @cherrypy.expose
-    @require()
-    def import_text_file(self, file):
-        add_message("inventory controller: importing text file...")
-        
-        try:
-            text_file = create_text_file("#", file.filename)
-            text_file.object["body"] = file.file.read()
-            text_file.set()
-        except:
-            add_message(traceback.format_exc())
-        
-        add_message("INVENTORY IMPORT COMPLETE")
-        
-        return json.dumps({})
-    
-    @cherrypy.expose
-    @require()
-    def import_binary_file(self, file):
-        add_message("inventory controller: importing binary file...")
-        
-        try:
-            binary_file_inv = create_binary_file("#", file.filename)
-            
-            binary_file_dst = DatastoreFile(binary_file_inv.object["sequuid"])
-            
-            sha1hash = hashlib.sha1()
-            
-            for chunk in iter(lambda: file.file.read(65536), b''):
-                binary_file_dst.write(chunk)
-                sha1hash.update(chunk)
-            
-            binary_file_inv.object["size"] = binary_file_dst.size()
-            binary_file_inv.object["sha1sum"] = sha1hash.hexdigest()
-            binary_file_inv.set()
         except:
             add_message(traceback.format_exc())
         
