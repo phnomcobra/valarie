@@ -25,7 +25,7 @@ from valarie.model.datastore import create_binary_file
 from valarie.model.host import create_host
 from valarie.model.hostgroup import create_host_group
 from valarie.model.console import create_console
-from valarie.model.invfile import ZipUpload, \
+from valarie.model.invfile import load_zip, \
                                   is_binary
 from valarie.model.statuscode import create_status_code, \
                                      get_status_objects
@@ -368,9 +368,7 @@ class Inventory(object):
         add_message("inventory controller: importing inventory files...")
         
         try:
-            archive = zipfile.ZipFile(file.file, 'r')
-            
-            ZipUpload().execute(archive)
+            load_zip(zipfile.ZipFile(file.file, 'r'))
         except:
             add_message(traceback.format_exc())
         

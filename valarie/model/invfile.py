@@ -3,9 +3,6 @@
 import traceback
 import hashlib
 
-from valarie.controller.messaging import add_message
-from valarie.controller.flags import touch_flag
-
 from valarie.dao.document import Collection
 from valarie.dao.utils import sucky_uuid
 
@@ -31,88 +28,82 @@ def is_binary(file_data):
     
     return float(binary_length) / data_length >= CHAR_THRESHOLD
                              
-class ZipUpload:
-    def __init__(self):
-        self.containers = {
-            "containers" : {},
-            "objuuid" : "#"
-        }
+def load_zip(archive, root_objuuid = "#"):
+    files = {}
+    
+    for filename in archive.namelist():
+        files[filename] = archive.read(filename)
+    
+    load_files(files, root_objuuid)
         
-        self.files = {}
-        self.directories = []
+def load_files(files, root_objuuid = "#"):
+    containers = {
+        "containers" : {},
+        "objuuid" : root_objuuid
+    }
+        
+    directories = []
 
-    def execute(self, archive):
-        try:
-            for filename in archive.namelist():
-                self.files[filename] = archive.read(filename)
-            
-                subdirs = filename.split("/")[:-1]
-                dname = "/" + "/".join(subdirs)
+    for fname, fdata in files.iteritems():
+        subdirs = fname.split("/")[:-1]
+        dname = "/" + "/".join(subdirs)
                 
-                if dname not in self.directories and dname != "/":
-                    self.directories.append(dname)
+        if dname not in directories and dname != "/":
+            directories.append(dname)
                 
-            for dname in self.directories:
-                current_container = self.containers
+    for dname in directories:
+        current_container = containers
                     
-                sdnames = dname.split("/")[1:]
+        sdnames = dname.split("/")[1:]
                 
-                parent_objuuid = self.containers["objuuid"]
+        parent_objuuid = containers["objuuid"]
                     
-                for sdname in sdnames:
-                    if sdname not in current_container["containers"]:
-                        current_container["containers"][sdname] = {
-                            "containers" : {},
-                            "objuuid" : sucky_uuid()
-                        }
+        for sdname in sdnames:
+            if sdname not in current_container["containers"]:
+                current_container["containers"][sdname] = {
+                    "containers" : {},
+                    "objuuid" : sucky_uuid()
+                }
                             
-                        create_container(parent_objuuid, \
-                                         sdname, \
-                                         current_container["containers"][sdname]["objuuid"])
+                create_container(parent_objuuid, \
+                                 sdname, \
+                                 current_container["containers"][sdname]["objuuid"])
                             
-                    parent_objuuid = current_container["containers"][sdname]["objuuid"]
+            parent_objuuid = current_container["containers"][sdname]["objuuid"]
                         
-                    current_container = current_container["containers"][sdname]
+            current_container = current_container["containers"][sdname]
             
-            for fname, fdata in self.files.iteritems():
-                current_container = self.containers
+    for fname, fdata in files.iteritems():
+        current_container = containers
                     
-                sfnames = fname.split("/")
+        sfnames = fname.split("/")
                     
-                parent_objuuid = self.containers["objuuid"]
+        parent_objuuid = containers["objuuid"]
                 
-                for i, sfname in enumerate(sfnames):
-                    if i == len(sfnames) - 1:
-                        if is_binary(fdata):
-                            # binary file inventory object
-                            bf = create_binary_file(parent_objuuid, sfname)
+        for i, sfname in enumerate(sfnames):
+            if i == len(sfnames) - 1:
+                if is_binary(fdata):
+                    # binary file inventory object
+                    bf = create_binary_file(parent_objuuid, sfname)
+                    
+                    # data store file
+                    df = File(bf.object["sequuid"])
                                 
-                            # data store file
-                            df = File(bf.object["sequuid"])
+                    sha1hash = hashlib.sha1()
                                 
-                            sha1hash = hashlib.sha1()
-                                
-                            df.write(fdata)
-                            sha1hash.update(fdata)
+                    df.write(fdata)
+                    sha1hash.update(fdata)
 
-                            df.close()
+                    df.close()
 
-                            bf.object["size"] = df.size()
-                            bf.object["sha1sum"] = sha1hash.hexdigest()
-                            bf.set()
-                                
-                            add_message(fname)
-                        else:
-                            tf = create_text_file(parent_objuuid, sfname)
-                            tf.object["body"] = fdata
-                            tf.set()
-                                
-                            add_message(fname)
-                    else:
-                        parent_objuuid = current_container["containers"][sfname]["objuuid"]
+                    bf.object["size"] = df.size()
+                    bf.object["sha1sum"] = sha1hash.hexdigest()
+                    bf.set()
+                else:
+                    tf = create_text_file(parent_objuuid, sfname)
+                    tf.object["body"] = fdata
+                    tf.set()
+            else:
+                parent_objuuid = current_container["containers"][sfname]["objuuid"]
                         
-                        current_container = current_container["containers"][sfname]
-                        
-            touch_flag("inventoryState")
-        except:
-            add_message(traceback.format_exc())
+                current_container = current_container["containers"][sfname]
