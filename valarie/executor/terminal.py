@@ -56,7 +56,7 @@ def create_session(hstuuid, session):
         inventory = Collection("inventory")
         host = inventory.get_object(hstuuid)
         tempmodule = new_module("tempmodule")
-        exec inventory.get_object(host.object["console"]).object["body"] in tempmodule.__dict__
+        exec(inventory.get_object(host.object["console"]).object["body"], tempmodule.__dict__)
         
         if "send" not in dir(tempmodule.Console):
             raise Exception("send method not present in console object!")

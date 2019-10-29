@@ -287,7 +287,7 @@ class Collection(Document):
         if len(kargs) == 0:
             objuuid_sets.append(self.list_objuuids())
         
-        for attribute, value in kargs.iteritems():
+        for attribute, value in kargs.items():
             objuuid_sets.append(Document.find_objects(self, self.coluuid, attribute, value))
         
         intersection = set(objuuid_sets[0])
@@ -306,7 +306,7 @@ class Collection(Document):
         if len(kargs) == 0:
             objuuid_sets.append(self.list_objuuids())
             
-        for attribute, value in kargs.iteritems():
+        for attribute, value in kargs.items():
             objuuid_sets.append(Document.find_objects(self, self.coluuid, attribute, value))
         
         intersection = set(objuuid_sets[0])

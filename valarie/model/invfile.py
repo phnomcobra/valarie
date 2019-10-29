@@ -44,7 +44,7 @@ def load_files(files, root_objuuid = "#"):
         
     directories = []
 
-    for fname, fdata in files.iteritems():
+    for fname, fdata in files.items():
         subdirs = fname.split("/")[:-1]
         dname = "/" + "/".join(subdirs)
                 
@@ -73,7 +73,7 @@ def load_files(files, root_objuuid = "#"):
                         
             current_container = current_container["containers"][sdname]
             
-    for fname, fdata in files.iteritems():
+    for fname, fdata in files.items():
         current_container = containers
                     
         sfnames = fname.split("/")

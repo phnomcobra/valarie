@@ -4,7 +4,7 @@ import cherrypy
 import json
 import traceback
 import zipfile
-import StringIO
+import io
 import hashlib
 
 from cherrypy.lib.static import serve_fileobj
@@ -273,7 +273,7 @@ class Inventory(object):
             cherrypy.response.headers['Content-Type'] = "application/x-download"
             cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
             
-            mem_file = StringIO.StringIO()
+            mem_file = io.StringIO()
             
             with zipfile.ZipFile(mem_file, mode = 'w', compression = zipfile.ZIP_DEFLATED) as zf:
                 zf.writestr('inventory.json', json.dumps(inventory, indent = 4, sort_keys = True))
@@ -295,7 +295,7 @@ class Inventory(object):
         try:
             collection = Collection("inventory")
         
-            mem_file = StringIO.StringIO()
+            mem_file = io.StringIO()
             
             with zipfile.ZipFile(mem_file, mode = 'w', compression = zipfile.ZIP_DEFLATED) as zf:
                 for objuuid in objuuids.split(","):
@@ -333,7 +333,7 @@ class Inventory(object):
             
             objects = json.loads(archive.read("inventory.json"))
             
-            for objuuid, object in objects.iteritems():
+            for objuuid, object in objects.items():
                 if object["type"] == "binary file":
                     datastore_file = DatastoreFile(object["sequuid"])
                     

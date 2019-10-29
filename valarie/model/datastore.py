@@ -105,7 +105,7 @@ def copy_sequence(sequuid):
 
 class File:
     def __init__(self, sequuid = None):
-        self.__position = 0L
+        self.__position = 0
         self.__chunk_position = 0
         self.__datastore = Collection("datastore")
         self.__chunk = None
