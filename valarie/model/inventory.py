@@ -44,9 +44,9 @@ def __get_fq_name(name, object, collection):
         if object["parent"] is not "#":
             return __get_fq_name(name, collection.get_object(object["parent"]).object, collection) + "/" + object["name"]
         else:
-            return name
+            return name + "/" + object["name"]
     else:
-        return name
+        return name + "/" + object["name"]
     
 def get_fq_name(objuuid):
     collection = Collection("inventory")

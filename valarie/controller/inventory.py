@@ -273,13 +273,13 @@ class Inventory(object):
             cherrypy.response.headers['Content-Type'] = "application/x-download"
             cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
             
-            mem_file = io.StringIO()
+            mem_file = io.BytesIO()
             
             with zipfile.ZipFile(mem_file, mode = 'w', compression = zipfile.ZIP_DEFLATED) as zf:
                 zf.writestr('inventory.json', json.dumps(inventory, indent = 4, sort_keys = True))
                 
                 for dstuuid in dstuuids:
-                    zf.writestr('{0}.bin'.format(dstuuid), buffer(DatastoreFile(dstuuid).read()))
+                    zf.writestr('{0}.bin'.format(dstuuid), DatastoreFile(dstuuid).read())
             
             add_message("INVENTORY EXPORT COMPLETE")
             
@@ -295,7 +295,7 @@ class Inventory(object):
         try:
             collection = Collection("inventory")
         
-            mem_file = io.StringIO()
+            mem_file = io.BytesIO()
             
             with zipfile.ZipFile(mem_file, mode = 'w', compression = zipfile.ZIP_DEFLATED) as zf:
                 for objuuid in objuuids.split(","):
@@ -303,14 +303,15 @@ class Inventory(object):
                     
                     # zip archive can't take a leading slash
                     filename = get_fq_name(objuuid)[1:]
+                    add_message(filename)
                     
                     if current.object["type"] == "binary file":
                         add_message("inventory controller: exported: " + filename)
-                        zf.writestr(filename, buffer(DatastoreFile(current.object["sequuid"]).read()))
+                        zf.writestr(filename, DatastoreFile(current.object["sequuid"]).read())
                     
                     elif current.object["type"] == "text file":
                         add_message("inventory controller: exported: " + filename)
-                        zf.writestr(filename, current.object["body"])
+                        zf.writestr(filename, current.object["body"].encode())
 
 
             cherrypy.response.headers['Content-Type'] = "application/x-download"
@@ -382,7 +383,6 @@ class Inventory(object):
         add_message("inventory controller: importing inventory file...")
         
         fdata = file.file.read()
-        
         try:
             if is_binary(fdata):
                 binary_file_inv = create_binary_file("#", file.filename)
@@ -399,7 +399,7 @@ class Inventory(object):
                 binary_file_inv.set()
             else:
                 text_file = create_text_file("#", file.filename)
-                text_file.object["body"] = fdata
+                text_file.object["body"] = fdata.decode()
                 text_file.set()
         except:
             add_message(traceback.format_exc())
