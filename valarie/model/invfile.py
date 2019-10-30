@@ -13,7 +13,7 @@ from valarie.model.container import create_container
 CHAR_THRESHOLD = 0.3
 TEXT_CHARACTERS = ''.join(
     [chr(code) for code in range(32,127)] + list('\b\f\n\r\t')
-)
+).encode()
 
 def is_binary(file_data):
     data_length = len(file_data)
@@ -21,7 +21,7 @@ def is_binary(file_data):
     if not data_length:
         return False
     
-    if '\x00' in file_data:
+    if b'\x00' in file_data:
         return True
     
     binary_length = len(file_data.translate(None, TEXT_CHARACTERS))
@@ -44,7 +44,7 @@ def load_files(files, root_objuuid = "#"):
         
     directories = []
 
-    for fname, fdata in files.iteritems():
+    for fname, fdata in files.items():
         subdirs = fname.split("/")[:-1]
         dname = "/" + "/".join(subdirs)
                 
@@ -73,7 +73,7 @@ def load_files(files, root_objuuid = "#"):
                         
             current_container = current_container["containers"][sdname]
             
-    for fname, fdata in files.iteritems():
+    for fname, fdata in files.items():
         current_container = containers
                     
         sfnames = fname.split("/")
@@ -90,7 +90,7 @@ def load_files(files, root_objuuid = "#"):
                     df = File(bf.object["sequuid"])
                                 
                     sha1hash = hashlib.sha1()
-                                
+
                     df.write(fdata)
                     sha1hash.update(fdata)
 
@@ -101,7 +101,7 @@ def load_files(files, root_objuuid = "#"):
                     bf.set()
                 else:
                     tf = create_text_file(parent_objuuid, sfname)
-                    tf.object["body"] = fdata
+                    tf.object["body"] = fdata.decode()
                     tf.set()
             else:
                 parent_objuuid = current_container["containers"][sfname]["objuuid"]

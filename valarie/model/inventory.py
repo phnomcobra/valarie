@@ -25,8 +25,8 @@ def __get_child_nodes(nodes, object, collection):
         for objuuid in collection.find_objuuids(parent = object.objuuid):
             nodes = __get_child_nodes(nodes, collection.get_object(objuuid), collection)
     except:
-        print traceback.format_exc()
-        print object.object
+        print(traceback.format_exc())
+        print(object.object)
  
     return nodes
     
@@ -44,9 +44,9 @@ def __get_fq_name(name, object, collection):
         if object["parent"] is not "#":
             return __get_fq_name(name, collection.get_object(object["parent"]).object, collection) + "/" + object["name"]
         else:
-            return name
+            return name + "/" + object["name"]
     else:
-        return name
+        return name + "/" + object["name"]
     
 def get_fq_name(objuuid):
     collection = Collection("inventory")
@@ -107,7 +107,7 @@ def get_context_menu(objuuid):
 
 def recstrrepl(object, find, replace):
     if isinstance(object, dict):
-        for key, value in object.iteritems():
+        for key, value in object.items():
             if isinstance(value, dict) or isinstance(value, list):
                 recstrrepl(object[key], find, replace)
             else:
@@ -227,7 +227,7 @@ def import_objects(objects):
     obj_ttl = len(objects)
     obj_cnt = 1    
     
-    for objuuid, object in objects.iteritems():
+    for objuuid, object in objects.items():
         try:
             current = collection.get_object(objuuid)
             

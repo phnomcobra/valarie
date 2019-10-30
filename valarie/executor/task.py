@@ -48,7 +48,7 @@ def execute(tskuuid, hstuuid, session):
     tempmodule = new_module("tempmodule")
     
     try:
-        exec inventory.get_object(host.object["console"]).object["body"] in tempmodule.__dict__
+        exec(inventory.get_object(host.object["console"]).object["body"], tempmodule.__dict__)
         cli = tempmodule.Console(session = session, host = host.object)
         
         try:
@@ -61,12 +61,12 @@ def execute(tskuuid, hstuuid, session):
             result.object['task']["tskuuid"] = tskuuid
             
             inv_task.object["body"] in tempmodule.__dict__
-            exec inv_task.object["body"] + "\n" + status_code_body in tempmodule.__dict__
+            exec(inv_task.object["body"] + "\n" + status_code_body, tempmodule.__dict__)
             task = tempmodule.Task()
             
             try:
                 task.execute(cli)
-            except Exception:
+            except:
                 task = TaskError(tskuuid)
                 add_message(traceback.format_exc())
         except:

@@ -55,7 +55,7 @@ def get_jobs_grid():
     grid_data = []
     job_lock.acquire()
     
-    for jobuuid, dict in jobs.iteritems():
+    for jobuuid, dict in jobs.items():
         row = {}
         row["name"] = dict["procedure"]["name"]
         row["host"] = dict["host"]["name"]
@@ -76,7 +76,7 @@ def get_queued_hosts(prcuuid):
     
     job_lock.acquire()
     
-    for jobuuid, dict in jobs.iteritems():
+    for jobuuid, dict in jobs.items():
         if prcuuid == dict["host"]["objuuid"]:
             hstuuids.append(dict["host"]["objuuid"])
 
@@ -246,7 +246,7 @@ def run_procedure(host_object, procedure_object, session, jobuuid = None, ctruui
             task_result["tskuuid"] = tskuuid
             
             try:
-                exec inventory.get_object(tskuuid).object["body"] + "\n" + status_code_body in tempmodule.__dict__
+                exec(inventory.get_object(tskuuid).object["body"] + "\n" + status_code_body, tempmodule.__dict__)
                 task = tempmodule.Task()
             except:
                 task = TaskError(tskuuid)
@@ -291,7 +291,7 @@ def run_procedure(host_object, procedure_object, session, jobuuid = None, ctruui
     try:
         try:
             result.object["output"].append("importing console...")
-            exec inventory.get_object(host_object["console"]).object["body"] in tempmodule.__dict__
+            exec(inventory.get_object(host_object["console"]).object["body"], tempmodule.__dict__)
             cli = tempmodule.Console(session = session, host = host_object)
         except:
             result.object["output"] += traceback.format_exc().split("\n")
@@ -303,7 +303,7 @@ def run_procedure(host_object, procedure_object, session, jobuuid = None, ctruui
             task_result["stop"] = None
             
             try:
-                exec inventory.get_object(tskuuid).object["body"] + "\n" + status_code_body in tempmodule.__dict__
+                exec(inventory.get_object(tskuuid).object["body"] + "\n" + status_code_body, tempmodule.__dict__)
                 task = tempmodule.Task()
                 
                 if continue_procedure:
@@ -453,10 +453,10 @@ def worker():
     
     try:    
         running_jobs_counts = {}
-        for key in jobs.keys():
+        for key in list(jobs.keys()):
             running_jobs_counts[jobs[key]["host"]["objuuid"]] = 0
             
-        for key in jobs.keys():
+        for key in list(jobs.keys()):
             if jobs[key]["process"] != None:
                 if jobs[key]["process"].is_alive():
                     running_jobs_count += 1
@@ -465,7 +465,7 @@ def worker():
                     del jobs[key]
                     touch_flag("queueState")
             
-        for key in jobs.keys():
+        for key in list(jobs.keys()):
             if running_jobs_count < MAX_JOBS:
                 if jobs[key]["process"] == None:
                     if running_jobs_counts[jobs[key]["host"]["objuuid"]] < MAX_JOBS_PER_HOST:

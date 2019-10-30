@@ -40,7 +40,7 @@ class Document:
             
             document["TBL_JSON_OBJ"]["-".join([coluuid, objuuid])] = object
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -56,7 +56,7 @@ class Document:
             document["TBL_JSON_OBJ"]["-".join([coluuid, objuuid])] = object
             
             keys = []
-            for key, value in document["TBL_JSON_IDX"].iteritems():
+            for key, value in document["TBL_JSON_IDX"].items():
                 if objuuid in key:
                     keys.append(key)
             
@@ -64,7 +64,7 @@ class Document:
                 del document["TBL_JSON_IDX"][key]
 
             attributes = {}
-            for key, value in document["TBL_JSON_ATTR"].iteritems():
+            for key, value in document["TBL_JSON_ATTR"].items():
                 if value["coluuid"] == coluuid:
                     attributes[document["TBL_JSON_ATTR"][key]["attribute_name"]] = document["TBL_JSON_ATTR"][key]["path"]
                 
@@ -79,27 +79,27 @@ class Document:
                 except:
                     continue
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
         finally:
             document_lock.release()
     
     def get_object_no_lock(self, objuuid):
-        for key, value in document["TBL_JSON_OBJ"].iteritems():
+        for key, value in document["TBL_JSON_OBJ"].items():
             if objuuid in key:
                 return deepcopy(value)
         
-        raise IndexError, "OBJUUID not found!"
+        raise IndexError("OBJUUID not found!")
     
     def get_object(self, objuuid):
         document_lock.acquire()
         
-        for key, value in document["TBL_JSON_OBJ"].iteritems():
+        for key, value in document["TBL_JSON_OBJ"].items():
             if objuuid in key:
                 document_lock.release()
                 return deepcopy(value)
         
         document_lock.release()
-        raise IndexError, "OBJUUID not found!"
+        raise IndexError("OBJUUID not found!")
     
     def find_objects(self, coluuid, attribute, value):
         value = str(value)
@@ -107,7 +107,7 @@ class Document:
         document_lock.acquire()
         
         objuuids = []
-        for key, index in document["TBL_JSON_IDX"].iteritems():
+        for key, index in document["TBL_JSON_IDX"].items():
             if index["value"] == value and \
                index["coluuid"] == coluuid and \
                index["attribute_name"] == attribute:
@@ -122,7 +122,7 @@ class Document:
             document_lock.acquire()
             
             keys = []
-            for key, value in document["TBL_JSON_OBJ"].iteritems():
+            for key, value in document["TBL_JSON_OBJ"].items():
                 if objuuid in key:
                     keys.append(key)
             
@@ -130,14 +130,14 @@ class Document:
                 del document["TBL_JSON_OBJ"][key]
             
             keys = []
-            for key, value in document["TBL_JSON_IDX"].iteritems():
+            for key, value in document["TBL_JSON_IDX"].items():
                 if objuuid in key:
                     keys.append(key)
             
             for key in keys:
                 del document["TBL_JSON_IDX"][key]
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -151,12 +151,12 @@ class Document:
                 "coluuid" : coluuid
             }
             
-            for key, value in document["TBL_JSON_IDX"].iteritems():
+            for key, value in document["TBL_JSON_IDX"].items():
                 if value["attribute_name"] == attribute:
                     del document["TBL_JSON_IDX"][key]
         
             objects = {}
-            for key, value in document["TBL_JSON_OBJ"].iteritems():
+            for key, value in document["TBL_JSON_OBJ"].items():
                 if coluuid in key:
                     objects[object["objuuid"]] = document["TBL_JSON_OBJ"][key]
             
@@ -171,7 +171,7 @@ class Document:
                 except:
                     traceback.format_exc()
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -181,7 +181,7 @@ class Document:
             
             keys = []
             
-            for key, value in document["TBL_JSON_ATTR"].iteritems():
+            for key, value in document["TBL_JSON_ATTR"].items():
                 if value["attribute_name"] == attribute and value["coluuid"] == coluuid:
                     keys.append(key)
             
@@ -189,14 +189,14 @@ class Document:
                 del document["TBL_JSON_ATTR"][key]
             
             keys = []
-            for key, value in document["TBL_JSON_IDX"].iteritems():
+            for key, value in document["TBL_JSON_IDX"].items():
                 if value["attribute_name"] == attribute and value["coluuid"] == coluuid:
                     keys.append(key)
             
             for key in keys:
                 del document["TBL_JSON_IDX"][key]
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
         finally:
             document_lock.release()
         
@@ -204,7 +204,7 @@ class Document:
         document_lock.acquire()
         
         attributes = {}
-        for key, value in document["TBL_JSON_ATTR"].iteritems():
+        for key, value in document["TBL_JSON_ATTR"].items():
             if value["coluuid"] == coluuid:
                 attributes[document["TBL_JSON_ATTR"][key]["attribute_name"]] = document["TBL_JSON_ATTR"][key]["path"]
         
@@ -254,7 +254,7 @@ class Document:
             for key in keys:
                 del document["TBL_JSON_IDX"][key]
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -267,7 +267,7 @@ class Document:
         document_lock.acquire()
         
         collections = {}
-        for key, value in document["TBL_JSON_COL"].iteritems():
+        for key, value in document["TBL_JSON_COL"].items():
             collections[value] = key
         
         document_lock.release()
@@ -279,11 +279,11 @@ class Document:
             document_lock.acquire()
             
             objuuids = []
-            for key, value in document["TBL_JSON_OBJ"].iteritems():
+            for key, value in document["TBL_JSON_OBJ"].items():
                 if coluuid in key:
                     objuuids.append(value["objuuid"])
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
         finally:
             document_lock.release()
         
@@ -294,10 +294,10 @@ class Document:
             document_lock.acquire()
             
             objuuids = []
-            for key, value in document["TBL_JSON_OBJ"].iteritems():
+            for key, value in document["TBL_JSON_OBJ"].items():
                 objuuids.append(value["objuuid"])
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
         finally:
             document_lock.release()
 
@@ -361,7 +361,7 @@ class Collection(Document):
         if len(kargs) == 0:
             objuuid_sets.append(self.list_objuuids())
 
-        for attribute, value in kargs.iteritems():
+        for attribute, value in kargs.items():
             objuuid_sets.append(Document.find_objects(self, self.coluuid, attribute, value))
         
         intersection = set(objuuid_sets[0])
@@ -380,7 +380,7 @@ class Collection(Document):
         if len(kargs) == 0:
             objuuid_sets.append(self.list_objuuids())
         
-        for attribute, value in kargs.iteritems():
+        for attribute, value in kargs.items():
             objuuid_sets.append(Document.find_objects(self, self.coluuid, attribute, value))
         
         intersection = set(objuuid_sets[0])
