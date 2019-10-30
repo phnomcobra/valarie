@@ -397,8 +397,8 @@ def eval_cron_field(cron_str, now_val):
     
     return result
 
-def worker_60():
-    Timer(60.0, worker_60).start()
+def worker_cron():
+    Timer(1, worker_cron).start()
     
     now = datetime.now()
     
@@ -412,6 +412,10 @@ def worker_60():
                 procedure.object["enabled"] = False
                 procedure.set()
             
+            if "seconds" not in procedure.object:
+                procedure.object["seconds"] = "0"
+                procedure.set()
+
             if "minutes" not in procedure.object:
                 procedure.object["minutes"] = "*"
                 procedure.set()
@@ -433,7 +437,8 @@ def worker_60():
                 procedure.set()
             
             if procedure.object["enabled"] in (True, "true"):
-                if eval_cron_field(procedure.object["minutes"], now.minute) and \
+                if eval_cron_field(procedure.object["seconds"], now.second) and \
+                   eval_cron_field(procedure.object["minutes"], now.minute) and \
                    eval_cron_field(procedure.object["hours"], now.hour) and \
                    eval_cron_field(procedure.object["dayofmonth"], now.day) and \
                    eval_cron_field(procedure.object["dayofweek"], now.weekday()) and \
@@ -486,4 +491,4 @@ def worker():
     job_lock.release()
 
 Thread(target = worker).start()
-Thread(target = worker_60).start()
+Thread(target = worker_cron).start()
