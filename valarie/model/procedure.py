@@ -17,6 +17,7 @@ def create_procedure(parent_objuuid, name = "New Procedure", objuuid = None):
         "title" : "",
         "description" : "",
         "enabled" : False,
+        "seconds" : "0",
         "minutes" : "*",
         "hours" : "*",
         "dayofmonth" : "*",
