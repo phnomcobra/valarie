@@ -129,10 +129,20 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
         if temp.object["type"] == "procedure":
             for hstuuid in hstuuids:
                 add_message("Queued host: {0}, procedure {1}...".format(hstuuid, prcuuid))
-                
+
                 host = inventory.get_object(hstuuid)
+                
                 if host.object["type"] == "host":
                     jobuuid = sucky_uuid()
+
+                    console = inventory.get_object(host.object["console"])
+                
+                    try:
+                        concurrency = int(console.object["concurrency"])
+                    except:
+                        add_message("Recovered max concurrency for console: " + console.object["objuuid"])
+                        console.object["concurrency"] = "1"
+                        console.set()
                     
                     job = {
                         "jobuuid" : jobuuid,
@@ -143,7 +153,8 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
                         "queue time" : time(),
                         "start time" : None,
                         "progress" : 0,
-                        "ctruuid" : ctruuid
+                        "ctruuid" : ctruuid,
+                        "concurrency" : concurrency
                     }
                 
                     set_job(jobuuid, job)
@@ -154,6 +165,15 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
                 host = inventory.get_object(hstuuid)
                 if host.object["type"] == "host":
                     jobuuid = sucky_uuid()
+
+                    console = inventory.get_object(host.object["console"])
+                
+                    try:
+                        concurrency = int(console.object["concurrency"])
+                    except:
+                        add_message("Recovered max concurrency for console: " + console.object["objuuid"])
+                        console.object["concurrency"] = "1"
+                        console.set()
                     
                     job = {
                         "jobuuid" : jobuuid,
@@ -172,7 +192,8 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
                         "queue time" : time(),
                         "start time" : None,
                         "progress" : 0,
-                        "ctruuid" : ctruuid
+                        "ctruuid" : ctruuid,
+                        "concurrency" : concurrency
                     }
                     
                     set_job(jobuuid, job)
@@ -473,7 +494,7 @@ def worker():
         for key in list(jobs.keys()):
             if running_jobs_count < MAX_JOBS:
                 if jobs[key]["process"] == None:
-                    if running_jobs_counts[jobs[key]["host"]["objuuid"]] < MAX_JOBS_PER_HOST:
+                    if running_jobs_counts[jobs[key]["host"]["objuuid"]] < jobs[key]["concurrency"]:
                         jobs[key]["process"] = Thread(target = run_procedure, \
                                                             args = (jobs[key]["host"], \
                                                                     jobs[key]["procedure"], \
