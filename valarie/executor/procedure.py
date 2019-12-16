@@ -77,7 +77,7 @@ def get_queued_hosts(prcuuid):
     job_lock.acquire()
     
     for jobuuid, dict in jobs.items():
-        if prcuuid == dict["host"]["objuuid"]:
+        if prcuuid == dict["procedure"]["objuuid"]:
             hstuuids.append(dict["host"]["objuuid"])
 
     job_lock.release()
