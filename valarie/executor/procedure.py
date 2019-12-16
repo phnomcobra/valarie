@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 MAX_JOBS = 20
-MAX_JOBS_PER_HOST = 2
 
 import traceback
 
