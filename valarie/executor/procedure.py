@@ -3,7 +3,6 @@
 MAX_JOBS = 20
 
 import traceback
-import json
 
 from threading import Lock, Thread, Timer
 from time import time
