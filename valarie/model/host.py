@@ -15,6 +15,8 @@ def create_host(parent_objuuid, name = "New Host", objuuid = None):
         "host" : "",
         "icon" : "/images/host_icon.png",
         "console" : None,
+        "concurrency" : 1,
+        "config" : "",
         "context" : {
             "delete" : {
                 "label" : "Delete",
