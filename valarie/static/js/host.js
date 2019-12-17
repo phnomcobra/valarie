@@ -17,6 +17,8 @@ var editHost = function() {
     addAttributeText('Host UUID', 'objuuid');
     addAttributeTextBox('Name', 'name');
     addAttributeTextBox('Host', 'host');
+    addAttributeTextBox('Max Concurrency', 'concurrency');
+    addAttributeTextArea('Configuration', 'config');
     
     $.ajax({
         'url' : 'console/ajax_get_consoles',
@@ -71,6 +73,8 @@ var launchTerminal = function() {
     addAttributeText('Host UUID', 'objuuid');
     addAttributeTextBox('Name', 'name');
     addAttributeTextBox('Host', 'host');
+    addAttributeTextBox('Max Concurrency', 'concurrency');
+    addAttributeTextArea('Configuration', 'config');
     
     $.ajax({
         'url' : 'console/ajax_get_consoles',

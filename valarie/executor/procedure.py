@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 MAX_JOBS = 20
-MAX_JOBS_PER_HOST = 2
 
 import traceback
 
@@ -77,7 +76,7 @@ def get_queued_hosts(prcuuid):
     job_lock.acquire()
     
     for jobuuid, dict in jobs.items():
-        if prcuuid == dict["host"]["objuuid"]:
+        if prcuuid == dict["procedure"]["objuuid"] and dict["process"] is None:
             hstuuids.append(dict["host"]["objuuid"])
 
     job_lock.release()
@@ -129,14 +128,18 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
         if temp.object["type"] == "procedure":
             for hstuuid in hstuuids:
                 add_message("Queued host: {0}, procedure {1}...".format(hstuuid, prcuuid))
-                
+
                 host = inventory.get_object(hstuuid)
+                
                 if host.object["type"] == "host":
                     jobuuid = sucky_uuid()
+
+                    console = inventory.get_object(host.object["console"])
                     
                     job = {
                         "jobuuid" : jobuuid,
                         "host" : host.object,
+                        "console" : console.object,
                         "procedure" : temp.object,
                         "session" : session,
                         "process" : None,
@@ -154,10 +157,13 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
                 host = inventory.get_object(hstuuid)
                 if host.object["type"] == "host":
                     jobuuid = sucky_uuid()
-                    
+
+                    console = inventory.get_object(host.object["console"])
+                
                     job = {
                         "jobuuid" : jobuuid,
                         "host" : host.object,
+                        "console" : console.object,
                         "procedure" : {
                             "objuuid" : prcuuid,
                             "type" : "procedure",
@@ -188,7 +194,7 @@ class TaskError:
     def execute(self, cli):
         return self.status
 
-def run_procedure(host_object, procedure_object, session, jobuuid = None, ctruuid = None):
+def run_procedure(host_object, procedure_object, console_object, session, jobuuid = None, ctruuid = None):
     add_message("Executing host: {0}, procedure: {1}...".format(host_object["name"], procedure_object["name"]))
     
     inventory = Collection("inventory")
@@ -291,7 +297,7 @@ def run_procedure(host_object, procedure_object, session, jobuuid = None, ctruui
     try:
         try:
             result.object["output"].append("importing console...")
-            exec(inventory.get_object(host_object["console"]).object["body"], tempmodule.__dict__)
+            exec(console_object["body"], tempmodule.__dict__)
             cli = tempmodule.Console(session = session, host = host_object)
         except:
             result.object["output"] += traceback.format_exc().split("\n")
@@ -457,15 +463,31 @@ def worker():
     running_jobs_count = 0
     
     try:    
+        # Concurrency conditioning
+        for key in list(jobs.keys()):
+            try:
+                assert int(jobs[key]["host"]["concurrency"]) > 0
+            except:
+                add_message("invalid host concurrency\n{0}".format(traceback.format_exc()))
+                jobs[key]["host"]["concurrency"] = "1"
+            
+            try:
+                assert int(jobs[key]["console"]["concurrency"]) > 0
+            except:
+                add_message("invalid console concurrency\n{0}".format(traceback.format_exc()))
+                jobs[key]["console"]["concurrency"] = "1"
+
         running_jobs_counts = {}
         for key in list(jobs.keys()):
             running_jobs_counts[jobs[key]["host"]["objuuid"]] = 0
+            running_jobs_counts[jobs[key]["console"]["objuuid"]] = 0
             
         for key in list(jobs.keys()):
             if jobs[key]["process"] != None:
                 if jobs[key]["process"].is_alive():
                     running_jobs_count += 1
                     running_jobs_counts[jobs[key]["host"]["objuuid"]] += 1
+                    running_jobs_counts[jobs[key]["console"]["objuuid"]] += 1
                 else:
                     del jobs[key]
                     touch_flag("queueState")
@@ -473,17 +495,24 @@ def worker():
         for key in list(jobs.keys()):
             if running_jobs_count < MAX_JOBS:
                 if jobs[key]["process"] == None:
-                    if running_jobs_counts[jobs[key]["host"]["objuuid"]] < MAX_JOBS_PER_HOST:
-                        jobs[key]["process"] = Thread(target = run_procedure, \
-                                                            args = (jobs[key]["host"], \
-                                                                    jobs[key]["procedure"], \
-                                                                    jobs[key]["session"], \
-                                                                    jobs[key]["jobuuid"], \
-                                                                    jobs[key]["ctruuid"]))
+                    if running_jobs_counts[jobs[key]["host"]["objuuid"]] < int(jobs[key]["host"]["concurrency"]) and \
+                       running_jobs_counts[jobs[key]["console"]["objuuid"]] < int(jobs[key]["console"]["concurrency"]):
+                        jobs[key]["process"] = Thread(
+                            target = run_procedure,
+                            args = (
+                                jobs[key]["host"],
+                                jobs[key]["procedure"],
+                                jobs[key]["console"],
+                                jobs[key]["session"],
+                                jobs[key]["jobuuid"],
+                                jobs[key]["ctruuid"]
+                            )
+                        )
                         jobs[key]["start time"] = time()
                         jobs[key]["process"].start()
                         running_jobs_count += 1
                         running_jobs_counts[jobs[key]["host"]["objuuid"]] += 1
+                        running_jobs_counts[jobs[key]["console"]["objuuid"]] += 1
                         touch_flag("queueState")
     except:
         add_message("queue exception\n{0}".format(traceback.format_exc()))

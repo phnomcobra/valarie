@@ -5,6 +5,7 @@ var editConsole = function() {
     initAttributes();
     addAttributeText('Console UUID', 'objuuid');
     addAttributeTextBox('Console Name', 'name');
+    addAttributeTextBox('Max Concurrency', 'concurrency');
 
     var editor = new ace.edit(document.getElementById('aceInstance'));
     

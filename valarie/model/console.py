@@ -48,6 +48,7 @@ def create_console(parent_objuuid, name = "New Console", objuuid = None):
         "name" : name,
         "body" : CONSOLE_PROTO_BODY,
         "icon" : "/images/console_icon.png",
+        "concurrency" : 1,
         "context" : {
             "delete" : {
                 "label" : "Delete",
