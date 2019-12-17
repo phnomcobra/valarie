@@ -77,7 +77,7 @@ def get_queued_hosts(prcuuid):
     job_lock.acquire()
     
     for jobuuid, dict in jobs.items():
-        if prcuuid == dict["procedure"]["objuuid"]:
+        if prcuuid == dict["procedure"]["objuuid"] and dict["process"] is None:
             hstuuids.append(dict["host"]["objuuid"])
 
     job_lock.release()
@@ -470,14 +470,12 @@ def worker():
                 assert int(jobs[key]["host"]["concurrency"]) > 0
             except:
                 add_message("invalid host concurrency\n{0}".format(traceback.format_exc()))
-                add_message(json.dumps(jobs[key]["host"], indent=4))
                 jobs[key]["host"]["concurrency"] = "1"
             
             try:
                 assert int(jobs[key]["console"]["concurrency"]) > 0
             except:
                 add_message("invalid console concurrency\n{0}".format(traceback.format_exc()))
-                add_message(json.dumps(jobs[key]["console"], indent=4))
                 jobs[key]["console"]["concurrency"] = "1"
 
         running_jobs_counts = {}
