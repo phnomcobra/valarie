@@ -6,11 +6,17 @@ import signal
 
 from valarie.controller.root import Root
 from valarie.executor.timers import cancel_timers
+from valarie.controller.messaging import add_message
+
+def shutdown(number, frame):
+    add_message("Shutting down...")
+    cancel_timers()
+    cherrypy.engine.exit()
 
 def start():
-    signal.signal(signal.SIGINT, cancel_timers)
-    signal.signal(signal.SIGTERM, cancel_timers)
-
+    signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
+    
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     config = {
