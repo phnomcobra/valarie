@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-CLI_TIME_OUT = 5 * 60
-RECV_TIME_OUT = 60
+CLI_TIME_OUT = 5
+RECV_TIME_OUT = 5
 
 import traceback
 
@@ -74,7 +74,9 @@ def create_session(hstuuid, session):
         
         add_message(traceback.format_exc())
     finally:
-        Timer(60, time_out_worker, args = (ttyuuid,)).start()
+        
+
+        Timer(5, time_out_worker, args = (ttyuuid,)).start()
         
         return ttyuuid
 
@@ -95,6 +97,6 @@ def time_out_worker(ttyuuid):
             add_message("terminal model: ttyuuid {0} closed due to inactivity".format(ttyuuid))
             destroy_session(ttyuuid)
         else:
-            Timer(60, time_out_worker, args = (ttyuuid,)).start()
+            Timer(5, time_out_worker, args = (ttyuuid,)).start()
     except:
         add_message(traceback.format_exc())
