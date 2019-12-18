@@ -14,6 +14,7 @@ from valarie.dao.ramdocument import Collection as RAMCollection
 from valarie.dao.utils import sucky_uuid
 from valarie.controller.flags import touch_flag
 from valarie.controller.messaging import add_message
+from valarie.executor.timers import timers
 
 jobs = {}
 job_lock = Lock()
@@ -404,7 +405,8 @@ def eval_cron_field(cron_str, now_val):
     return result
 
 def worker_cron():
-    Timer(1, worker_cron).start()
+    timers["procedure cron worker"] = Timer(1, worker_cron)
+    timers["procedure cron worker"].start()
     
     now = datetime.now()
     
@@ -456,7 +458,8 @@ def worker_cron():
             add_message("procedure exception\n{0}".format(traceback.format_exc()))
 
 def worker():
-    Timer(1, worker).start()
+    timers["procedure worker"] = Timer(1, worker)
+    timers["procedure worker"].start()
     
     job_lock.acquire()
     
@@ -519,5 +522,8 @@ def worker():
 
     job_lock.release()
 
-Thread(target = worker).start()
-Thread(target = worker_cron).start()
+timers["procedure worker"] = Timer(1, worker)
+timers["procedure worker"].start()
+
+timers["procedure cron worker"] = Timer(1, worker_cron)
+timers["procedure cron worker"].start()

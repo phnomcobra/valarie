@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
-from threading import Thread, Timer
+from threading import Timer
 from time import time
 
+from valarie.executor.timers import timers
 from valarie.dao.ramdocument import Collection as RAMCollection
 from valarie.dao.document import Collection
 
@@ -102,7 +103,8 @@ def get_procedure_result(prcuuid, hstuuid):
     
 
 def worker():
-    Timer(3600, worker).start()
+    timers["results worker"] = Timer(60, worker)
+    timers["results worker"].start()
     
     results = RAMCollection("results")
     
@@ -122,4 +124,5 @@ collection.create_attribute("tskuuid", "['task']['objuuid']")
 collection.create_attribute("prcuuid", "['procedure']['objuuid']")
 collection.create_attribute("hstuuid", "['host']['objuuid']")
 
-Thread(target = worker).start()
+timers["results worker"] = Timer(60, worker)
+timers["results worker"].start()

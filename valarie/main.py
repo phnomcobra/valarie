@@ -2,10 +2,15 @@
 
 import cherrypy
 import os
+import signal
 
 from valarie.controller.root import Root
+from valarie.executor.timers import cancel_timers
 
 def start():
+    signal.signal(signal.SIGINT, cancel_timers)
+    signal.signal(signal.SIGTERM, cancel_timers)
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     config = {
