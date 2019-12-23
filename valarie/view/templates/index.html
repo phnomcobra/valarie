@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta http-equiv="Pragma" content="no-cache">
@@ -11,91 +10,77 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <link rel="shortcut icon" type="image/x-icon" href="/images/task_icon.png" />
-
     <title>ValARIE</title>
-
     <!-- Bootstrap Core CSS -->
     <link href="/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- From initial index --> 
     <link rel="stylesheet" href="/css/style.min.css" />
     <link rel="stylesheet" href="/css/jquery-ui.css">
     <link rel="stylesheet" href="/css/jsgrid.min.css">
     <link rel="stylesheet" href="/css/jsgrid-theme.min.css">
     <link rel="stylesheet" href="/js/amcharts/plugins/export/export.css">
-    
     <!-- Custom CSS -->
     <link href="/css/valarie.css" rel="stylesheet">
-
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
-
-</head>
-
-<body>
+  </head>
+  <body>
     <!-- nav -->
     {% include '_navbar.html' %}
     <!-- /nav -->
-    
     <div id="wrapper">
-        <!-- Sidebar -->
-        <ul id="sidebar-wrapper" class="sidebar-nav">
-            <ul class="nav nav-tabs">
-                <li class="active"><a data-toggle="tab" href="#inventoryContainer">Inventory</a></li>
-                <li><a data-toggle="tab" href="#queue">Queue</a></li>
-            </ul>
-            
-            <div class="tab-content">
-                <div id="inventoryContainer" class="tab-pane fade in active">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search" id="inventorySearchTextBox"></input>
-                        <span class="input-group-btn">
-                            <button class="btn btn-default" type="button" onclick="document.getElementById('inventorySearchTextBox').value='';$('#inventory').jstree(true).search('');" >Clear</button>
-                        </span>
-                    </div>
-                    <div id="inventory"></div>
-                </div>
-                <div id="queue" class="tab-pane fade"></div>
-            </div>
+      <!-- Sidebar -->
+      <ul id="sidebar-wrapper" class="sidebar-nav">
+        <ul class="nav nav-tabs">
+          <li class="active"><a data-toggle="tab" href="#inventoryContainer">Inventory</a></li>
+          <li><a data-toggle="tab" href="#queue">Queue</a></li>
         </ul>
-        <!-- /#sidebar-wrapper -->
-
-        <!-- Page Content -->
-        <div id="page-content-wrapper" class="container-fluid">
-            <ul class="nav nav-tabs">
-                <li><a><b id="bodyTitle"></b></a></li>
-                <li><a data-toggle="tab" href="#attributes">Attributes</a></li>
-                <li><a data-toggle="tab" href="#body">Body</a></li>
-                <li class="active"><a data-toggle="tab" href="#console">Console</a></li>
-            </ul>
-            <div class="tab-content">
-                <div id="attributes" class="tab-pane fade"></div>
-                <div id="body" class="tab-pane fade"></div>
-                <div class="tab-pane fade in active" id="console">
-                    <div ng-app="inventoryApp" ng-controller="inventoryCtrl">
-                        <div ng-bind-html="messages"></div>
-                    </div>
-                </div> 
+        <div class="tab-content">
+          <div id="inventoryContainer" class="tab-pane fade in active">
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Search" id="inventorySearchTextBox"></input>
+              <span class="input-group-btn">
+              <button class="btn btn-default" type="button" onclick="document.getElementById('inventorySearchTextBox').value='';$('#inventory').jstree(true).search('');" >Clear</button>
+              </span>
             </div>
+            <div id="inventory"></div>
+          </div>
+          <div id="queue" class="tab-pane fade"></div>
         </div>
-        <!-- /#page-content-wrapper -->
+      </ul>
+      <!-- /#sidebar-wrapper -->
+      <!-- Page Content -->
+      <div id="page-content-wrapper" class="container-fluid">
+        <ul class="nav nav-tabs">
+          <li><a><b id="bodyTitle"></b></a></li>
+          <li><a data-toggle="tab" href="#attributes">Attributes</a></li>
+          <li><a data-toggle="tab" href="#body">Body</a></li>
+          <li class="active"><a data-toggle="tab" href="#console">Console</a></li>
+        </ul>
+        <div class="tab-content">
+          <div id="attributes" class="tab-pane fade"></div>
+          <div id="body" class="tab-pane fade"></div>
+          <div class="tab-pane fade in active" id="console">
+            <div ng-app="inventoryApp" ng-controller="inventoryCtrl">
+              <div ng-bind-html="messages"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /#page-content-wrapper -->
     </div>
     <!-- /#wrapper -->
-
     <!-- import form -->
     {% include '_import.html' %}
     <!-- /import -->
-    
     <!-- jQuery -->
     <script src="/js/jquery.js"></script>
-
     <!-- Bootstrap Core JavaScript -->
     <script src="/js/bootstrap.min.js"></script>
-    
     <!-- From initial index -->
     <script src="/js/jquery-ui.js"></script>
     <script src="/js/jsgrid.js"></script>
@@ -108,6 +93,8 @@
     <script src="/js/status.js"></script>
     <script src="/js/jscolor.js"></script>
     <script src="/js/host.js"></script>
+    <script src="/js/user.js"></script>
+    <script src="/js/config.js"></script>
     <script src="/js/controller.js"></script>
     <script src="/js/console.js"></script>
     <script src="/js/queue.js"></script>
@@ -128,12 +115,10 @@
     <script src="/js/inventory.js"></script>
     <!-- Menu Toggle Script -->
     <script>
-    $("#menu-toggle").click(function(e) {
-        e.preventDefault();
-        $("#wrapper").toggleClass("toggled");
-    });
+      $("#menu-toggle").click(function(e) {
+          e.preventDefault();
+          $("#wrapper").toggleClass("toggled");
+      });
     </script>
-
-</body>
-
+  </body>
 </html>

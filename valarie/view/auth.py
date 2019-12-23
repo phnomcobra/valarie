@@ -2,14 +2,12 @@
 
 import jinja2
 
-def admin_view():
-    templateLoader = jinja2.FileSystemLoader(searchpath = "./valarie/view/templates")
-    templateEnv = jinja2.Environment(loader = templateLoader )
-    template = templateEnv.get_template('auth.html')
-    return template.render()
-    
-def login_view(username, msg = "Enter login information", from_page = "/"):
+from valarie.dao.document import Collection
+from valarie.model.config import CONFIG_OBJUUID
+
+def login_view():
+    config = Collection("inventory").get_object(CONFIG_OBJUUID)
     templateLoader = jinja2.FileSystemLoader(searchpath = "./valarie/view/templates")
     templateEnv = jinja2.Environment(loader = templateLoader)
     template = templateEnv.get_template('login.html')
-    return template.render(username = username, msg = msg, from_page = from_page)
+    return template.render(title=config.object["title"], banner=config.object["banner"])

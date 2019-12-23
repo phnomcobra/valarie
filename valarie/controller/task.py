@@ -25,6 +25,6 @@ class Task(object):
     def ajax_execute_task(self, tskuuid, hstuuid):
         add_message("task controller: execute task: hstuuid: {0}, tskuuid: {1}".format(hstuuid, tskuuid))
         try:
-            return json.dumps(execute(tskuuid, hstuuid, Collection("users").find(sessionid = cherrypy.session.id)[0].object))
+            return json.dumps(execute(tskuuid, hstuuid, Collection("inventory").find(sessionid = cherrypy.session.id)[0].object))
         except:
             add_message(traceback.format_exc())

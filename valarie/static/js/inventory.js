@@ -271,6 +271,12 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                         createNode(resp);
                                         editTask();
                                         $('.nav-tabs a[href="#attributes"]').tab('show');
+                                    } else if(obj.item.method == 'create user') {
+                                        addMessage('create user success');
+                                        inventoryObject = resp;
+                                        createNode(resp);
+                                        editUser();
+                                        $('.nav-tabs a[href="#attributes"]').tab('show');
                                     } else if(obj.item.method == 'create text file') {
                                         addMessage('create text file success');
                                         inventoryObject = resp;
@@ -315,6 +321,14 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                         addMessage("edit task success");
                                         inventoryObject = resp;
                                         editTask();
+                                    } else if(obj.item.method == 'edit user') {
+                                        addMessage("edit user success");
+                                        inventoryObject = resp;
+                                        editUser();
+                                    } else if(obj.item.method == 'edit configuration') {
+                                        addMessage("edit configuration success");
+                                        inventoryObject = resp;
+                                        editConfig();
                                     } else if(obj.item.method == 'edit text file') {
                                         addMessage("edit text file success");
                                         inventoryObject = resp;
@@ -485,6 +499,20 @@ var addAttributeTextArea = function(fieldName, inventoryKey) {
     var id = 'inventory-obj-key-' + inventoryKey;
     attributeCell.innerHTML = '<textarea rows = "5" id="' + id + '" onchange="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" onkeyup="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" style="width:98%;"></textarea>';
     document.getElementById(id).value = inventoryObject[inventoryKey];
+}
+
+var addAttributePassword = function(fieldName, inventoryKey) {
+    var attributeTable = document.getElementById("attributesTable");
+    var attributeRow = attributeTable.insertRow(-1);
+    var attributeCell;
+    
+    attributeCell = attributeRow.insertCell(-1);
+    attributeCell.innerHTML = fieldName;
+    
+    attributeCell = attributeRow.insertCell(-1);
+    var id = 'inventory-obj-key-' + inventoryKey;
+    attributeCell.innerHTML = '<input type="password" id="' + id + '" onchange="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" onkeyup="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" style="width:99%"></input>';
+    document.getElementById(id).value = userObject[inventoryKey];
 }
 
 var addAttributeCheckBox = function(fieldName, inventoryKey) {

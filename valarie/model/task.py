@@ -2,30 +2,7 @@
 
 from valarie.dao.document import Collection
 from valarie.controller.messaging import add_message
-
-TASK_PROTO_BODY = '''#!/usr/bin/python
-
-import traceback
-
-class Task:
-    def __init__(self):
-        self.output = []
-        self.status = STATUS_NOT_EXECUTED
-
-    def execute(self, cli):
-        try:
-            status, stdout, stderr = cli.system("whoami", return_tuple = True)
-            if status:
-                self.output.append(str(stderr))
-                self.status = STATUS_FAILURE
-            else:
-                self.output.append(str(stdout))
-                self.status = STATUS_SUCCESS
-        except:
-            self.output.append(traceback.format_exc())
-            self.status = STATUS_EXCEPTION
-
-        return self.status'''
+from valarie.model.config import TASK_PROTO_OBJUUID
 
 def create_task(parent_objuuid, \
                 name = "New Task", \
@@ -42,7 +19,7 @@ def create_task(parent_objuuid, \
         "parent" : parent_objuuid,
         "children" : [],
         "name" : name,
-        "body" : TASK_PROTO_BODY,
+        "body" : collection.get_object(TASK_PROTO_OBJUUID).object["body"],
         "hosts" : [],
         "icon" : "/images/task_icon.png",
         "context" : {

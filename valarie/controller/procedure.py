@@ -68,7 +68,7 @@ class Procedure(object):
                     
                     add_message("procedure controller: queuing procedure: hstuuid: {0}, prcuuid: {1}".format(item["hstuuid"], item["prcuuid"]))
                     
-                    queue_procedure(item["hstuuid"], item["prcuuid"], Collection("users").find(sessionid = cherrypy.session.id)[0].object, ctruuid)
+                    queue_procedure(item["hstuuid"], item["prcuuid"], Collection("inventory").find(sessionid = cherrypy.session.id)[0].object, ctruuid)
                 except:
                     add_message(traceback.format_exc())
         
