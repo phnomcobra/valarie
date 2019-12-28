@@ -378,6 +378,9 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                         addMessage("run controller success");
                                         inventoryObject = resp;
                                         executeController();
+                                    } else if(obj.item.method == 'restart valarie') {
+                                        addMessage("restart success");
+                                        restartValarie();
                                     } else if(obj.item.method == 'run task') {
                                         document.title = resp.name;
                                         document.getElementById('bodyTitle').innerHTML = resp.type.toUpperCase() + ': ' + resp.name;
@@ -512,7 +515,7 @@ var addAttributePassword = function(fieldName, inventoryKey) {
     attributeCell = attributeRow.insertCell(-1);
     var id = 'inventory-obj-key-' + inventoryKey;
     attributeCell.innerHTML = '<input type="password" id="' + id + '" onchange="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" onkeyup="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" style="width:99%"></input>';
-    document.getElementById(id).value = userObject[inventoryKey];
+    document.getElementById(id).value = inventoryObject[inventoryKey];
 }
 
 var addAttributeCheckBox = function(fieldName, inventoryKey) {

@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-MAX_JOBS = 20
-
 import traceback
 
 from threading import Lock, Thread, Timer
@@ -15,6 +13,7 @@ from valarie.dao.utils import sucky_uuid
 from valarie.controller.flags import touch_flag
 from valarie.controller.messaging import add_message
 from valarie.executor.timers import timers
+from valarie.model.config import get_config
 
 jobs = {}
 job_lock = Lock()
@@ -496,7 +495,7 @@ def worker():
                     touch_flag("queueState")
             
         for key in list(jobs.keys()):
-            if running_jobs_count < MAX_JOBS:
+            if running_jobs_count < int(get_config()["concurrency"]):
                 if jobs[key]["process"] == None:
                     if running_jobs_counts[jobs[key]["host"]["objuuid"]] < int(jobs[key]["host"]["concurrency"]) and \
                        running_jobs_counts[jobs[key]["console"]["objuuid"]] < int(jobs[key]["console"]["concurrency"]):

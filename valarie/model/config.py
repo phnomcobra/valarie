@@ -163,6 +163,18 @@ class Task:
         return self.status
 '''
 
+def get_config():
+    return Collection("inventory").get_object(CONFIG_OBJUUID).object
+
+def get_host():
+    return Collection("inventory").get_object(CONFIG_OBJUUID).object["host"]
+
+def get_port():
+    return int(Collection("inventory").get_object(CONFIG_OBJUUID).object["port"])
+
+def ssl_enabled():
+    return Collection("inventory").get_object(CONFIG_OBJUUID).object["ssl"] not in (False, 'false')
+
 def create_config():
     collection = Collection("inventory")
 
@@ -172,9 +184,13 @@ def create_config():
         "type" : "config",
         "parent" : SETTINGS_CONTAINER_OBJUUID,
         "concurrency" : 20,
+        "host" : "0.0.0.0",
+        "port" : 8080,
+        "ssl" : False,
         "brand" : "valarie",
         "banner" : "<h1>Valarie</h1>",
         "title" : "Valarie",
+        "restartcmd" : "service valarie restart",
         "children" : [],
         "name" : "Configuration",
         "icon" : "/images/config_icon.png",
@@ -188,6 +204,14 @@ def create_config():
                         "objuuid" : CONFIG_OBJUUID
                     }
                 }
+            },
+            "restart" : {
+                "label" : "Restart",
+                "action" : {
+                    "method" : "restart valarie",
+                    "route" : "general/ajax_restart",
+                    "params" : {}
+                }
             }
         }
     }
@@ -195,6 +219,9 @@ def create_config():
     config.set()
     
     return config
+
+def get_console_template():
+    return Collection("inventory").get_object(CONSOLE_PROTO_OBJUUID).object["body"]
 
 def create_console_template():
     collection = Collection("inventory")
@@ -227,6 +254,9 @@ def create_console_template():
     
     return console
 
+def get_task_template():
+    return Collection("inventory").get_object(TASK_PROTO_OBJUUID).object["body"]
+
 def create_task_template():
     collection = Collection("inventory")
     
@@ -258,6 +288,9 @@ def create_task_template():
     
     return task
 
+def get_public_key():
+    return Collection("inventory").get_object(PUBLIC_KEY_OBJUUID).object["body"]
+
 def create_public_key():
     collection = Collection("inventory")
     
@@ -288,6 +321,9 @@ def create_public_key():
     text_file.set()
     
     return text_file
+
+def get_private_key():
+    return Collection("inventory").get_object(PRIVATE_KEY_OBJUUID).object["body"]
 
 def create_private_key():
     collection = Collection("inventory")

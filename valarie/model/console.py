@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from valarie.dao.document import Collection
-from valarie.model.config import CONSOLE_PROTO_OBJUUID
+from valarie.model.config import get_console_template
 
 def create_console(parent_objuuid, name = "New Console", objuuid = None):
     collection = Collection("inventory")
@@ -11,7 +11,7 @@ def create_console(parent_objuuid, name = "New Console", objuuid = None):
         "parent" : parent_objuuid,
         "children" : [],
         "name" : name,
-        "body" : collection.get_object(CONSOLE_PROTO_OBJUUID).object["body"],
+        "body" : get_console_template(),
         "icon" : "/images/console_icon.png",
         "concurrency" : 1,
         "context" : {

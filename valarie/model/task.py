@@ -2,7 +2,7 @@
 
 from valarie.dao.document import Collection
 from valarie.controller.messaging import add_message
-from valarie.model.config import TASK_PROTO_OBJUUID
+from valarie.model.config import get_task_template
 
 def create_task(parent_objuuid, \
                 name = "New Task", \
@@ -19,7 +19,7 @@ def create_task(parent_objuuid, \
         "parent" : parent_objuuid,
         "children" : [],
         "name" : name,
-        "body" : collection.get_object(TASK_PROTO_OBJUUID).object["body"],
+        "body" : get_task_template(),
         "hosts" : [],
         "icon" : "/images/task_icon.png",
         "context" : {
