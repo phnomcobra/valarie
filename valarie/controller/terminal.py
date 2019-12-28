@@ -19,7 +19,7 @@ class Terminal(object):
     def ajax_create_session(self, hstuuid):
         add_message("terminal controller: create terminal")
         try:
-            return json.dumps({"ttyuuid" : create_session(hstuuid, Collection("users").find(sessionid = cherrypy.session.id)[0].object)})
+            return json.dumps({"ttyuuid" : create_session(hstuuid, Collection("inventory").find(sessionid = cherrypy.session.id)[0].object)})
         except:
             add_message(traceback.format_exc())
     
