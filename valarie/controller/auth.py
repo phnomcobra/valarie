@@ -5,17 +5,16 @@ import json
 import traceback
 
 from valarie.dao.document import Collection
-from valarie.model.auth import create_user, get_users_grid
 from valarie.controller.messaging import add_message
-from valarie.view.auth import login_view, admin_view
+from valarie.view.auth import login_view
 
 SESSION_KEY = '_cp_username'
 
 def check_credentials(username, password):
-    users = Collection("users")
+    inventory = Collection("inventory")
     
-    for user in users.find(name = username):
-        if user.object["enabled"] == 'false':
+    for user in inventory.find(name=username,type="user"):
+        if user.object["enabled"] in ('false', False):
             return "User {0} is disabled!".format(username)
         if user.object["password"] == password:
             return None
@@ -82,32 +81,27 @@ def all_of(*conditions):
 
 class Auth(object):
     def on_login(self, username):
-        users = Collection("users")
+        inventory = Collection("inventory")
         
-        for user in users.find(sessionid = cherrypy.session.id):
-            user.object['session id'] = None
+        for user in inventory.find(sessionid=cherrypy.session.id,type="user"):
+            user.object['sessionid'] = None
             user.set()
         
-        for user in users.find(name = username):
-            user.object['session id'] = cherrypy.session.id
+        for user in inventory.find(name=username,type="user"):
+            user.object['sessionid'] = cherrypy.session.id
             user.set()
 
     def on_logout(self, username):
         pass
     
     @cherrypy.expose
-    @require()
-    def admin(self):
-        return admin_view()
-    
-    @cherrypy.expose
     def login(self, username=None, password=None, from_page="/"):
         if username is None or password is None:
-            return login_view("", from_page=from_page)
+            return login_view()
         
         error_msg = check_credentials(username, password)
         if error_msg:
-            return login_view(username, error_msg, from_page)
+            return login_view()
         else:
             cherrypy.session[SESSION_KEY] = cherrypy.request.login = username
             self.on_login(username)
@@ -123,76 +117,3 @@ class Auth(object):
             cherrypy.request.login = None
             self.on_logout(username)
         raise cherrypy.HTTPRedirect(from_page or "/")
-
-    @cherrypy.expose
-    @require()
-    def ajax_get_users_grid(self):
-        add_message("auth controller: get users grid")
-        try:
-            return json.dumps(get_users_grid())
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    @require()
-    def ajax_create_user(self, name):
-        add_message("auth controller: create user: {0}".format(name))
-        try:
-            target_user = create_user(name)
-            return json.dumps(target_user.object)
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    @require()
-    def ajax_delete(self, objuuid):
-        add_message("auth controller: delete user object: {0}".format(objuuid))
-        try:
-            Collection("users").get_object(objuuid).destroy()
-            return json.dumps({"id" : objuuid})
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    @require()
-    def ajax_get_object(self, objuuid):
-        add_message("auth controller: get user object...")
-        try:
-            collection = Collection("users")
-            object = collection.get_object(objuuid).object
-            add_message("auth controller: get: {0}, name: {1}".format(objuuid, object["name"]))
-            return json.dumps(object)
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    @require()
-    def ajax_get_current_object(self):
-        add_message("auth controller: get current user object...")
-        try:
-            collection = Collection("users")
-            object = collection.find(sessionid = cherrypy.session.id)[0].object
-            add_message("auth controller: get: {0}, name: {1}".format(object["objuuid"], object["name"]))
-            return json.dumps(object)
-        except:
-            add_message(traceback.format_exc())
-        
-    @cherrypy.expose
-    @require()
-    def ajax_post_object(self):
-        add_message("auth controller: post user object...")
-        
-        try:
-            cl = cherrypy.request.headers['Content-Length']
-            object = json.loads(cherrypy.request.body.read(int(cl)))
-        
-            collection = Collection("users")
-            current = collection.get_object(object["objuuid"])
-            current.object = object
-            current.set()
-            
-            add_message("auth controller: set: {0}, name: {1}".format(object["objuuid"], object["name"]))
-        
-            return json.dumps(current.object)
-        except:
-            add_message(traceback.format_exc())

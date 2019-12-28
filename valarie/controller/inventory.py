@@ -15,6 +15,7 @@ from valarie.controller.auth import require
 
 from valarie.dao.document import Collection
 
+from valarie.model.users import create_user
 from valarie.model.datastore import File as DatastoreFile
 from valarie.model.container import create_container
 from valarie.model.task import create_task
@@ -132,6 +133,17 @@ class Inventory(object):
             console = create_console(objuuid, "New Console")
             
             return json.dumps(console.object)
+        except:
+            add_message(traceback.format_exc())
+    
+    @cherrypy.expose
+    @require()
+    def ajax_create_user(self):
+        add_message("inventory controller: create user")
+        try:
+            user = create_user(name = "New User")
+            
+            return json.dumps(user.object)
         except:
             add_message(traceback.format_exc())
     

@@ -16,6 +16,7 @@ from valarie.controller.flags import Flags
 from valarie.controller.task import Task
 from valarie.controller.terminal import Terminal
 from valarie.controller.auth import Auth, require
+from valarie.controller.general import General
 
 class Root(object):
     inventory = Inventory()
@@ -29,6 +30,7 @@ class Root(object):
     auth = Auth()
     terminal = Terminal()
     hostgroup = HostGroup()
+    general = General()
     
     @cherrypy.expose
     @require()
