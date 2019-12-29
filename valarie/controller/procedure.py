@@ -7,11 +7,8 @@ import traceback
 from valarie.controller.auth import require
 from valarie.controller.messaging import add_message
 from valarie.dao.document import Collection
-from valarie.model.procedure import get_task_grid, \
-                                    get_host_grid
-from valarie.executor.procedure import get_jobs_grid, \
-                                       queue_procedure, \
-                                       run_procedure
+from valarie.model.procedure import get_task_grid, get_host_grid
+from valarie.executor.procedure import get_jobs_grid, queue_procedure
 
 class Procedure(object):
     @cherrypy.expose
@@ -34,19 +31,10 @@ class Procedure(object):
     
     @cherrypy.expose
     @require()
-    def ajax_execute_procedure(self, prcuuid, hstuuid):
-        add_message("procedure controller: execute procedure: hstuuid: {0}, prcuuid: {1}".format(hstuuid, prcuuid))
-        try:
-            return json.dumps(run_procedure(hstuuid, prcuuid, Collection("users").find(sessionid = cherrypy.session.id)[0].object))
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    @require()
     def ajax_queue_procedure(self, prcuuid, hstuuid):
         add_message("procedure controller: queuing procedure: hstuuid: {0}, prcuuid: {1}".format(hstuuid, prcuuid))
         try:
-            queue_procedure(hstuuid, prcuuid, Collection("users").find(sessionid = cherrypy.session.id)[0].object)
+            queue_procedure(hstuuid, prcuuid, Collection("inventory").find(sessionid = cherrypy.session.id)[0].object)
             return json.dumps({})
         except:
             add_message(traceback.format_exc())
@@ -55,10 +43,6 @@ class Procedure(object):
     @require()
     def ajax_queue_procedures(self, queuelist):
         try:
-            items = json.loads(queuelist)
-            
-            controllers = Collection("inventory").find(type = "controller")
-            
             for item in json.loads(queuelist):
                 try:
                     if "ctruuid" in item:

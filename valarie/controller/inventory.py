@@ -152,14 +152,7 @@ class Inventory(object):
     def ajax_create_task(self, objuuid):
         add_message("inventory controller: create task: {0}".format(objuuid))
         try:
-            current_user = Collection("users").find(sessionid = cherrypy.session.id)[0]
-            
-            task = create_task(objuuid, \
-                               "New Task", \
-                               author = "{0} {1}".format(current_user.object["first name"], \
-                                                         current_user.object["last name"]), \
-                               email = current_user.object["email"], \
-                               phone = current_user.object["phone"])
+            task = create_task(objuuid, "New Task")
             
             return json.dumps(task.object)
         except:
