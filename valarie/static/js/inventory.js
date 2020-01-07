@@ -722,29 +722,6 @@ var refreshJSGrids = function() {
     });
 }
 
-var selectDependencies = function() {
-    //$('#inventory').jstree("deselect_all");
-    
-    var nodes = $('#inventory').jstree().get_selected(true);
-    
-    var objuuids = []
-    for(i in nodes)
-        objuuids.push(nodes[i].id);
-    
-    $.ajax({
-        'type' : 'POST',
-        'url' : 'inventory/ajax_get_dependencies',
-        'dataType' : 'json',
-        'contentType' : 'application/json',
-        'data' : JSON.stringify(objuuids),
-        'success' : function(objuuids) {
-            for(var i in objuuids) {
-                $('#inventory').jstree(true).select_node(objuuids[i]);
-            }
-        },
-    });
-}
-
 var cutInventoryItems = function() {
     var nodes = $('#inventory').jstree().get_selected(true);
     var objuuids = [];

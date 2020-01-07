@@ -61,12 +61,11 @@ class Inventory(object):
         try:
             self.moving = True
             set_parent_objuuid(objuuid, parent_objuuid)
+            return json.dumps({})
         except:
             add_message(traceback.format_exc())
         finally:
             self.moving = False
-
-        return json.dumps({})
     
     @cherrypy.expose
     @require()

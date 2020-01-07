@@ -97,7 +97,7 @@ def set_parent_objuuid(objuuid, parent_objuuid):
         collection = Collection("inventory")
     
         current = collection.get_object(objuuid)
-        assert current.object["type"] is "user", f"Change parent not permitted for {objuuid}"
+        assert current.object["type"] != "user", f"Change parent not permitted for {objuuid}"
         
         old_parent_objuuid = current.object["parent"]
         current.object["parent"] = parent_objuuid
