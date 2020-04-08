@@ -9,26 +9,13 @@ var drawQueue = function(resp) {
     row = table.insertRow(-1);
     cell = row.insertCell(-1);
     cell.innerHTML = '<b>Procedure</b>';
-        
-    cell = row.insertCell(-1);
-    cell.innerHTML = '<b>Host</b>';
-
-    cell = row.insertCell(-1);
-    cell.innerHTML = '<b>Progress</b>';
     
     var count = 0;
     for(var i in resp) {
-        count++;
-        
+        count++;     
         row = table.insertRow(-1);
         cell = row.insertCell(-1);
         cell.innerHTML = resp[i].name;
-        
-        cell = row.insertCell(-1);
-        cell.innerHTML = resp[i].host;
-
-        cell = row.insertCell(-1);
-        cell.innerHTML = Math.round(resp[i].progress * 100.0) + '%';
     }
     
     if(count == 0)
