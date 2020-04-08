@@ -112,7 +112,7 @@ def worker():
         result = results.get_object(objuuid)
         
         try:
-            if time() - result.object["start"] > 28800:
+            if time() - result.object["start"] > 86400:
                 result.destroy()
         except:
             result.destroy()
