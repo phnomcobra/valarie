@@ -403,12 +403,10 @@ def eval_cron_field(cron_str, now_val):
     
     return result
 
-def worker_cron():
-    timers["procedure cron worker"] = Timer(1, worker_cron)
-    timers["procedure cron worker"].start()
-    
-    now = datetime.now()
-    
+def worker():
+    global last_worker_time
+    running_jobs_count = 0
+
     collection = Collection("inventory")
         
     for prcuuid in collection.find_objuuids(type = "procedure"):
@@ -443,26 +441,26 @@ def worker_cron():
                 procedure.object["year"] = "*"
                 procedure.set()
             
-            if procedure.object["enabled"] in (True, "true"):
-                if eval_cron_field(procedure.object["seconds"], now.second) and \
-                   eval_cron_field(procedure.object["minutes"], now.minute) and \
-                   eval_cron_field(procedure.object["hours"], now.hour) and \
-                   eval_cron_field(procedure.object["dayofmonth"], now.day) and \
-                   eval_cron_field(procedure.object["dayofweek"], now.weekday()) and \
-                   eval_cron_field(procedure.object["year"], now.year):
-                    
-                    for hstuuid in procedure.object["hosts"]:
-                        queue_procedure(hstuuid, procedure.objuuid, {})
+            if procedure.object["enabled"] in (True, "true"):                
+                for t in range(int(last_worker_time), int(time())):
+                    now = datetime.fromtimestamp(t).now()
+                    if (
+                        eval_cron_field(procedure.object["seconds"], now.second) and
+                        eval_cron_field(procedure.object["minutes"], now.minute) and
+                        eval_cron_field(procedure.object["hours"], now.hour) and
+                        eval_cron_field(procedure.object["dayofmonth"], now.day) and
+                        eval_cron_field(procedure.object["dayofweek"], now.weekday()) and
+                        eval_cron_field(procedure.object["year"], now.year)
+                    ):
+                        for hstuuid in procedure.object["hosts"]:
+                            queue_procedure(hstuuid, procedure.objuuid, {})
+                        break
         except:
             add_message("procedure exception\n{0}".format(traceback.format_exc()))
-
-def worker():
-    timers["procedure worker"] = Timer(1, worker)
-    timers["procedure worker"].start()
+    
+    last_worker_time = time()
     
     job_lock.acquire()
-    
-    running_jobs_count = 0
     
     try:    
         # Concurrency conditioning
@@ -518,11 +516,13 @@ def worker():
                         touch_flag("queueState")
     except:
         add_message("queue exception\n{0}".format(traceback.format_exc()))
-
+    
     job_lock.release()
+
+    timers["procedure worker"] = Timer(1, worker)
+    timers["procedure worker"].start()
+
+last_worker_time = time()
 
 timers["procedure worker"] = Timer(1, worker)
 timers["procedure worker"].start()
-
-timers["procedure cron worker"] = Timer(1, worker_cron)
-timers["procedure cron worker"].start()
