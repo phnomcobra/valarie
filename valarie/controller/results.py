@@ -13,7 +13,6 @@ class Results(object):
     @cherrypy.expose
     @require()
     def ajax_get_controller(self, objuuid):
-        add_message("results controller: get controller results: {0}".format(objuuid))
         try:
             return json.dumps(get_controller_results(objuuid))
         except:
@@ -22,7 +21,6 @@ class Results(object):
     @cherrypy.expose
     @require()
     def ajax_get_procedure(self, prcuuid, hstuuid):
-        add_message("results controller: get procedure result: prcuuid: {0}, hstuuid: {1}".format(prcuuid, hstuuid))
         try:
             return json.dumps(get_procedure_result(prcuuid, hstuuid))
         except:

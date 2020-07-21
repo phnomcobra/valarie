@@ -251,9 +251,9 @@ String.prototype.toHHMMSS = function () {
 }
 
 var viewProcedureResult = function(result) {
-    document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = result.procedure.name + '<br>' + result.host.name + ' ' + result.host.host + ' <br>' + new Date(result.stop * 1000) + '<br> [Duration: ' + String(result.duration).toHHMMSS() + '] [' + result.status.name + ']';
+    document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = result.procedure.name + ' - ' + result.host.name + ' - ' + result.host.host + ' - ' + result.status.name;
     
-    document.getElementById('section-body-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = '<table class="table" id="section-body-procedure-header-' + result.host.objuuid + '-' + result.procedure.objuuid + '"></table>';
+    document.getElementById('section-body-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = '<table class="ProcedureResult" id="section-body-procedure-header-' + result.host.objuuid + '-' + result.procedure.objuuid + '"></table>';
     
     var table = document.getElementById('section-body-procedure-header-' + result.host.objuuid + '-' + result.procedure.objuuid);
     var row;
@@ -265,42 +265,28 @@ var viewProcedureResult = function(result) {
     row.insertCell(-1).innerHTML = '<div id="section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid + '"></div>';
     
     title = document.createElement("div");
-    taskOutput = document.createElement("code");
+    taskOutput = document.createElement("div");
     taskOutput.setAttribute('style', 'width:100%');
         
     document.getElementById('section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).appendChild(title);
     document.getElementById('section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).appendChild(taskOutput);
         
-    title.innerHTML = "<b>PROCEDURE OUTPUT</b>";
-        
     for(var j = 0; j < result.output.length; j++)
         taskOutput.innerHTML += result.output[j] + '<br>';
 
-    
-    
-    
     for(var i = 0; i < result.tasks.length; i++) {
         title = document.createElement("div");
-        taskOutput = document.createElement("code");
-        taskOutput.setAttribute('style', 'width:100%');
+        taskOutput = document.createElement("div");
         
         document.getElementById('section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).appendChild(title);
         document.getElementById('section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).appendChild(taskOutput);
         
         title.innerHTML = result.tasks[i].name + ' [Duration: ' + String(result.tasks[i].stop - result.tasks[i].start).toHHMMSS() + '] [' + result.tasks[i].status.name + ']';
-        title.style.color = '#' + result.tasks[i].status.cfg;
-        title.style.backgroundColor = '#' + result.tasks[i].status.cbg;
         
         for(var j = 0; j < result.tasks[i].output.length; j++)
             taskOutput.innerHTML += result.tasks[i].output[j] + '<br>';
     }
-    
-    $('#section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).accordion({
-        collapsible: true,
-        heightStyle: "content",
-        active: false
-    });
-    
+        
     document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).style.color = '#' + result.status.cfg;
     document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).style.backgroundColor = '#' + result.status.cbg;
 }
@@ -308,7 +294,7 @@ var viewProcedureResult = function(result) {
 var insertProcedureResultDiv = function(hstuuid) {
     if(!document.getElementById('section-header-' + hstuuid + '-' + inventoryObject.objuuid)) {
         document.getElementById('procedureResultAccordion').innerHTML += '<div id="section-header-' + hstuuid + '-' + inventoryObject.objuuid + '"></div>';
-        document.getElementById('procedureResultAccordion').innerHTML += '<pre><code id="section-body-' + hstuuid + '-' + inventoryObject.objuuid + '"></code></pre>';
+        document.getElementById('procedureResultAccordion').innerHTML += '<div id="section-body-' + hstuuid + '-' + inventoryObject.objuuid + '"></div>';
     }
 }
 

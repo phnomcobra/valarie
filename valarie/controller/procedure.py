@@ -14,7 +14,6 @@ class Procedure(object):
     @cherrypy.expose
     @require()
     def ajax_get_task_grid(self, objuuid):
-        add_message("procedure controller: get procedure task grid: {0}".format(objuuid))
         try:
             return json.dumps(get_task_grid(objuuid))
         except:
@@ -23,7 +22,6 @@ class Procedure(object):
     @cherrypy.expose
     @require()
     def ajax_get_host_grid(self, objuuid):
-        add_message("procedure controller: get procedure host grid: {0}".format(objuuid))
         try:
             return json.dumps(get_host_grid(objuuid))
         except:
@@ -32,7 +30,6 @@ class Procedure(object):
     @cherrypy.expose
     @require()
     def ajax_queue_procedure(self, prcuuid, hstuuid):
-        add_message("procedure controller: queuing procedure: hstuuid: {0}, prcuuid: {1}".format(hstuuid, prcuuid))
         try:
             queue_procedure(hstuuid, prcuuid, Collection("inventory").find(sessionid = cherrypy.session.id)[0].object)
             return json.dumps({})
@@ -49,8 +46,6 @@ class Procedure(object):
                         ctruuid = item["ctruuid"]
                     else:
                         ctruuid = None
-                    
-                    add_message("procedure controller: queuing procedure: hstuuid: {0}, prcuuid: {1}".format(item["hstuuid"], item["prcuuid"]))
                     
                     queue_procedure(item["hstuuid"], item["prcuuid"], Collection("inventory").find(sessionid = cherrypy.session.id)[0].object, ctruuid)
                 except:

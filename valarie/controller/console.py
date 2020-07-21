@@ -12,7 +12,6 @@ class Console(object):
     @cherrypy.expose
     @require()
     def ajax_get_consoles(self):
-        add_message("console controller: get console objects...")
         try:
             return json.dumps(get_consoles())
         except:

@@ -14,7 +14,6 @@ class Controller(object):
     @cherrypy.expose
     @require()
     def ajax_get_procedure_grid(self, objuuid):
-        add_message("controller controller: get controller procedure grid: {0}".format(objuuid))
         try:
             return json.dumps(get_procedure_grid(objuuid))
         except:
@@ -23,7 +22,6 @@ class Controller(object):
     @cherrypy.expose
     @require()
     def ajax_get_host_grid(self, objuuid):
-        add_message("controller controller: get controller host grid: {0}".format(objuuid))
         try:
             return json.dumps(get_host_grid(objuuid))
         except:
@@ -32,7 +30,6 @@ class Controller(object):
     @cherrypy.expose
     @require()
     def ajax_get_tiles(self, objuuid):
-        add_message("controller controller: get controller tiles: {0}".format(objuuid))
         try:
             return json.dumps(get_tiles(objuuid))
         except:

@@ -662,10 +662,7 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
                 'success' : function(resp) {
                     polling_queue = false;
                     
-                    if(queueStateFlag != resp.value) {
-                        queueStateFlag = resp.value;
-                        updateQueueState();
-                    }
+                    updateQueueState();
                     document.getElementById('connectionStatus').innerHTML = '<font style="color:#0F0">OK</font>';
                 },
                 'error' : function(resp) {
