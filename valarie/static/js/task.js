@@ -61,7 +61,7 @@ var viewTaskResult = function(result) {
     document.getElementById('section-header-' + result.host.objuuid).innerHTML = result.host.name + ' - ' + result.host.host + ' - ' + result.status.name;
     
     for(var i = 0; i < result.output.length; i++)
-        document.getElementById('section-body-' + result.host.objuuid).innerHTML += result.output[i] + '<br>';
+        document.getElementById('section-body-' + result.host.objuuid).innerHTML += '<div class="TaskResult">' + result.output[i] + '</div>';
         
     document.getElementById('section-header-' + result.host.objuuid).style.color = '#' + result.status.cfg;
     document.getElementById('section-header-' + result.host.objuuid).style.backgroundColor = '#' + result.status.cbg;

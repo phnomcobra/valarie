@@ -45,7 +45,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_roots(self, objuuid):
-        add_message("inventory controller: load inventory: {0}".format(objuuid))
         try:
             return json.dumps(get_child_nodes(objuuid))
         except:
@@ -54,7 +53,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_move(self, objuuid, parent_objuuid):
-        add_message("inventory controller: move inventory object: {0}".format(objuuid))
         while self.moving:
             sleep(.1)
         
@@ -70,8 +68,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_copy_object(self, objuuid):
-        add_message("inventory controller: copy: {0}".format(objuuid))
-
         try:
             while self.moving:
                 sleep(.1)
@@ -83,7 +79,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_container(self, objuuid):
-        add_message("inventory controller: create container: {0}".format(objuuid))
         try:
             container = create_container(objuuid, "New Container")
             
@@ -94,7 +89,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_host(self, objuuid):
-        add_message("inventory controller: create host: {0}".format(objuuid))
         try:
             host = create_host(objuuid, "New Host")
             
@@ -105,7 +99,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_text_file(self, objuuid):
-        add_message("inventory controller: create text_file: {0}".format(objuuid))
         try:
             text_file = create_text_file(objuuid, "New Text File.txt")
             
@@ -116,7 +109,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_host_group(self, objuuid):
-        add_message("inventory controller: create host group: {0}".format(objuuid))
         try:
             group = create_host_group(objuuid, "New Host Group")
             
@@ -127,7 +119,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_console(self, objuuid):
-        add_message("inventory controller: create console: {0}".format(objuuid))
         try:
             console = create_console(objuuid, "New Console")
             
@@ -138,7 +129,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_user(self):
-        add_message("inventory controller: create user")
         try:
             user = create_user(name = "New User")
             
@@ -149,7 +139,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_task(self, objuuid):
-        add_message("inventory controller: create task: {0}".format(objuuid))
         try:
             task = create_task(objuuid, "New Task")
             
@@ -160,7 +149,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_status_code(self, objuuid):
-        add_message("inventory controller: create status code: {0}".format(objuuid))
         try:
             status_code = create_status_code(objuuid, "New Status Code")
             
@@ -171,7 +159,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_procedure(self, objuuid):
-        add_message("inventory controller: create procedure: {0}".format(objuuid))
         try:
             procedure = create_procedure(objuuid, "New Procedure")
         
@@ -182,7 +169,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_create_controller(self, objuuid):
-        add_message("inventory controller: create controller: {0}".format(objuuid))
         try:
             controller = create_controller(objuuid, "New Controller")
             
@@ -193,7 +179,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_delete(self, objuuid):
-        add_message("inventory controller: delete inventory object: {0}".format(objuuid))
         try:
             while self.moving:
                 sleep(.1)
@@ -206,7 +191,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_context(self, objuuid):
-        add_message("inventory controller: get context menu: {0}".format(objuuid))
         try:
             return json.dumps(get_context_menu(objuuid))
         except:
@@ -215,19 +199,14 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_get_object(self, objuuid):
-        add_message("inventory controller: get inventory object...")
         try:
-            collection = Collection("inventory")
-            object = collection.get_object(objuuid).object
-            add_message("inventory controller: get: {0}, type: {1}, name: {2}".format(objuuid, object["type"], object["name"]))
-            return json.dumps(object)
+            return json.dumps(Collection("inventory").get_object(objuuid).object)
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
     @require()
     def ajax_get_status_objects(self):
-        add_message("inventory controller: get status objects...")
         try:
             return json.dumps(get_status_objects())
         except:
@@ -236,8 +215,6 @@ class Inventory(object):
     @cherrypy.expose
     @require()
     def ajax_post_object(self):
-        add_message("inventory controller: post inventory object...")
-        
         try:
             cl = cherrypy.request.headers['Content-Length']
             object = json.loads(cherrypy.request.body.read(int(cl)))
@@ -247,8 +224,6 @@ class Inventory(object):
             current.object = object
             current.set()
             
-            add_message("inventory controller: set: {0}, type: {1}, name: {2}".format(object["objuuid"], object["type"], object["name"]))
-        
             return json.dumps(current.object)
         except:
             add_message(traceback.format_exc())

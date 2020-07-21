@@ -272,3 +272,19 @@
         margin-right: 0;
     }
 }
+
+#queueTable > tbody > tr > td {
+  font-size: small;
+  padding-right: 10px;  
+  font-family: monospace;
+}
+
+.ProcedureResult {
+  font-size: small;
+  font-family: monospace;
+}
+
+.TaskResult {
+  font-size: small;
+  font-family: monospace;
+}

@@ -56,9 +56,23 @@ def get_jobs_grid():
     
     for jobuuid, dict in jobs.items():
         row = {}
+        
+        if dict["start time"] == None:
+            run_time = 0
+        else:
+            run_time = time() - dict["start time"]
+        
         row["name"] = dict["procedure"]["name"]
-        row["host"] = dict["host"]["name"]
+        row["hostname"] = dict["host"]["name"]
+        row["host"] = dict["host"]["host"]
         row["progress"] = dict["progress"]
+        row["status"] = "Queued" if dict["start time"] == None else "Running"
+        row["runtime"] = "{2}:{1}:{0}".format(
+            str(int(run_time % 60)).zfill(2),
+            str(int(run_time / 60) % 60).zfill(2),
+            str(int(run_time / 3600)).zfill(2)
+        )
+        
         grid_data.append(row)
     
     job_lock.release()
@@ -127,8 +141,6 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
     if "type" in temp.object:
         if temp.object["type"] == "procedure":
             for hstuuid in hstuuids:
-                add_message("Queued host: {0}, procedure {1}...".format(hstuuid, prcuuid))
-
                 host = inventory.get_object(hstuuid)
                 
                 if host.object["type"] == "host":
@@ -152,8 +164,6 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
                     set_job(jobuuid, job)
         elif temp.object["type"] == "task":
             for hstuuid in hstuuids:
-                add_message("Queued host: {0}, task {1}...".format(hstuuid, prcuuid))
-                
                 host = inventory.get_object(hstuuid)
                 if host.object["type"] == "host":
                     jobuuid = sucky_uuid()
@@ -195,8 +205,6 @@ class TaskError:
         return self.status
 
 def run_procedure(host_object, procedure_object, console_object, session, jobuuid = None, ctruuid = None):
-    add_message("Executing host: {0}, procedure: {1}...".format(host_object["name"], procedure_object["name"]))
-    
     inventory = Collection("inventory")
     results = RAMCollection("results")
     
