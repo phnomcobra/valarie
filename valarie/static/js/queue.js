@@ -13,7 +13,6 @@ var drawQueue = function(resp) {
         row = table.insertRow(-1);
         row.insertCell(-1).innerHTML = resp[i].name;
         row.insertCell(-1).innerHTML = resp[i].hostname;
-        row.insertCell(-1).innerHTML = resp[i].host;
         row.insertCell(-1).innerHTML = resp[i].status;
         row.insertCell(-1).innerHTML = resp[i].runtime;
         row.insertCell(-1).innerHTML = `${Math.round(resp[i].progress * 100)}%`;
