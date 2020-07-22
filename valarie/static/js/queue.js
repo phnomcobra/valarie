@@ -7,14 +7,13 @@ var drawQueue = function(resp) {
     
     for (var i in resp) {
         row = table.insertRow(-1);
-
-        row.insertCell(-1).innerHTML = resp[i].name;
-        row.insertCell(-1).innerHTML = resp[i].hostname;
+        row.insertCell(-1).innerHTML = resp[i].name;        
+        row.insertCell(-1).innerHTML = `[${resp[i].hostname}]`;
         
         if (resp[i].status === 'Queued') {
-            row.insertCell(-1).innerHTML = resp[i].status;
+            row.insertCell(-1).innerHTML = `[${resp[i].status}]`;
         } else {
-            row.insertCell(-1).innerHTML = `${resp[i].runtime} ${Math.round(resp[i].progress * 100)}%`;
+            row.insertCell(-1).innerHTML = `[${resp[i].status} ${resp[i].runtime} ${Math.round(resp[i].progress * 100)}%]`;
         }
     }
 }

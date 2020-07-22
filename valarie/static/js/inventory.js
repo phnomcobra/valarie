@@ -261,30 +261,25 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                 'success' : function(resp) {
                                     $('#inventory').jstree("deselect_all");
                                     if(obj.item.method == 'create container') {
-                                        addMessage('create container success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editContainer();
                                     } else if(obj.item.method == 'create task') {
-                                        addMessage('create task success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editTask();
                                         $('.nav-tabs a[href="#attributes"]').tab('show');
                                     } else if(obj.item.method == 'create user') {
-                                        addMessage('create user success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editUser();
                                         $('.nav-tabs a[href="#attributes"]').tab('show');
                                     } else if(obj.item.method == 'create text file') {
-                                        addMessage('create text file success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editTextFile();
                                         $('.nav-tabs a[href="#attributes"]').tab('show');
                                     } else if(obj.item.method == 'create host group') {
-                                        addMessage('create host group success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editHostGroup();
@@ -296,110 +291,86 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                         editProcedure();
                                         $('.nav-tabs a[href="#attributes"]').tab('show');
                                     } else if(obj.item.method == 'create status') {
-                                        addMessage('create status success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editStatusCode();
                                     } else if(obj.item.method == 'create host') {
-                                        addMessage('create host success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editHost();
                                     } else if(obj.item.method == 'create console') {
-                                        addMessage('create console success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editConsole();
                                         $('.nav-tabs a[href="#attributes"]').tab('show');
                                     } else if(obj.item.method == 'create controller') {
-                                        addMessage('create controller success');
                                         inventoryObject = resp;
                                         createNode(resp);
                                         editController();
                                         $('.nav-tabs a[href="#attributes"]').tab('show');
                                     } else if(obj.item.method == 'edit task') {
-                                        addMessage("edit task success");
                                         inventoryObject = resp;
                                         editTask();
                                     } else if(obj.item.method == 'edit user') {
-                                        addMessage("edit user success");
                                         inventoryObject = resp;
                                         editUser();
                                     } else if(obj.item.method == 'edit configuration') {
-                                        addMessage("edit configuration success");
                                         inventoryObject = resp;
                                         editConfig();
                                     } else if(obj.item.method == 'edit text file') {
-                                        addMessage("edit text file success");
                                         inventoryObject = resp;
                                         editTextFile();
                                     } else if(obj.item.method == 'edit binary file') {
-                                        addMessage("edit binary file success");
                                         inventoryObject = resp;
                                         editBinaryFile();
                                     } else if(obj.item.method == 'edit task hosts') {
-                                        addMessage("edit task success");
                                         inventoryObject = resp;
                                         editTaskHosts();
                                     } else if(obj.item.method == 'edit host group') {
-                                        addMessage("edit task success");
                                         inventoryObject = resp;
                                         editHostGroup();
                                     } else if(obj.item.method == 'edit container') {
-                                        addMessage("edit container success");
                                         inventoryObject = resp;
                                         editContainer();
                                     } else if(obj.item.method == 'edit procedure') {
-                                        addMessage("edit procedure success");
                                         inventoryObject = resp;
                                         editProcedure();
                                     } else if(obj.item.method == 'edit status code') {
-                                        addMessage("edit status success");
                                         inventoryObject = resp;
                                         editStatusCode();
                                     } else if(obj.item.method == 'edit host') {
-                                        addMessage("edit host success");
                                         inventoryObject = resp;
                                         editHost();
                                     } else if(obj.item.method == 'edit controller') {
-                                        addMessage("edit controller success");
                                         inventoryObject = resp;
                                         editController();
                                         $('.nav-tabs a[href="#body"]').tab('show');
                                     } else if(obj.item.method == 'edit console') {
-                                        addMessage("edit console success");
                                         inventoryObject = resp;
                                         editConsole();
                                     } else if(obj.item.method == 'run procedure') {
-                                        addMessage("run procedure success");
                                         inventoryObject = resp;
                                         executeProcedure();
                                     } else if(obj.item.method == 'run controller') {
-                                        addMessage("run controller success");
                                         inventoryObject = resp;
                                         executeController();
                                     } else if(obj.item.method == 'restart valarie') {
-                                        addMessage("restart success");
                                         restartValarie();
                                     } else if(obj.item.method == 'run task') {
                                         document.title = resp.name;
                                         document.getElementById('bodyTitle').innerHTML = resp.type.toUpperCase() + ': ' + resp.name;
-                                        addMessage("run task success");
                                         inventoryObject = resp;
                                         executeTask();
                                         $('.nav-tabs a[href="#body"]').tab('show');
                                     } else if(obj.item.method == 'delete node') {
                                         document.title = "ValARIE WebApp";
                                         document.getElementById('bodyTitle').innerHTML = '';
-                                        addMessage("delete success");
                                         deleteNode(resp['id']);
                                         touchInventory();
                                         $('.nav-tabs a[href="#console"]').tab('show');
                                     } else if(obj.item.method == 'copy node') {
-                                        addMessage("copy success");
                                         createNode(resp);
                                     } else if(obj.item.method == 'create terminal') {
-                                        addMessage("start terminal success");
                                         inventoryObject = resp;
                                         launchTerminal();
                                     }
@@ -436,7 +407,6 @@ $('#inventory').on("move_node.jstree", function(event, data) {
             },
             'success' : function(resp) {
                 $('.nav-tabs a[href="#console"]').tab('show');
-                addMessage('move success');
                 touchInventory();
             },
             'error' : function(resp, status, error) {
@@ -591,7 +561,6 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
             saving = true;
             $http.post('inventory/ajax_post_object', JSON.stringify(inventoryObject)
             ).then(function successCallback(response) {
-                addMessage("saving " + inventoryObject['objuuid']);
                 saving = false;
                 
                 if(inventoryObject['refreshTree']) {
@@ -800,7 +769,6 @@ var pasteInventoryItems = function() {
             },
             'success' : function(resp) {
                 $('.nav-tabs a[href="#console"]').tab('show');
-                addMessage('move success');
                 touchInventory();
             },
             'error' : function(resp, status, error) {
