@@ -3,18 +3,17 @@ var executedHosts = [];
 var editTask = function() {
     document.getElementById('body').innerHTML = '<div id="aceInstance"></div>';
     document.getElementById('menuBarDynamic').innerHTML = '';
-    
+
     document.title = inventoryObject.name;
     document.getElementById('bodyTitle').innerHTML = inventoryObject.type.toUpperCase() + ': ' + inventoryObject.name;
     $('.nav-tabs a[href="#body"]').tab('show');
-    
+
     initAttributes();
     addAttributeText('Task UUID', 'objuuid');
     addAttributeTextBox('Task Name', 'name');
 
     var editor = new ace.edit(document.getElementById('aceInstance'));
-    
-    //editor.setTheme("ace/theme/twilight");
+
     editor.session.setMode("ace/mode/python");
     editor.setValue(inventoryObject['body']);
     editor.selection.moveTo(0, 0);
@@ -24,14 +23,12 @@ var editTask = function() {
         f.inventoryObject['body'] = f.getValue();
         f.inventoryObject['changed'] = true;
     });
-    
-    
 }
 
 var loadAndEditTask = function(objuuid) {
     document.getElementById('body').innerHTML = '';
     document.getElementById('menuBarDynamic').innerHTML = '';
-    
+
     $.ajax({
         'url' : 'inventory/ajax_get_object',
         'dataType' : 'json',
@@ -59,17 +56,17 @@ var addRunTaskHost = function(objuuid) {
 
 var viewTaskResult = function(result) {
     document.getElementById('section-header-' + result.host.objuuid).innerHTML = result.host.name + ' - ' + result.host.host + ' - ' + result.status.name;
-    
+
     for(var i = 0; i < result.output.length; i++)
         document.getElementById('section-body-' + result.host.objuuid).innerHTML += '<div class="TaskResult">' + result.output[i] + '</div>';
-        
+
     document.getElementById('section-header-' + result.host.objuuid).style.color = '#' + result.status.cfg;
     document.getElementById('section-header-' + result.host.objuuid).style.backgroundColor = '#' + result.status.cbg;
 }
 
 var executeTaskOnHost = function(hstuuid) {
     executedHosts.push(hstuuid);
-    
+
     $.ajax({
         'url' : 'inventory/ajax_get_object',
         'dataType' : 'json',
@@ -79,10 +76,8 @@ var executeTaskOnHost = function(hstuuid) {
             if(resp.type == 'host') {
                 if(!document.getElementById('section-header-' + resp.objuuid)) {
                     document.getElementById('taskResultAccordion').innerHTML += '<div id="section-header-' + resp.objuuid + '"></div>';
-                    document.getElementById('taskResultAccordion').innerHTML += '<pre><code id="section-body-' + resp.objuuid + '"></code></pre>';
+                    document.getElementById('taskResultAccordion').innerHTML += '<pre id="section-body-' + resp.objuuid + '"></pre>';
                     
-                    addMessage('executing ' + inventoryObject.name + ' host: ' + resp.name + ' (' + resp.host + ')');
-        
                     $.ajax({
                         'url' : 'task/ajax_execute_task',
                         'dataType' : 'json',
@@ -115,45 +110,43 @@ var executeTask = function() {
     initAttributes();
     addAttributeText('Task UUID', 'objuuid');
     addAttributeTextBox('Task Name', 'name');
-    
+
     document.title = inventoryObject.name;
     document.getElementById('bodyTitle').innerHTML = inventoryObject.type.toUpperCase() + ': ' + inventoryObject.name;
     $('.nav-tabs a[href="#body"]').tab('show');
     document.getElementById('menuBarDynamic').innerHTML = '';
-    
+
     document.getElementById('body').innerHTML = '<div id="taskResultAccordion"></div>';
-    
+
     executedHosts = [];
-    
+
     for(var i = 0; i < inventoryObject.hosts.length; i++) {
         executeTaskOnHost(inventoryObject.hosts[i]);
     }
-    
+
     setTimeout(initTaskResultAccordion, 1000);
-    
-    
 }
 
 var editTaskHosts = function() {
     initAttributes();
     addAttributeText('Task UUID', 'objuuid');
     addAttributeTextBox('Task Name', 'name');
-    
+
     document.title = inventoryObject.name;
     document.getElementById('bodyTitle').innerHTML = inventoryObject.type.toUpperCase() + ': ' + inventoryObject.name;
     $('.nav-tabs a[href="#body"]').tab('show');
-    
+
     document.getElementById('body').innerHTML = '<div id="hostGrid" style="padding:10px"></div>';
-    
+
     $("#hostGrid").jsGrid({
         width: "calc(100% - 5px)",
         height: "calc(100% - 5px)",
         autoload: true,
-        
+
         deleteButton: true,
         confirmDeleting: false,
         sorting: false,
-        
+
         editing: true,
         onItemEditing: function(args) {
             if(args.item.type == 'host') {
@@ -162,11 +155,11 @@ var editTaskHosts = function() {
                 loadAndEditHostGroup(args.item.objuuid);
             }
         },
-        
+
         rowClass: function(item, itemIndex) {
             return "client-" + itemIndex;
         },
- 
+
         controller: {
             loadData: function(filter) {
                 return $.ajax({
@@ -185,14 +178,14 @@ var editTaskHosts = function() {
                 inventoryObject['changed'] = true;
             }
         },
-        
+
         fields: [
             {name : "name", type : "text", title : "Host Name"},
             {name : "host", type : "text", title : "Host"},
             {name : "objuuid", type : "text", visible: false},
             {type : "control" }
         ],
-        
+
         onRefreshed: function() {
             var $gridData = $("#hostGrid .jsgrid-grid-body tbody");
  
@@ -218,8 +211,6 @@ var editTaskHosts = function() {
             });
         }
     });
-    
-    
-    
+   
     setTimeout(refreshJSGrids, 1000);
 }

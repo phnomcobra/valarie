@@ -295,7 +295,7 @@ var viewProcedureResult = function(result) {
 var insertProcedureResultDiv = function(hstuuid) {
     if(!document.getElementById('section-header-' + hstuuid + '-' + inventoryObject.objuuid)) {
         document.getElementById('procedureResultAccordion').innerHTML += '<div id="section-header-' + hstuuid + '-' + inventoryObject.objuuid + '"></div>';
-        document.getElementById('procedureResultAccordion').innerHTML += '<div id="section-body-' + hstuuid + '-' + inventoryObject.objuuid + '"></div>';
+        document.getElementById('procedureResultAccordion').innerHTML += '<pre id="section-body-' + hstuuid + '-' + inventoryObject.objuuid + '"></pre>';
     }
 }
 
