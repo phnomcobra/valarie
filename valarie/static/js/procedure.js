@@ -251,7 +251,8 @@ String.prototype.toHHMMSS = function () {
 }
 
 var viewProcedureResult = function(result) {
-    document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = result.procedure.name + ' - ' + result.host.name + ' - ' + result.host.host + ' - ' + result.status.name;
+    console.log(result)
+    document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = result.procedure.name + ' - ' + result.host.name + ' - ' + result.status.name;
     
     document.getElementById('section-body-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = '<table class="ProcedureResult" id="section-body-procedure-header-' + result.host.objuuid + '-' + result.procedure.objuuid + '"></table>';
     
