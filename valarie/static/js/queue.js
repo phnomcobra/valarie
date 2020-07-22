@@ -13,7 +13,7 @@ var drawQueue = function(resp) {
         if (resp[i].status === 'Queued') {
             row.insertCell(-1).innerHTML = `[${resp[i].status}]`;
         } else {
-            row.insertCell(-1).innerHTML = `[${resp[i].status} ${resp[i].runtime} ${Math.round(resp[i].progress * 100)}%]`;
+            row.insertCell(-1).innerHTML = `[${resp[i].runtime} ${Math.round(resp[i].progress * 100)}%]`;
         }
     }
 }
