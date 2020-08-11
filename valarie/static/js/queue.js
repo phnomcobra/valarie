@@ -4,8 +4,11 @@ var drawQueue = function(resp) {
     
     var table = document.getElementById('queueTable');
     var row;
+    var count = 0;
     
     for (var i in resp) {
+        count++;
+
         row = table.insertRow(-1);
         row.insertCell(-1).innerHTML = resp[i].name;        
         row.insertCell(-1).innerHTML = resp[i].hostname;
@@ -16,6 +19,8 @@ var drawQueue = function(resp) {
             row.insertCell(-1).innerHTML = `${resp[i].runtime} ${Math.round(resp[i].progress * 100)}%`;
         }
     }
+
+    if (count == 0) $('.nav-tabs a[href="#inventoryContainer"]').tab('show');
 }
 
 var updateQueueState = function () {
