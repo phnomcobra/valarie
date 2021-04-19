@@ -325,7 +325,7 @@ class Inventory(object):
                         datastore_file.write(chunk)
                         sha1hash.update(chunk)
                     
-                    datastore_file.truncate()
+                    datastore_file.close()
                     
                     object["size"] = datastore_file.size()
                     object["sha1sum"] = sha1hash.hexdigest()
