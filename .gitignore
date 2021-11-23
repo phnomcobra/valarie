@@ -24,3 +24,6 @@
 *.log
 *.sql
 *.sqlite
+
+# AWS YML
+docker-compose-aws.yml

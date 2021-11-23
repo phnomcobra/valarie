@@ -3,12 +3,9 @@ version: "3"
 services:
   web:
     build: .
-    command: bash -c "rsync -a --exclude={'Dockerfile','docker-compose.yml','.gitignore'} /mnt/code / && python start.py"
+    command: bash -c "python start.py"
     environment:
       - PYTHON_PATH=/code/
     ports:
       - "8080:8080"
-    volumes:
-      - ./:/mnt/code
-    restart: on-failure
   
