@@ -13,6 +13,5 @@ COPY ./valarie/ /code/valarie/
 
 # Install dependencies
 RUN pip3 install -r requirements.txt
-RUN apt-get update && apt-get -y install rsync
 
 EXPOSE 8080
