@@ -27,4 +27,4 @@
 
 # AWS YML
 docker-compose-aws.yml
-template.yml
+template-aws.yml
