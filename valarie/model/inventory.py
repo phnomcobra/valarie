@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import cherrypy
 import traceback
 
 from valarie.dao.document import Collection
@@ -11,30 +12,18 @@ from valarie.model.config import (
     CONFIG_OBJUUID,
     TASK_PROTO_OBJUUID,
     CONSOLE_PROTO_OBJUUID,
-    PUBLIC_KEY_OBJUUID,
-    PRIVATE_KEY_OBJUUID,
     SETTINGS_CONTAINER_OBJUUID,
     create_config,
     create_console_template,
     create_task_template,
-    create_public_key,
-    create_private_key,
     create_settings_container
-)
-from valarie.model.users import (
-    create_user,
-    create_users_container,
-    USERS_CONTAINER_OBJUUID
 )
 
 FIXED_OBJUUIDS = (
     CONFIG_OBJUUID,
     TASK_PROTO_OBJUUID,
     CONSOLE_PROTO_OBJUUID,
-    PUBLIC_KEY_OBJUUID,
-    PRIVATE_KEY_OBJUUID,
     SETTINGS_CONTAINER_OBJUUID,
-    USERS_CONTAINER_OBJUUID
 ) 
 
 def __get_child_nodes(nodes, object, collection):
@@ -54,8 +43,8 @@ def __get_child_nodes(nodes, object, collection):
         for objuuid in collection.find_objuuids(parent = object.objuuid):
             nodes = __get_child_nodes(nodes, collection.get_object(objuuid), collection)
     except:
-        print(traceback.format_exc())
-        print(object.object)
+        cherrypy.log(traceback.format_exc())
+        cherrypy.log(object.object)
  
     return nodes
     
@@ -97,7 +86,6 @@ def set_parent_objuuid(objuuid, parent_objuuid):
         collection = Collection("inventory")
     
         current = collection.get_object(objuuid)
-        assert current.object["type"] != "user", f"Change parent not permitted for {objuuid}"
         
         old_parent_objuuid = current.object["parent"]
         current.object["parent"] = parent_objuuid
@@ -335,7 +323,6 @@ collection = Collection("inventory")
 collection.create_attribute("parent", "['parent']")
 collection.create_attribute("type", "['type']")
 collection.create_attribute("name", "['name']")
-collection.create_attribute("sessionid", "['sessionid']")
     
 if not len(collection.find(parent = "#")):
     create_container("#", "Root")
@@ -344,14 +331,4 @@ if not len(collection.find(type = "config")):
     create_config()
     create_console_template()
     create_task_template()
-    create_public_key()
-    create_private_key()
     create_settings_container()
-
-create_users_container()
-if not len(collection.find(type = "user")):
-    create_users_container()
-    user = create_user(name = "root")
-    user.object["password"] = "root"
-    user.object["enabled"] = True
-    user.set()

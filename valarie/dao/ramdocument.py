@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import cherrypy
 import traceback
 
 from copy import deepcopy
@@ -40,7 +41,7 @@ class Document:
             
             document["TBL_JSON_OBJ"]["-".join([coluuid, objuuid])] = object
         except:
-            print(traceback.format_exc())
+            cherrypy.log(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -79,7 +80,7 @@ class Document:
                 except:
                     continue
         except:
-            print(traceback.format_exc())
+            cherrypy.log(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -137,7 +138,7 @@ class Document:
             for key in keys:
                 del document["TBL_JSON_IDX"][key]
         except:
-            print(traceback.format_exc())
+            cherrypy.log(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -171,7 +172,7 @@ class Document:
                 except:
                     traceback.format_exc()
         except:
-            print(traceback.format_exc())
+            cherrypy.log(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -196,7 +197,7 @@ class Document:
             for key in keys:
                 del document["TBL_JSON_IDX"][key]
         except:
-            print(traceback.format_exc())
+            cherrypy.log(traceback.format_exc())
         finally:
             document_lock.release()
         
@@ -254,7 +255,7 @@ class Document:
             for key in keys:
                 del document["TBL_JSON_IDX"][key]
         except:
-            print(traceback.format_exc())
+            cherrypy.log(traceback.format_exc())
         finally:
             document_lock.release()
     
@@ -283,7 +284,7 @@ class Document:
                 if coluuid in key:
                     objuuids.append(value["objuuid"])
         except:
-            print(traceback.format_exc())
+            cherrypy.log(traceback.format_exc())
         finally:
             document_lock.release()
         
@@ -297,7 +298,7 @@ class Document:
             for key, value in document["TBL_JSON_OBJ"].items():
                 objuuids.append(value["objuuid"])
         except:
-            print(traceback.format_exc())
+            cherrypy.log(traceback.format_exc())
         finally:
             document_lock.release()
 

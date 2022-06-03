@@ -16,7 +16,7 @@ def add_message(message, timestamp = None):
     if not timestamp:
         timestamp = time()
     
-    print(strftime('%H:%M:%S', localtime(timestamp)), str(message))
+    cherrypy.log(strftime('%H:%M:%S', localtime(timestamp)), str(message))
     
     message_lock.acquire()
     messages["messages"] = [{"message" : deepcopy(message), "timestamp" : strftime('%H:%M:%S', localtime(timestamp))}] + messages["messages"][:49]

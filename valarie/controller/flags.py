@@ -7,8 +7,6 @@ from threading import Lock
 from random import random
 from copy import deepcopy
 
-from valarie.controller.auth import require
-
 flags = {}
 flag_lock = Lock()
 
@@ -34,7 +32,6 @@ def touch_flag(key):
 
 class Flags(object):
     @cherrypy.expose
-    @require()
     def ajax_set(self, key, value):
         item = {
             "key" : key, 
@@ -43,7 +40,6 @@ class Flags(object):
         return json.dumps(item)
     
     @cherrypy.expose
-    @require()
     def ajax_get(self, key):
         item = {
             "key" : key, 
@@ -52,7 +48,6 @@ class Flags(object):
         return json.dumps(item)
     
     @cherrypy.expose
-    @require()
     def ajax_touch(self, key):
         item = {
             "key" : key, 

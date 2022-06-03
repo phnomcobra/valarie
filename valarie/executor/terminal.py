@@ -49,7 +49,7 @@ def write_file(ttyuuid, file):
     except:
         add_message(traceback.format_exc())
         
-def create_session(hstuuid, session):
+def create_session(hstuuid):
     try:
         ttyuuid = sucky_uuid()
        
@@ -65,7 +65,7 @@ def create_session(hstuuid, session):
             raise Exception("recv method not present in console object!")
         
         cli_sessions[ttyuuid] = {}
-        cli_sessions[ttyuuid]["console"] = tempmodule.Console(session = session, host = host.object)
+        cli_sessions[ttyuuid]["console"] = tempmodule.Console(host = host.object)
         cli_sessions[ttyuuid]["contact"] = time()
     except:
         cli_sessions[ttyuuid] = {}

@@ -11,11 +11,9 @@ from cherrypy.lib.static import serve_fileobj
 from time import sleep
 
 from valarie.controller.messaging import add_message
-from valarie.controller.auth import require
 
 from valarie.dao.document import Collection
 
-from valarie.model.users import create_user
 from valarie.model.datastore import File as DatastoreFile
 from valarie.model.container import create_container
 from valarie.model.task import create_task
@@ -26,24 +24,23 @@ from valarie.model.datastore import create_binary_file
 from valarie.model.host import create_host
 from valarie.model.hostgroup import create_host_group
 from valarie.model.console import create_console
-from valarie.model.invfile import load_zip, \
-                                  is_binary
-from valarie.model.statuscode import create_status_code, \
-                                     get_status_objects
-from valarie.model.inventory import get_child_nodes, \
-                                    set_parent_objuuid, \
-                                    get_context_menu, \
-                                    delete_node, \
-                                    copy_object, \
-                                    import_objects, \
-                                    get_fq_name
+from valarie.model.invfile import load_zip, is_binary
+from valarie.model.statuscode import create_status_code, get_status_objects
+from valarie.model.inventory import (
+    get_child_nodes,
+    set_parent_objuuid,
+    get_context_menu,
+    delete_node,
+    copy_object,
+    import_objects,
+    get_fq_name
+)
 
 class Inventory(object):
     def __init__(self):
         self.moving = False
 
     @cherrypy.expose
-    @require()
     def ajax_roots(self, objuuid):
         try:
             return json.dumps(get_child_nodes(objuuid))
@@ -51,7 +48,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_move(self, objuuid, parent_objuuid):
         while self.moving:
             sleep(.1)
@@ -66,7 +62,6 @@ class Inventory(object):
             self.moving = False
     
     @cherrypy.expose
-    @require()
     def ajax_copy_object(self, objuuid):
         try:
             while self.moving:
@@ -77,7 +72,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
 
     @cherrypy.expose
-    @require()
     def ajax_create_container(self, objuuid):
         try:
             container = create_container(objuuid, "New Container")
@@ -87,7 +81,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_create_host(self, objuuid):
         try:
             host = create_host(objuuid, "New Host")
@@ -97,7 +90,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_create_text_file(self, objuuid):
         try:
             text_file = create_text_file(objuuid, "New Text File.txt")
@@ -107,7 +99,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_create_host_group(self, objuuid):
         try:
             group = create_host_group(objuuid, "New Host Group")
@@ -117,7 +108,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_create_console(self, objuuid):
         try:
             console = create_console(objuuid, "New Console")
@@ -127,17 +117,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
-    def ajax_create_user(self):
-        try:
-            user = create_user(name = "New User")
-            
-            return json.dumps(user.object)
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    @require()
     def ajax_create_task(self, objuuid):
         try:
             task = create_task(objuuid, "New Task")
@@ -147,7 +126,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_create_status_code(self, objuuid):
         try:
             status_code = create_status_code(objuuid, "New Status Code")
@@ -157,7 +135,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_create_procedure(self, objuuid):
         try:
             procedure = create_procedure(objuuid, "New Procedure")
@@ -167,7 +144,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_create_controller(self, objuuid):
         try:
             controller = create_controller(objuuid, "New Controller")
@@ -177,7 +153,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_delete(self, objuuid):
         try:
             while self.moving:
@@ -189,7 +164,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_context(self, objuuid):
         try:
             return json.dumps(get_context_menu(objuuid))
@@ -197,7 +171,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_get_object(self, objuuid):
         try:
             return json.dumps(Collection("inventory").get_object(objuuid).object)
@@ -205,7 +178,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_get_status_objects(self):
         try:
             return json.dumps(get_status_objects())
@@ -213,7 +185,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def ajax_post_object(self):
         try:
             cl = cherrypy.request.headers['Content-Length']
@@ -229,7 +200,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def export_objects_zip(self, objuuids):
         add_message("inventory controller: exporting inventory objects...")
         
@@ -267,7 +237,6 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    @require()
     def export_files_zip(self, objuuids):
         add_message("inventory controller: exporting inventory files...")
         
@@ -304,7 +273,6 @@ class Inventory(object):
     
     
     @cherrypy.expose
-    @require()
     def import_objects_zip(self, file):
         add_message("inventory controller: importing inventory objects...")
         
@@ -343,7 +311,6 @@ class Inventory(object):
         return json.dumps({})
     
     @cherrypy.expose
-    @require()
     def import_files_zip(self, file):
         add_message("inventory controller: importing inventory files...")
         
@@ -357,7 +324,6 @@ class Inventory(object):
         return json.dumps({})
     
     @cherrypy.expose
-    @require()
     def import_file(self, file):
         add_message("inventory controller: importing inventory file...")
         

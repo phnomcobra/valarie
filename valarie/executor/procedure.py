@@ -121,7 +121,7 @@ def get_hosts(hstuuid, hstuuids, grpuuids, inventory):
                     o.set()
                     c.destroy()
     
-def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
+def queue_procedure(hstuuid, prcuuid, ctruuid = None):
     inventory = Collection("inventory")
     
     # Discover Nested Hosts
@@ -153,7 +153,6 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
                         "host" : host.object,
                         "console" : console.object,
                         "procedure" : temp.object,
-                        "session" : session,
                         "process" : None,
                         "queue time" : time(),
                         "start time" : None,
@@ -183,7 +182,6 @@ def queue_procedure(hstuuid, prcuuid, session, ctruuid = None):
                             "title" : "",
                             "description" : "This is a synthetic procedure used for encapsulating tasks for use with controller objects."
                         },
-                        "session" : session,
                         "process" : None,
                         "queue time" : time(),
                         "start time" : None,
@@ -204,7 +202,7 @@ class TaskError:
     def execute(self, cli):
         return self.status
 
-def run_procedure(host_object, procedure_object, console_object, session, jobuuid = None, ctruuid = None):
+def run_procedure(host_object, procedure_object, console_object, jobuuid = None, ctruuid = None):
     inventory = Collection("inventory")
     results = RAMCollection("results")
     
@@ -306,7 +304,7 @@ def run_procedure(host_object, procedure_object, console_object, session, jobuui
         try:
             result.object["output"].append("importing console...")
             exec(console_object["body"], tempmodule.__dict__)
-            cli = tempmodule.Console(session = session, host = host_object)
+            cli = tempmodule.Console(host = host_object)
         except:
             result.object["output"] += traceback.format_exc().split("\n")
         
@@ -511,7 +509,6 @@ def worker():
                                 jobs[key]["host"],
                                 jobs[key]["procedure"],
                                 jobs[key]["console"],
-                                jobs[key]["session"],
                                 jobs[key]["jobuuid"],
                                 jobs[key]["ctruuid"]
                             )

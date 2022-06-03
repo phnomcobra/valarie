@@ -4,12 +4,11 @@ from valarie.dao.document import Collection
 from valarie.controller.messaging import add_message
 from valarie.model.config import get_task_template
 
-def create_task(parent_objuuid, \
-                name = "New Task", \
-                objuuid = None, \
-                author = "<author>", \
-                email = "<email>", \
-                phone = "<phone>"):
+def create_task(
+    parent_objuuid,
+    name = "New Task",
+    objuuid = None
+):
     collection = Collection("inventory")
     
     task = collection.get_object(objuuid)
