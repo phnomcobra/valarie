@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
-import traceback
 import hashlib
 
-from valarie.dao.document import Collection
 from valarie.dao.utils import sucky_uuid
 
 from valarie.model.datastore import File, create_binary_file

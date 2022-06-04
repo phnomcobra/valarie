@@ -18,7 +18,7 @@ class TaskError:
     def execute(self, cli):
         return self.status
 
-def execute(tskuuid, hstuuid, session):
+def execute(tskuuid, hstuuid):
     inventory = Collection("inventory")
     results = RAMCollection("results")
     
@@ -49,7 +49,7 @@ def execute(tskuuid, hstuuid, session):
     
     try:
         exec(inventory.get_object(host.object["console"]).object["body"], tempmodule.__dict__)
-        cli = tempmodule.Console(session = session, host = host.object)
+        cli = tempmodule.Console(host = host.object)
         
         try:
             inv_task = inventory.get_object(tskuuid)

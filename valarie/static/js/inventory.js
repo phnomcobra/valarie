@@ -269,11 +269,6 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                         createNode(resp);
                                         editTask();
                                         $('.nav-tabs a[href="#attributes"]').tab('show');
-                                    } else if(obj.item.method == 'create user') {
-                                        inventoryObject = resp;
-                                        createNode(resp);
-                                        editUser();
-                                        $('.nav-tabs a[href="#attributes"]').tab('show');
                                     } else if(obj.item.method == 'create text file') {
                                         inventoryObject = resp;
                                         createNode(resp);
@@ -311,9 +306,6 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                     } else if(obj.item.method == 'edit task') {
                                         inventoryObject = resp;
                                         editTask();
-                                    } else if(obj.item.method == 'edit user') {
-                                        inventoryObject = resp;
-                                        editUser();
                                     } else if(obj.item.method == 'edit configuration') {
                                         inventoryObject = resp;
                                         editConfig();

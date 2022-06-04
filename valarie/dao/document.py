@@ -2,9 +2,6 @@
 
 import sqlite3
 import pickle
-import traceback
-import base64
-import hashlib
 
 from threading import Lock
 
@@ -326,3 +323,4 @@ class Collection(Document):
     
     def list_objuuids(self):
         return Document.list_collection_objects(self, self.coluuid)
+    

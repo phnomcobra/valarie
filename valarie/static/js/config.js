@@ -13,7 +13,6 @@ var editConfig = function() {
     addAttributeTextBox('Global Max Concurrency', 'concurrency');
     addAttributeTextBox('Web Host', 'host');
     addAttributeTextBox('Web Port', 'port');
-    addAttributeCheckBox('Enable SSL', 'ssl');
     addAttributeTextBox('Restart Command', 'restartcmd');
 }
 

@@ -6,7 +6,6 @@ import json
 
 from os import system
 from threading import Timer
-from valarie.controller.auth import require
 from valarie.controller.messaging import add_message
 from valarie.model.config import get_config
 
@@ -19,7 +18,6 @@ def restart():
 
 class General(object):
     @cherrypy.expose
-    @require()
     def ajax_restart(self):
         add_message("general controller: restarting in 3 seconds...")
         try:
