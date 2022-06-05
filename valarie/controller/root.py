@@ -13,7 +13,6 @@ from valarie.controller.console import Console
 from valarie.controller.results import Results
 from valarie.controller.flags import Flags
 from valarie.controller.task import Task
-from valarie.controller.terminal import Terminal
 from valarie.controller.general import General
 
 class Root(object):
@@ -25,7 +24,6 @@ class Root(object):
     results = Results()
     flags = Flags()
     task = Task()
-    terminal = Terminal()
     hostgroup = HostGroup()
     general = General()
     

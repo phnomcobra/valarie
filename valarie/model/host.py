@@ -38,16 +38,6 @@ def create_host(parent_objuuid, name = "New Host", objuuid = None):
                     }
                 }
             },
-            "terminal" : {
-                "label" : "Terminal",
-                "action" : {
-                    "method" : "create terminal",
-                    "route" : "inventory/ajax_get_object",
-                    "params" : {
-                        "objuuid" : host.objuuid
-                    }
-                }
-            },
             "copy" : {
                 "label" : "Copy",
                 "action" : {
