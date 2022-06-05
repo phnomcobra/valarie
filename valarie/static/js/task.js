@@ -30,7 +30,7 @@ var loadAndEditTask = function(objuuid) {
     document.getElementById('menuBarDynamic').innerHTML = '';
 
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -44,7 +44,7 @@ var loadAndEditTask = function(objuuid) {
 
 var addRunTaskHost = function(objuuid) {
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -68,7 +68,7 @@ var executeTaskOnHost = function(hstuuid) {
     executedHosts.push(hstuuid);
 
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : hstuuid},
@@ -79,7 +79,7 @@ var executeTaskOnHost = function(hstuuid) {
                     document.getElementById('taskResultAccordion').innerHTML += '<pre id="section-body-' + resp.objuuid + '"></pre>';
                     
                     $.ajax({
-                        'url' : 'task/ajax_execute_task',
+                        'url' : 'task/execute_task',
                         'dataType' : 'json',
                         'method': 'POST',
                         'data' : {'tskuuid' : inventoryObject.objuuid, 'hstuuid' : resp.objuuid},
@@ -164,7 +164,7 @@ var editTaskHosts = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/task/ajax_get_host_grid",
+                    url: "/task/get_host_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });

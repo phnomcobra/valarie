@@ -85,7 +85,7 @@ def create_config():
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit configuration",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : CONFIG_OBJUUID
                     }
@@ -95,7 +95,7 @@ def create_config():
                 "label" : "Restart",
                 "action" : {
                     "method" : "restart valarie",
-                    "route" : "general/ajax_restart",
+                    "route" : "general/restart",
                     "params" : {}
                 }
             }
@@ -127,7 +127,7 @@ def create_console_template():
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit console",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : CONSOLE_PROTO_OBJUUID
                     }
@@ -161,7 +161,7 @@ def create_task_template():
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit task",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : task.objuuid
                     }

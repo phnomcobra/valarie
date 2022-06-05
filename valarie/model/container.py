@@ -17,7 +17,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Container",
                 "action" : {
                     "method" : "create container",
-                    "route" : "inventory/ajax_create_container",
+                    "route" : "inventory/create_container",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -27,7 +27,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Task",
                 "action" : {
                     "method" : "create task",
-                    "route" : "inventory/ajax_create_task",
+                    "route" : "inventory/create_task",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -37,7 +37,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Text File",
                 "action" : {
                     "method" : "create text file",
-                    "route" : "inventory/ajax_create_text_file",
+                    "route" : "inventory/create_text_file",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -47,7 +47,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Procedure",
                 "action" : {
                     "method" : "create procedure",
-                    "route" : "inventory/ajax_create_procedure",
+                    "route" : "inventory/create_procedure",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -57,7 +57,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Controller",
                 "action" : {
                     "method" : "create controller",
-                    "route" : "inventory/ajax_create_controller",
+                    "route" : "inventory/create_controller",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -67,7 +67,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Status Code",
                 "action" : {
                     "method" : "create status",
-                    "route" : "inventory/ajax_create_status_code",
+                    "route" : "inventory/create_status_code",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -77,7 +77,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Host",
                 "action" : {
                     "method" : "create host",
-                    "route" : "inventory/ajax_create_host",
+                    "route" : "inventory/create_host",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -87,7 +87,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Host Group",
                 "action" : {
                     "method" : "create host group",
-                    "route" : "inventory/ajax_create_host_group",
+                    "route" : "inventory/create_host_group",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -97,7 +97,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "New Console",
                 "action" : {
                     "method" : "create console",
-                    "route" : "inventory/ajax_create_console",
+                    "route" : "inventory/create_console",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -107,7 +107,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "Delete",
                 "action" : {
                     "method" : "delete node",
-                    "route" : "inventory/ajax_delete",
+                    "route" : "inventory/delete",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -117,7 +117,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit container",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : container.objuuid
                     }
@@ -127,7 +127,7 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
                 "label" : "Copy",
                 "action" : {
                     "method" : "copy node",
-                    "route" : "inventory/ajax_copy_object",
+                    "route" : "inventory/copy_object",
                     "params" : {
                         "objuuid" : container.objuuid
                     }

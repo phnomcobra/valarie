@@ -41,14 +41,14 @@ class Inventory(object):
         self.moving = False
 
     @cherrypy.expose
-    def ajax_roots(self, objuuid):
+    def roots(self, objuuid):
         try:
             return json.dumps(get_child_nodes(objuuid))
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_move(self, objuuid, parent_objuuid):
+    def move(self, objuuid, parent_objuuid):
         while self.moving:
             sleep(.1)
         
@@ -62,7 +62,7 @@ class Inventory(object):
             self.moving = False
     
     @cherrypy.expose
-    def ajax_copy_object(self, objuuid):
+    def copy_object(self, objuuid):
         try:
             while self.moving:
                 sleep(.1)
@@ -72,7 +72,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
 
     @cherrypy.expose
-    def ajax_create_container(self, objuuid):
+    def create_container(self, objuuid):
         try:
             container = create_container(objuuid, "New Container")
             
@@ -81,7 +81,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_create_host(self, objuuid):
+    def create_host(self, objuuid):
         try:
             host = create_host(objuuid, "New Host")
             
@@ -90,7 +90,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_create_text_file(self, objuuid):
+    def create_text_file(self, objuuid):
         try:
             text_file = create_text_file(objuuid, "New Text File.txt")
             
@@ -99,7 +99,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_create_host_group(self, objuuid):
+    def create_host_group(self, objuuid):
         try:
             group = create_host_group(objuuid, "New Host Group")
             
@@ -108,7 +108,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_create_console(self, objuuid):
+    def create_console(self, objuuid):
         try:
             console = create_console(objuuid, "New Console")
             
@@ -117,7 +117,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_create_task(self, objuuid):
+    def create_task(self, objuuid):
         try:
             task = create_task(objuuid, "New Task")
             
@@ -126,7 +126,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_create_status_code(self, objuuid):
+    def create_status_code(self, objuuid):
         try:
             status_code = create_status_code(objuuid, "New Status Code")
             
@@ -135,7 +135,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_create_procedure(self, objuuid):
+    def create_procedure(self, objuuid):
         try:
             procedure = create_procedure(objuuid, "New Procedure")
         
@@ -144,7 +144,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_create_controller(self, objuuid):
+    def create_controller(self, objuuid):
         try:
             controller = create_controller(objuuid, "New Controller")
             
@@ -153,7 +153,7 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_delete(self, objuuid):
+    def delete(self, objuuid):
         try:
             while self.moving:
                 sleep(.1)
@@ -164,28 +164,28 @@ class Inventory(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_context(self, objuuid):
+    def context(self, objuuid):
         try:
             return json.dumps(get_context_menu(objuuid))
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_get_object(self, objuuid):
+    def get_object(self, objuuid):
         try:
             return json.dumps(Collection("inventory").get_object(objuuid).object)
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_get_status_objects(self):
+    def get_status_objects(self):
         try:
             return json.dumps(get_status_objects())
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_post_object(self):
+    def post_object(self):
         try:
             cl = cherrypy.request.headers['Content-Length']
             object = json.loads(cherrypy.request.body.read(int(cl)))

@@ -31,7 +31,7 @@ def create_procedure(parent_objuuid, name = "New Procedure", objuuid = None):
                 "label" : "Delete",
                 "action" : {
                     "method" : "delete node",
-                    "route" : "inventory/ajax_delete",
+                    "route" : "inventory/delete",
                     "params" : {
                         "objuuid" : procedure.objuuid
                     }
@@ -41,7 +41,7 @@ def create_procedure(parent_objuuid, name = "New Procedure", objuuid = None):
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit procedure",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : procedure.objuuid
                     }
@@ -51,7 +51,7 @@ def create_procedure(parent_objuuid, name = "New Procedure", objuuid = None):
                 "label" : "Open",
                 "action" : {
                     "method" : "run procedure",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : procedure.objuuid
                     }
@@ -61,7 +61,7 @@ def create_procedure(parent_objuuid, name = "New Procedure", objuuid = None):
                 "label" : "Copy",
                 "action" : {
                     "method" : "copy node",
-                    "route" : "inventory/ajax_copy_object",
+                    "route" : "inventory/copy_object",
                     "params" : {
                         "objuuid" : procedure.objuuid
                     }

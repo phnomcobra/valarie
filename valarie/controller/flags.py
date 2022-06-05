@@ -32,7 +32,7 @@ def touch_flag(key):
 
 class Flags(object):
     @cherrypy.expose
-    def ajax_set(self, key, value):
+    def set(self, key, value):
         item = {
             "key" : key, 
             "value" : set_flag(key, value)
@@ -40,7 +40,7 @@ class Flags(object):
         return json.dumps(item)
     
     @cherrypy.expose
-    def ajax_get(self, key):
+    def get(self, key):
         item = {
             "key" : key, 
             "value" : get_flag(key)
@@ -48,7 +48,7 @@ class Flags(object):
         return json.dumps(item)
     
     @cherrypy.expose
-    def ajax_touch(self, key):
+    def touch(self, key):
         item = {
             "key" : key, 
             "value" : touch_flag(key)

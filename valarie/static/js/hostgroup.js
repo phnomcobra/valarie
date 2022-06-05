@@ -3,7 +3,7 @@ var loadAndEditHostGroup = function(objuuid) {
     document.getElementById('menuBarDynamic').innerHTML = '';
     
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -53,7 +53,7 @@ var editHostGroup = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/hostgroup/ajax_get_host_grid",
+                    url: "/hostgroup/get_host_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });

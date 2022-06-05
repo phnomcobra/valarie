@@ -17,7 +17,7 @@ var populateProcedureAttributes = function() {
     
     
     $.ajax({
-        'url' : 'inventory/ajax_get_status_objects',
+        'url' : 'inventory/get_status_objects',
         'dataType' : 'json',
         'method': 'POST',
         'success' : function(resp) {
@@ -38,7 +38,7 @@ var populateProcedureAttributes = function() {
 
 var addProcedureTask = function(objuuid) {
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -53,7 +53,7 @@ var loadAndEditProcedure = function(objuuid) {
     document.getElementById('menuBarDynamic').innerHTML = '';
     
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -112,7 +112,7 @@ var editProcedure = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/procedure/ajax_get_task_grid",
+                    url: "/procedure/get_task_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });
@@ -187,7 +187,7 @@ var editProcedure = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/procedure/ajax_get_host_grid",
+                    url: "/procedure/get_host_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });
@@ -310,7 +310,7 @@ var discoveredHostGroups = [];
 
 var populateProcedureResultDivs = function(hstuuid) {
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : hstuuid},
@@ -380,7 +380,7 @@ var runProcedure = function () {
     }
     
     $.ajax({
-        'url' : 'procedure/ajax_queue_procedures',
+        'url' : 'procedure/queue_procedures',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {
@@ -398,7 +398,7 @@ var runProcedure = function () {
 var updateProcedureTimer = function() {
     if(document.getElementById('procedureResultAccordion')) {
         $.ajax({
-            'url' : 'flags/ajax_get',
+            'url' : 'flags/get',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
@@ -421,7 +421,7 @@ var updateProcedureTimer = function() {
 var updateProcedureStateData = function() {
     for(var i = 0; i < inventoryObject.hosts.length; i++) {
         $.ajax({
-            'url' : 'results/ajax_get_procedure',
+            'url' : 'results/get_procedure',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {

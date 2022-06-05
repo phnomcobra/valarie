@@ -28,7 +28,7 @@ var loadRequiresGrid = function(){
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/inventory/ajax_get_required_objects_grid",
+                    url: "/inventory/get_required_objects_grid",
                     data: {'objuuid' : inventoryObject.objuuid},
                     dataType: "JSON"
                 });
@@ -73,7 +73,7 @@ var loadProvidesGrid = function(){
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/inventory/ajax_get_provided_objects_grid",
+                    url: "/inventory/get_provided_objects_grid",
                     data: {'objuuid' : inventoryObject.objuuid},
                     dataType: "JSON"
                 });

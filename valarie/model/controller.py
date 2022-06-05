@@ -21,7 +21,7 @@ def create_controller(parent_objuuid, name = "New Controller", objuuid = None):
                 "label" : "Delete",
                 "action" : {
                     "method" : "delete node",
-                    "route" : "inventory/ajax_delete",
+                    "route" : "inventory/delete",
                     "params" : {
                         "objuuid" : controller.objuuid
                     }
@@ -31,7 +31,7 @@ def create_controller(parent_objuuid, name = "New Controller", objuuid = None):
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit controller",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : controller.objuuid
                     }
@@ -41,7 +41,7 @@ def create_controller(parent_objuuid, name = "New Controller", objuuid = None):
                 "label" : "Open",
                 "action" : {
                     "method" : "run controller",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : controller.objuuid
                     }
@@ -51,7 +51,7 @@ def create_controller(parent_objuuid, name = "New Controller", objuuid = None):
                 "label" : "Copy",
                 "action" : {
                     "method" : "copy node",
-                    "route" : "inventory/ajax_copy_object",
+                    "route" : "inventory/copy_object",
                     "params" : {
                         "objuuid" : controller.objuuid
                     }

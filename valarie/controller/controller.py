@@ -13,21 +13,21 @@ from valarie.model.controller import (
 
 class Controller(object):
     @cherrypy.expose
-    def ajax_get_procedure_grid(self, objuuid):
+    def get_procedure_grid(self, objuuid):
         try:
             return json.dumps(get_procedure_grid(objuuid))
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_get_host_grid(self, objuuid):
+    def get_host_grid(self, objuuid):
         try:
             return json.dumps(get_host_grid(objuuid))
         except:
             add_message(traceback.format_exc())
         
     @cherrypy.expose
-    def ajax_get_tiles(self, objuuid):
+    def get_tiles(self, objuuid):
         try:
             return json.dumps(get_tiles(objuuid))
         except:

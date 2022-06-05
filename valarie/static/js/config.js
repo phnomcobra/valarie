@@ -18,7 +18,7 @@ var editConfig = function() {
 
 var restartValarie = function() {
     $.ajax({
-        'url' : 'general/ajax_restart',
+        'url' : 'general/restart',
         'method': 'POST',
         'success' : function(resp){
             window.location.assign("/auth/logout");

@@ -14,7 +14,7 @@ var editHost = function() {
     addAttributeTextArea('Configuration', 'config');
     
     $.ajax({
-        'url' : 'console/ajax_get_consoles',
+        'url' : 'console/get_consoles',
         'dataType' : 'json',
         'method': 'POST',
         'success' : function(resp) {
@@ -32,7 +32,7 @@ var loadAndEditHost = function(objuuid) {
     document.getElementById('menuBarDynamic').innerHTML = '';
     
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},

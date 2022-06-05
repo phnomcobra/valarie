@@ -10,21 +10,21 @@ from valarie.executor.procedure import get_jobs_grid, queue_procedure
 
 class Procedure(object):
     @cherrypy.expose
-    def ajax_get_task_grid(self, objuuid):
+    def get_task_grid(self, objuuid):
         try:
             return json.dumps(get_task_grid(objuuid))
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_get_host_grid(self, objuuid):
+    def get_host_grid(self, objuuid):
         try:
             return json.dumps(get_host_grid(objuuid))
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_queue_procedure(self, prcuuid, hstuuid):
+    def queue_procedure(self, prcuuid, hstuuid):
         try:
             queue_procedure(hstuuid, prcuuid)
             return json.dumps({})
@@ -32,7 +32,7 @@ class Procedure(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_queue_procedures(self, queuelist):
+    def queue_procedures(self, queuelist):
         try:
             for item in json.loads(queuelist):
                 try:
@@ -50,7 +50,7 @@ class Procedure(object):
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_get_queue_grid(self):
+    def get_queue_grid(self):
         try:
             return json.dumps(get_jobs_grid())
         except:

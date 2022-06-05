@@ -26,7 +26,7 @@ def create_task(
                 "label" : "Delete",
                 "action" : {
                     "method" : "delete node",
-                    "route" : "inventory/ajax_delete",
+                    "route" : "inventory/delete",
                     "params" : {
                         "objuuid" : task.objuuid
                     }
@@ -36,7 +36,7 @@ def create_task(
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit task",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : task.objuuid
                     }
@@ -46,7 +46,7 @@ def create_task(
                 "label" : "Edit Hosts",
                 "action" : {
                     "method" : "edit task hosts",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : task.objuuid
                     }
@@ -56,7 +56,7 @@ def create_task(
                 "label" : "Run",
                 "action" : {
                     "method" : "run task",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : task.objuuid
                     }
@@ -66,7 +66,7 @@ def create_task(
                 "label" : "Copy",
                 "action" : {
                     "method" : "copy node",
-                    "route" : "inventory/ajax_copy_object",
+                    "route" : "inventory/copy_object",
                     "params" : {
                         "objuuid" : task.objuuid
                     }

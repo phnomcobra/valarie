@@ -20,8 +20,8 @@ var selected_objuuids = [];
         'data' : {
             'url' : function (node) {
                 return node.id === '#' ?
-                'inventory/ajax_roots' :
-                'ajax_children';
+                'inventory/roots' :
+                'children';
             },
             'data' : function (node) {
                 return { 'objuuid' : node.id };
@@ -57,7 +57,7 @@ $(document).on('dnd_stop.vakata', function (e, data) {
         
         if(nodes.length == 0) {
             $.ajax({
-                'url' : 'inventory/ajax_get_object',
+                'url' : 'inventory/get_object',
                 'dataType' : 'json',
                 'method': 'POST',
                 'data' : {'objuuid' : data.data.nodes[0]},
@@ -89,7 +89,7 @@ $(document).on('dnd_stop.vakata', function (e, data) {
         
         for(i in nodes) {
             $.ajax({
-                'url' : 'inventory/ajax_get_object',
+                'url' : 'inventory/get_object',
                 'dataType' : 'json',
                 'data' : {'objuuid' : nodes[i].id},
                 'method': 'POST',
@@ -239,7 +239,7 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
         contextMenu = {};
         
         $.ajax({
-            'url' : 'inventory/ajax_context',
+            'url' : 'inventory/context',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
@@ -387,7 +387,7 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
 $('#inventory').on("move_node.jstree", function(event, data) {
         $('#inventory').jstree("deselect_all");
         $.ajax({
-            'url' : 'inventory/ajax_move',
+            'url' : 'inventory/move',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
@@ -548,7 +548,7 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
             inventoryObject['changed'] = false;
             document.getElementById('connectionStatus').innerHTML = '<font style="color:#F90">SAVING</font>';
             saving = true;
-            $http.post('inventory/ajax_post_object', JSON.stringify(inventoryObject)
+            $http.post('inventory/post_object', JSON.stringify(inventoryObject)
             ).then(function successCallback(response) {
                 saving = false;
                 
@@ -568,7 +568,7 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
         if(!polling_messages) {
             polling_messages = true;
             
-            $http.post("messaging/ajax_get_messages").then(function (response) {
+            $http.post("messaging/get_messages").then(function (response) {
                 polling_messages = false;
                 var messageData = '<table>';
                 var responseJSON = angular.fromJson(response)['data']['messages'];
@@ -587,7 +587,7 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
             polling_inventory = true;
             
             $.ajax({
-                'url' : 'flags/ajax_get',
+                'url' : 'flags/get',
                 'dataType' : 'json',
                 'method': 'POST',
                 'data' : {
@@ -611,7 +611,7 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
             polling_queue = true;
             
             $.ajax({
-                'url' : 'flags/ajax_get',
+                'url' : 'flags/get',
                 'dataType' : 'json',
                 'method': 'POST',
                 'data' : {
@@ -635,7 +635,7 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
 
 var addMessage = function (message) {
     $.ajax({
-        'url' : 'messaging/ajax_add_message',
+        'url' : 'messaging/add_message',
         'method': 'POST',
         'dataType' : 'json',
         'data' : {
@@ -657,7 +657,7 @@ var setInventoryKey = function (key, div) {
 
 var touchInventory = function() {
     $.ajax({
-        'url' : 'flags/ajax_touch',
+        'url' : 'flags/touch',
         'method': 'POST',
         'dataType' : 'json',
         'data' : {
@@ -720,7 +720,7 @@ var deleteInventoryItems = function() {
             deleteNode(objuuids[i]);
         
             $.ajax({
-                'url' : 'inventory/ajax_delete',
+                'url' : 'inventory/delete',
                 'dataType' : 'json',
                 'method': 'POST',
                 'data' : {
@@ -749,7 +749,7 @@ var pasteInventoryItems = function() {
         $("#" + selected_objuuids[i] + " >a").css("background", "white");
                 
         $.ajax({
-            'url' : 'inventory/ajax_move',
+            'url' : 'inventory/move',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
