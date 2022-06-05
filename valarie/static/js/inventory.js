@@ -362,9 +362,6 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                         $('.nav-tabs a[href="#console"]').tab('show');
                                     } else if(obj.item.method == 'copy node') {
                                         createNode(resp);
-                                    } else if(obj.item.method == 'create terminal') {
-                                        inventoryObject = resp;
-                                        launchTerminal();
                                     }
                                 },
                                 'error' : function(resp, status, error) {
