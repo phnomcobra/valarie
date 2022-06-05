@@ -27,7 +27,7 @@ from valarie.model.console import create_console
 from valarie.model.invfile import load_zip, is_binary
 from valarie.model.statuscode import create_status_code, get_status_objects
 from valarie.model.inventory import (
-    get_child_nodes,
+    get_child_tree_nodes,
     set_parent_objuuid,
     get_context_menu,
     delete_node,
@@ -41,14 +41,14 @@ class Inventory(object):
         self.moving = False
 
     @cherrypy.expose
-    def roots(self, objuuid):
+    def get_child_tree_nodes(self, objuuid):
         try:
-            return json.dumps(get_child_nodes(objuuid))
+            return json.dumps(get_child_tree_nodes(objuuid))
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def move(self, objuuid, parent_objuuid):
+    def move_object(self, objuuid, parent_objuuid):
         while self.moving:
             sleep(.1)
         

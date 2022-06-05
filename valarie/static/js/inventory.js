@@ -20,7 +20,7 @@ var selected_objuuids = [];
         'data' : {
             'url' : function (node) {
                 return node.id === '#' ?
-                'inventory/roots' :
+                'inventory/get_child_tree_nodes' :
                 'children';
             },
             'data' : function (node) {
@@ -387,7 +387,7 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
 $('#inventory').on("move_node.jstree", function(event, data) {
         $('#inventory').jstree("deselect_all");
         $.ajax({
-            'url' : 'inventory/move',
+            'url' : 'inventory/move_object',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
@@ -749,7 +749,7 @@ var pasteInventoryItems = function() {
         $("#" + selected_objuuids[i] + " >a").css("background", "white");
                 
         $.ajax({
-            'url' : 'inventory/move',
+            'url' : 'inventory/move_object',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
