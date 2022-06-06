@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from valarie.dao.document import Collection
 from valarie.controller.messaging import add_message

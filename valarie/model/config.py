@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from valarie.dao.document import Collection
 
@@ -7,7 +7,7 @@ TASK_PROTO_OBJUUID = "4d22259a-8000-49c7-bb6b-cf8526dbff70"
 CONSOLE_PROTO_OBJUUID = "d64e5c18-2fe8-495b-ace1-a3f0321b1629"
 SETTINGS_CONTAINER_OBJUUID = "bcde4d54-9456-4b09-9bff-51022e799b30"
 
-CONSOLE_PROTO_BODY = '''#!/usr/bin/python
+CONSOLE_PROTO_BODY = '''#!/usr/bin/python3
 
 from subprocess import Popen, PIPE
 
@@ -28,7 +28,7 @@ class Console:
             return output_buffer
 '''
 
-TASK_PROTO_BODY = '''#!/usr/bin/python
+TASK_PROTO_BODY = '''#!/usr/bin/python3
 
 import traceback
 
