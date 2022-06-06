@@ -16,6 +16,4 @@ var editStatusCode = function() {
     addAttributeColor('Current Background Color', 'cbg');
     addAttributeColor('Stale Foreground Color', 'sfg');
     addAttributeColor('Stale Background Color', 'sbg');
-    
-    
 }

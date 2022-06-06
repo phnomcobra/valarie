@@ -361,12 +361,8 @@ var executeProcedure = function() {
     cell.appendChild(link);
     document.getElementById('menuBarDynamic').appendChild(cell);
     
-    setTimeout(initProcedureResultAccordion, 1000);
-    
     updateProcedureTimer();
     updateProcedureStateData();
-    
-    
 }
 
 var runProcedure = function () {
@@ -431,8 +427,8 @@ var updateProcedureStateData = function() {
             'success' : function(resp) {
                 for(var j = 0; j < resp.length; j++) {
                     viewProcedureResult(resp[j]);
-                    
                 }
+                initProcedureResultAccordion();
             }
         });
     }

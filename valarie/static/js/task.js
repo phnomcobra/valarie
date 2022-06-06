@@ -84,6 +84,7 @@ var executeTaskOnHost = function(hstuuid) {
                         'method': 'POST',
                         'data' : {'tskuuid' : inventoryObject.objuuid, 'hstuuid' : resp.objuuid},
                         'success' : function(resp) {
+                            initTaskResultAccordion();
                             viewTaskResult(resp);
                         }
                     });
@@ -123,8 +124,6 @@ var executeTask = function() {
     for(var i = 0; i < inventoryObject.hosts.length; i++) {
         executeTaskOnHost(inventoryObject.hosts[i]);
     }
-
-    setTimeout(initTaskResultAccordion, 1000);
 }
 
 var editTaskHosts = function() {
@@ -164,7 +163,7 @@ var editTaskHosts = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/task/get_host_grid",
+                    url: "task/get_host_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });
