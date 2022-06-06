@@ -217,8 +217,6 @@ def run_procedure(host_object, procedure_object, console_object, jobuuid = None,
     status_code_body = ""
     status_data = {}
     
-    result.object["output"].append("importing status codes...")
-    
     for status in inventory.find(type = "status"):
         try:
             status_code_body += "{0}=int('{1}')\n".format(status.object["alias"], status.object["code"])
@@ -302,7 +300,6 @@ def run_procedure(host_object, procedure_object, console_object, jobuuid = None,
     
     try:
         try:
-            result.object["output"].append("importing console...")
             exec(console_object["body"], tempmodule.__dict__)
             cli = tempmodule.Console(host = host_object)
         except:

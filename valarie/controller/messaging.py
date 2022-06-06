@@ -29,9 +29,6 @@ def get_messages():
     return temp
 
 class Messaging(object):
-    def __init__(self):
-        self.messages = {"messages":[]}
-    
     @cherrypy.expose
     def add_message(self, message, timestamp):
         add_message(message, timestamp)
