@@ -8,8 +8,6 @@ var editConfig = function() {
     
     initAttributes();
     addAttributeTextBox('Brand', 'brand');
-    addAttributeTextArea('Banner', 'banner');
-    addAttributeTextBox('Title', 'title');
     addAttributeTextBox('Global Max Concurrency', 'concurrency');
     addAttributeTextBox('Web Host', 'host');
     addAttributeTextBox('Web Port', 'port');
@@ -19,11 +17,8 @@ var editConfig = function() {
 var restartValarie = function() {
     $.ajax({
         'url' : 'general/restart',
-        'method': 'POST',
-        'success' : function(resp){
-            window.location.assign("/auth/logout");
-        },
-        'failure' : function(resp){
+        'method': 'POST',        
+        'failure' : function(resp) {
             $('.nav-tabs a[href="#console"]').tab('show');
         }
     });

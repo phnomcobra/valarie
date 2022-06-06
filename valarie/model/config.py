@@ -74,8 +74,6 @@ def create_config():
         "host" : "0.0.0.0",
         "port" : 8080,
         "brand" : "valarie",
-        "banner" : "<h1>Valarie</h1>",
-        "title" : "Valarie",
         "restartcmd" : "service valarie restart",
         "children" : [],
         "name" : "Configuration",
