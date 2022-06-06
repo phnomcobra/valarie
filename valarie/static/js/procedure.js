@@ -251,7 +251,6 @@ String.prototype.toHHMMSS = function () {
 }
 
 var viewProcedureResult = function(result) {
-    console.log(result)
     document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = result.procedure.name + ' - ' + result.host.name + ' - ' + result.status.name;
     
     document.getElementById('section-body-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = '<table class="ProcedureResult" id="section-body-procedure-header-' + result.host.objuuid + '-' + result.procedure.objuuid + '"></table>';
@@ -276,16 +275,24 @@ var viewProcedureResult = function(result) {
         taskOutput.innerHTML += result.output[j] + '<br>';
 
     for(var i = 0; i < result.tasks.length; i++) {
-        title = document.createElement("div");
         taskOutput = document.createElement("div");
         
-        document.getElementById('section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).appendChild(title);
         document.getElementById('section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).appendChild(taskOutput);
-        
-        title.innerHTML = result.tasks[i].name + ' [Duration: ' + String(result.tasks[i].stop - result.tasks[i].start).toHHMMSS() + '] [' + result.tasks[i].status.name + ']';
-        
+
+        taskOutput.innerHTML += '<br>';
+        taskOutput.innerHTML += '-------------------------------------------------------------------------<br>';
+        taskOutput.innerHTML += '  Task Name:  ' + result.tasks[i].name + '<br>';
+        taskOutput.innerHTML += '  Start Time: ' + Date(result.tasks[i].start * 1000).toLocaleString() + '<br>';
+        taskOutput.innerHTML += '  Stop Time:  ' + Date(result.tasks[i].stop * 1000).toLocaleString() + '<br>';
+        taskOutput.innerHTML += '  Duration:   ' + String(result.tasks[i].start - result.tasks[i].stop).toHHMMSS() + '<br>';
+        taskOutput.innerHTML += '  Status:     ' + result.tasks[i].status.name + '<br>';
+        taskOutput.innerHTML += '-------------------------------------------------------------------------<br>';
+        taskOutput.innerHTML += '<br>';
+
         for(var j = 0; j < result.tasks[i].output.length; j++)
             taskOutput.innerHTML += result.tasks[i].output[j] + '<br>';
+        
+        taskOutput.innerHTML += '<br>';
     }
         
     document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).style.color = '#' + result.status.cfg;
