@@ -17,7 +17,7 @@ var populateProcedureAttributes = function() {
     
     
     $.ajax({
-        'url' : 'inventory/ajax_get_status_objects',
+        'url' : 'inventory/get_status_objects',
         'dataType' : 'json',
         'method': 'POST',
         'success' : function(resp) {
@@ -38,7 +38,7 @@ var populateProcedureAttributes = function() {
 
 var addProcedureTask = function(objuuid) {
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -53,7 +53,7 @@ var loadAndEditProcedure = function(objuuid) {
     document.getElementById('menuBarDynamic').innerHTML = '';
     
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -112,7 +112,7 @@ var editProcedure = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/procedure/ajax_get_task_grid",
+                    url: "/procedure/get_task_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });
@@ -187,7 +187,7 @@ var editProcedure = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/procedure/ajax_get_host_grid",
+                    url: "/procedure/get_host_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });
@@ -251,7 +251,6 @@ String.prototype.toHHMMSS = function () {
 }
 
 var viewProcedureResult = function(result) {
-    console.log(result)
     document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = result.procedure.name + ' - ' + result.host.name + ' - ' + result.status.name;
     
     document.getElementById('section-body-' + result.host.objuuid + '-' + result.procedure.objuuid).innerHTML = '<table class="ProcedureResult" id="section-body-procedure-header-' + result.host.objuuid + '-' + result.procedure.objuuid + '"></table>';
@@ -276,16 +275,24 @@ var viewProcedureResult = function(result) {
         taskOutput.innerHTML += result.output[j] + '<br>';
 
     for(var i = 0; i < result.tasks.length; i++) {
-        title = document.createElement("div");
         taskOutput = document.createElement("div");
         
-        document.getElementById('section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).appendChild(title);
         document.getElementById('section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid).appendChild(taskOutput);
-        
-        title.innerHTML = result.tasks[i].name + ' [Duration: ' + String(result.tasks[i].stop - result.tasks[i].start).toHHMMSS() + '] [' + result.tasks[i].status.name + ']';
-        
+
+        taskOutput.innerHTML += '<br>';
+        taskOutput.innerHTML += '-------------------------------------------------------------------------<br>';
+        taskOutput.innerHTML += '  Task Name:  ' + result.tasks[i].name + '<br>';
+        taskOutput.innerHTML += '  Start Time: ' + Date(result.tasks[i].start * 1000).toLocaleString() + '<br>';
+        taskOutput.innerHTML += '  Stop Time:  ' + Date(result.tasks[i].stop * 1000).toLocaleString() + '<br>';
+        taskOutput.innerHTML += '  Duration:   ' + String(result.tasks[i].start - result.tasks[i].stop).toHHMMSS() + '<br>';
+        taskOutput.innerHTML += '  Status:     ' + result.tasks[i].status.name + '<br>';
+        taskOutput.innerHTML += '-------------------------------------------------------------------------<br>';
+        taskOutput.innerHTML += '<br>';
+
         for(var j = 0; j < result.tasks[i].output.length; j++)
             taskOutput.innerHTML += result.tasks[i].output[j] + '<br>';
+        
+        taskOutput.innerHTML += '<br>';
     }
         
     document.getElementById('section-header-' + result.host.objuuid + '-' + result.procedure.objuuid).style.color = '#' + result.status.cfg;
@@ -310,7 +317,7 @@ var discoveredHostGroups = [];
 
 var populateProcedureResultDivs = function(hstuuid) {
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : hstuuid},
@@ -361,12 +368,8 @@ var executeProcedure = function() {
     cell.appendChild(link);
     document.getElementById('menuBarDynamic').appendChild(cell);
     
-    setTimeout(initProcedureResultAccordion, 1000);
-    
     updateProcedureTimer();
     updateProcedureStateData();
-    
-    
 }
 
 var runProcedure = function () {
@@ -380,7 +383,7 @@ var runProcedure = function () {
     }
     
     $.ajax({
-        'url' : 'procedure/ajax_queue_procedures',
+        'url' : 'procedure/queue_procedures',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {
@@ -398,7 +401,7 @@ var runProcedure = function () {
 var updateProcedureTimer = function() {
     if(document.getElementById('procedureResultAccordion')) {
         $.ajax({
-            'url' : 'flags/ajax_get',
+            'url' : 'flags/get',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
@@ -421,7 +424,7 @@ var updateProcedureTimer = function() {
 var updateProcedureStateData = function() {
     for(var i = 0; i < inventoryObject.hosts.length; i++) {
         $.ajax({
-            'url' : 'results/ajax_get_procedure',
+            'url' : 'results/get_procedure',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
@@ -431,8 +434,8 @@ var updateProcedureStateData = function() {
             'success' : function(resp) {
                 for(var j = 0; j < resp.length; j++) {
                     viewProcedureResult(resp[j]);
-                    
                 }
+                initProcedureResultAccordion();
             }
         });
     }

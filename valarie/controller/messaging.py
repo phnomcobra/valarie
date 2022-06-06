@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import cherrypy
 import json
@@ -29,19 +29,16 @@ def get_messages():
     return temp
 
 class Messaging(object):
-    def __init__(self):
-        self.messages = {"messages":[]}
-    
     @cherrypy.expose
-    def ajax_add_message(self, message, timestamp):
+    def add_message(self, message, timestamp):
         add_message(message, timestamp)
         return json.dumps({})
     
     @cherrypy.expose
-    def ajax_add_message(self, message):
+    def add_message(self, message):
         add_message(message)
         return json.dumps({})
     
     @cherrypy.expose
-    def ajax_get_messages(self):
+    def get_messages(self):
         return json.dumps(get_messages())

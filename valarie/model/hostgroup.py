@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from valarie.dao.document import Collection
 from valarie.controller.messaging import add_message
@@ -20,7 +20,7 @@ def create_host_group(parent_objuuid, name = "New Host Group", objuuid = None):
                 "label" : "Delete",
                 "action" : {
                     "method" : "delete node",
-                    "route" : "inventory/ajax_delete",
+                    "route" : "inventory/delete",
                     "params" : {
                         "objuuid" : group.objuuid
                     }
@@ -30,7 +30,7 @@ def create_host_group(parent_objuuid, name = "New Host Group", objuuid = None):
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit host group",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : group.objuuid
                     }
@@ -40,7 +40,7 @@ def create_host_group(parent_objuuid, name = "New Host Group", objuuid = None):
                 "label" : "Copy",
                 "action" : {
                     "method" : "copy node",
-                    "route" : "inventory/ajax_copy_object",
+                    "route" : "inventory/copy_object",
                     "params" : {
                         "objuuid" : group.objuuid
                     }

@@ -4,24 +4,9 @@ var showControllerDetails = false;
 var controllerStateUpdating = false;
 var controllerLastUpdateTime = (new Date).getTime() / 1000;
 
-/*
-var touchController = function() {
-    $.ajax({
-        'url' : 'flags/ajax_touch',
-        'dataType' : 'json',
-        'data' : {
-            'key' : 'controller-' + inventoryObject.objuuid;
-        },
-        'success' : function(resp) {
-            controllerStateFlag = resp.value;
-        },
-    });
-}
-*/
-
 var addControllerProcedure = function(objuuid) {
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -33,7 +18,7 @@ var addControllerProcedure = function(objuuid) {
 
 var addControllerHost = function(objuuid) {
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -62,7 +47,7 @@ var executeController = function() {
     addAttributeTextBox('Controller Name', 'name');
     
     $.ajax({
-        'url' : 'controller/ajax_get_tiles',
+        'url' : 'controller/get_tiles',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : inventoryObject.objuuid},
@@ -316,7 +301,7 @@ var executeSelectedProcedures = function() {
     });
     
     $.ajax({
-        'url' : 'procedure/ajax_queue_procedures',
+        'url' : 'procedure/queue_procedures',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {
@@ -388,7 +373,7 @@ var drawResults = function(resultItems) {
 var updateControllerTimer = function() {
     if(document.getElementById('controllerTable')) {
         $.ajax({
-            'url' : 'flags/ajax_get',
+            'url' : 'flags/get',
             'dataType' : 'json',
             'method': 'POST',
             'data' : {
@@ -411,7 +396,7 @@ var updateControllerTimer = function() {
 
 var updateControllerStateData = function() {
     $.ajax({
-        'url' : 'results/ajax_get_controller',
+        'url' : 'results/get_controller',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : inventoryObject.objuuid},
@@ -430,7 +415,7 @@ var loadAndEditController = function(objuuid) {
     document.getElementById('menuBarDynamic').innerHTML = '';
     
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},
@@ -487,7 +472,7 @@ var editController = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/controller/ajax_get_procedure_grid",
+                    url: "/controller/get_procedure_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });
@@ -561,7 +546,7 @@ var editController = function() {
             loadData: function(filter) {
                 return $.ajax({
                     type: "POST",
-                    url: "/controller/ajax_get_host_grid",
+                    url: "/controller/get_host_grid",
                     data: {'objuuid' : inventoryObject['objuuid']},
                     dataType: "JSON"
                 });

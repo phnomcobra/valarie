@@ -19,7 +19,7 @@ var loadAndEditBinaryFile = function(objuuid) {
     document.getElementById('menuBarDynamic').innerHTML = '';
     
     $.ajax({
-        'url' : 'inventory/ajax_get_object',
+        'url' : 'inventory/get_object',
         'dataType' : 'json',
         'method': 'POST',
         'data' : {'objuuid' : objuuid},

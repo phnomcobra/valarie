@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import cherrypy
 import json
@@ -9,7 +9,7 @@ from valarie.model.console import get_consoles
 
 class Console(object):
     @cherrypy.expose
-    def ajax_get_consoles(self):
+    def get_consoles(self):
         try:
             return json.dumps(get_consoles())
         except:

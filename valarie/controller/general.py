@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import cherrypy
 import traceback
@@ -18,7 +18,7 @@ def restart():
 
 class General(object):
     @cherrypy.expose
-    def ajax_restart(self):
+    def restart(self):
         add_message("general controller: restarting in 3 seconds...")
         try:
             Timer(3, restart).start()

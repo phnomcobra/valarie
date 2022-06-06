@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from valarie.dao.document import Collection
 
@@ -20,7 +20,7 @@ def create_text_file(parent_objuuid, name = "New Text File", objuuid = None):
                 "label" : "Delete",
                 "action" : {
                     "method" : "delete node",
-                    "route" : "inventory/ajax_delete",
+                    "route" : "inventory/delete",
                     "params" : {
                         "objuuid" : text_file.objuuid
                     }
@@ -30,7 +30,7 @@ def create_text_file(parent_objuuid, name = "New Text File", objuuid = None):
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit text file",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : text_file.objuuid
                     }
@@ -40,7 +40,7 @@ def create_text_file(parent_objuuid, name = "New Text File", objuuid = None):
                 "label" : "Copy",
                 "action" : {
                     "method" : "copy node",
-                    "route" : "inventory/ajax_copy_object",
+                    "route" : "inventory/copy_object",
                     "params" : {
                         "objuuid" : text_file.objuuid
                     }

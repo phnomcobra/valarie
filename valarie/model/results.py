@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from threading import Timer
 from time import time
@@ -77,9 +77,7 @@ def get_procedure_result(prcuuid, hstuuid):
     results = RAMCollection("results")
     
     result_objects = []
-    
-    host = collection.get_object(hstuuid)
-        
+            
     hstuuids = []
     grpuuids = []
     get_hosts(hstuuid, hstuuids, grpuuids, collection)

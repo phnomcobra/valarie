@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from valarie.dao.document import Collection
 from valarie.model.config import get_console_template
@@ -19,7 +19,7 @@ def create_console(parent_objuuid, name = "New Console", objuuid = None):
                 "label" : "Delete",
                 "action" : {
                     "method" : "delete node",
-                    "route" : "inventory/ajax_delete",
+                    "route" : "inventory/delete",
                     "params" : {
                         "objuuid" : console.objuuid
                     }
@@ -29,7 +29,7 @@ def create_console(parent_objuuid, name = "New Console", objuuid = None):
                 "label" : "Edit",
                 "action" : {
                     "method" : "edit console",
-                    "route" : "inventory/ajax_get_object",
+                    "route" : "inventory/get_object",
                     "params" : {
                         "objuuid" : console.objuuid
                     }
@@ -39,7 +39,7 @@ def create_console(parent_objuuid, name = "New Console", objuuid = None):
                 "label" : "Copy",
                 "action" : {
                     "method" : "copy node",
-                    "route" : "inventory/ajax_copy_object",
+                    "route" : "inventory/copy_object",
                     "params" : {
                         "objuuid" : console.objuuid
                     }

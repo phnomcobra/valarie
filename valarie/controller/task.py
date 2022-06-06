@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import cherrypy
 import json
@@ -10,14 +10,14 @@ from valarie.executor.task import execute
 
 class Task(object):
     @cherrypy.expose
-    def ajax_get_host_grid(self, objuuid):
+    def get_host_grid(self, objuuid):
         try:
             return json.dumps(get_host_grid(objuuid))
         except:
             add_message(traceback.format_exc())
     
     @cherrypy.expose
-    def ajax_execute_task(self, tskuuid, hstuuid):
+    def execute_task(self, tskuuid, hstuuid):
         try:
             return json.dumps(execute(tskuuid, hstuuid))
         except:

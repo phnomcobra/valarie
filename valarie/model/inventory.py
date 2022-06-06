@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import cherrypy
 import traceback
@@ -26,7 +26,7 @@ FIXED_OBJUUIDS = (
     SETTINGS_CONTAINER_OBJUUID,
 ) 
 
-def __get_child_nodes(nodes, object, collection):
+def __get_child_tree_nodes(nodes, object, collection):
     try:
         node = {
             "id" : object.objuuid, 
@@ -41,25 +41,25 @@ def __get_child_nodes(nodes, object, collection):
         nodes.append(node)
 
         for objuuid in collection.find_objuuids(parent = object.objuuid):
-            nodes = __get_child_nodes(nodes, collection.get_object(objuuid), collection)
+            nodes = __get_child_tree_nodes(nodes, collection.get_object(objuuid), collection)
     except:
         cherrypy.log(traceback.format_exc())
         cherrypy.log(object.object)
  
     return nodes
     
-def get_child_nodes(objuuid):
+def get_child_tree_nodes(objuuid):
     nodes = []
     collection = Collection("inventory")
         
     for object in collection.find(parent = objuuid):
-        nodes = __get_child_nodes(nodes, object, collection)
+        nodes = __get_child_tree_nodes(nodes, object, collection)
     
     return nodes
 
 def no_fixed_objects(objuuid):
     no_objects_found = True
-    for node in get_child_nodes(objuuid):
+    for node in get_child_tree_nodes(objuuid):
         if node["id"] in FIXED_OBJUUIDS:
             no_objects_found = False
     return no_objects_found
@@ -109,7 +109,7 @@ def delete_node(objuuid):
     
     parent_objuuid = collection.get_object(objuuid).object["parent"]
     
-    for node in get_child_nodes(objuuid):
+    for node in get_child_tree_nodes(objuuid):
         current = collection.get_object(node["id"])
         
         if "type" in current.object and \
