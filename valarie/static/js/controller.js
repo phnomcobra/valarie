@@ -4,21 +4,6 @@ var showControllerDetails = false;
 var controllerStateUpdating = false;
 var controllerLastUpdateTime = (new Date).getTime() / 1000;
 
-/*
-var touchController = function() {
-    $.ajax({
-        'url' : 'flags/touch',
-        'dataType' : 'json',
-        'data' : {
-            'key' : 'controller-' + inventoryObject.objuuid;
-        },
-        'success' : function(resp) {
-            controllerStateFlag = resp.value;
-        },
-    });
-}
-*/
-
 var addControllerProcedure = function(objuuid) {
     $.ajax({
         'url' : 'inventory/get_object',
