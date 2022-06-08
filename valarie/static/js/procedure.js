@@ -14,7 +14,10 @@ var populateProcedureAttributes = function() {
     addAttributeTextBox('Day of Month', 'dayofmonth');
     addAttributeTextBox('Day of Week', 'dayofweek');
     addAttributeTextBox('Year', 'year');
-    
+    addAttributeTextBox('Result Expiration Period', 'resultexpirationperiod');
+    addAttributeCheckBox('Refresh Inventory on Result', 'resultinventoryupdate');
+    addAttributeCheckBox('Single Result', 'resultoverwrite');
+    addAttributeCheckBox('Result Link', 'resultlinkenable');
     
     $.ajax({
         'url' : 'inventory/get_status_objects',
@@ -258,9 +261,6 @@ var viewProcedureResult = function(result) {
     var table = document.getElementById('section-body-procedure-header-' + result.host.objuuid + '-' + result.procedure.objuuid);
     var row;
 
-    
-    
-    
     row = table.insertRow(-1);
     row.insertCell(-1).innerHTML = '<div id="section-body-tasks-' + result.host.objuuid + '-' + result.procedure.objuuid + '"></div>';
     
@@ -282,9 +282,9 @@ var viewProcedureResult = function(result) {
         taskOutput.innerHTML += '<br>';
         taskOutput.innerHTML += '-------------------------------------------------------------------------<br>';
         taskOutput.innerHTML += '  Task Name:  ' + result.tasks[i].name + '<br>';
-        taskOutput.innerHTML += '  Start Time: ' + Date(result.tasks[i].start * 1000).toLocaleString() + '<br>';
-        taskOutput.innerHTML += '  Stop Time:  ' + Date(result.tasks[i].stop * 1000).toLocaleString() + '<br>';
-        taskOutput.innerHTML += '  Duration:   ' + String(result.tasks[i].start - result.tasks[i].stop).toHHMMSS() + '<br>';
+        taskOutput.innerHTML += '  Start Time: ' + new Date(result.tasks[i].start * 1000).toLocaleString() + '<br>';
+        taskOutput.innerHTML += '  Stop Time:  ' + new Date(result.tasks[i].stop * 1000).toLocaleString() + '<br>';
+        taskOutput.innerHTML += '  Duration:   ' + String(result.tasks[i].stop - result.tasks[i].start).toHHMMSS() + '<br>';
         taskOutput.innerHTML += '  Status:     ' + result.tasks[i].status.name + '<br>';
         taskOutput.innerHTML += '-------------------------------------------------------------------------<br>';
         taskOutput.innerHTML += '<br>';

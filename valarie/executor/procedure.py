@@ -8,12 +8,13 @@ from datetime import datetime
 from imp import new_module
 
 from valarie.dao.document import Collection
-from valarie.dao.ramdocument import Collection as RAMCollection
 from valarie.dao.utils import sucky_uuid
 from valarie.controller.flags import touch_flag
 from valarie.controller.messaging import add_message
 from valarie.executor.timers import timers
 from valarie.model.config import get_config
+from valarie.model.results import create_result_link
+from valarie.model.inventory import delete_node
 
 jobs = {}
 job_lock = Lock()
@@ -161,6 +162,8 @@ def queue_procedure(hstuuid, prcuuid, ctruuid = None):
                     }
                 
                     set_job(jobuuid, job)
+
+                    add_message(f'''Queued procedure "{job['procedure']['name']}" on "{job['host']['name']}"''')
         elif temp.object["type"] == "task":
             for hstuuid in hstuuids:
                 host = inventory.get_object(hstuuid)
@@ -180,7 +183,11 @@ def queue_procedure(hstuuid, prcuuid, ctruuid = None):
                             "tasks" : [prcuuid],
                             "hosts" : [],
                             "title" : "",
-                            "description" : "This is a synthetic procedure used for encapsulating tasks for use with controller objects."
+                            "description" : "This is a synthetic procedure used for encapsulating tasks for use with controller objects.",
+                            "resultexpirationperiod" : 3600,
+                            "resultinventoryupdate" : False,
+                            "resultoverwrite" : True,
+                            "resultlinkenable" : False,
                         },
                         "process" : None,
                         "queue time" : time(),
@@ -190,6 +197,8 @@ def queue_procedure(hstuuid, prcuuid, ctruuid = None):
                     }
                     
                     set_job(jobuuid, job)
+
+                    add_message(f'''Queued task "{job['procedure']['name']}" on "{job['host']['name']}"''')
     else:
         temp.destroy()
     
@@ -204,10 +213,19 @@ class TaskError:
 
 def run_procedure(host_object, procedure_object, console_object, jobuuid = None, ctruuid = None):
     inventory = Collection("inventory")
-    results = RAMCollection("results")
+    results = Collection("results")
+
+    add_message(f'''Running "{procedure_object['name']}" on "{host_object['name']}"''')
     
-    for result in results.find(hstuuid = host_object["objuuid"], prcuuid = procedure_object["objuuid"]):
-        result.destroy()
+    try:
+        result_overwrite = ('true' in str(procedure_object['resultoverwrite']).lower())
+    except:
+        result_overwrite = True
+    if result_overwrite:
+        for result in results.find(hstuuid=host_object["objuuid"], prcuuid=procedure_object["objuuid"]):
+            if "linkuuid" in result.object:
+                delete_node(result.object['linkuuid'])
+            result.destroy()
     
     result = results.get_object()
     
@@ -383,9 +401,39 @@ def run_procedure(host_object, procedure_object, console_object, jobuuid = None,
                 touch_flag("procedure-" + procedure_object["objuuid"])
             if ctruuid:
                 touch_flag("controller-" + ctruuid)
+        
+        try:
+            result_link_enabled = ('true' in str(procedure_object['resultlinkenable']).lower())
+        except:
+            result_link_enabled = False
+        if result_link_enabled:
+            stop_time_str = datetime.fromtimestamp(int(result.object['stop']))
+            
+            link = create_result_link(
+                procedure_object['objuuid'],
+                f"{host_object['name']}:{stop_time_str}:{result.object['status']['abbreviation']}",
+            )
+            link.object['hstuuid'] = host_object['objuuid']
+            link.object['prcuuid'] = procedure_object["objuuid"]
+            link.object['resuuid'] = result.object['objuuid']
+            link.set()
+
+            result.object['linkuuid'] = link.object['objuuid']        
+            result.set()
+
+        try:
+            update_inventory = ('true' in str(procedure_object['resultinventoryupdate']).lower())
+        except:
+            update_inventory = False
+        if update_inventory:
+            touch_flag('inventoryState')
+
+        add_message(f'''Finished "{procedure_object['name']}" on "{host_object['name']}"''')
     except:
         add_message(traceback.format_exc())
     
+    
+
     return result.object
 
 def eval_cron_field(cron_str, now_val):

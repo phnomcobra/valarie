@@ -212,6 +212,10 @@ class Inventory(object):
             
             for objuuid in objuuids.split(","):
                 current = collection.get_object(objuuid)
+                
+                if current.object["type"] in ["result link"]:
+                    continue
+
                 inventory[objuuid] = current.object
                 
                 if current.object["type"] == "binary file":
@@ -248,6 +252,9 @@ class Inventory(object):
             with zipfile.ZipFile(mem_file, mode = 'w', compression = zipfile.ZIP_DEFLATED) as zf:
                 for objuuid in objuuids.split(","):
                     current = collection.get_object(objuuid)
+
+                    if current.object["type"] in ["result link"]:
+                        continue
                     
                     # zip archive can't take a leading slash
                     filename = get_fq_name(objuuid)[1:]

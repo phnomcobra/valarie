@@ -3,7 +3,6 @@
 import traceback
 
 from valarie.dao.document import Collection
-from valarie.dao.ramdocument import Collection as RAMCollection
 from valarie.controller.messaging import add_message
 
 from imp import new_module
@@ -20,7 +19,7 @@ class TaskError:
 
 def execute(tskuuid, hstuuid):
     inventory = Collection("inventory")
-    results = RAMCollection("results")
+    results = Collection("results")
     
     for result in results.find(hstuuid = hstuuid, tskuuid = tskuuid):
         result.destroy()
