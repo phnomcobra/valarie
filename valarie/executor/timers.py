@@ -8,7 +8,7 @@ def cancel_timers():
     for key in timers.keys():
         try:
             timers[key].cancel()
-            add_message(f"Cancelling {key}...OK")
+            add_message(f"CANCELLING {key}...OK")
         except Exception as e:
             msg = str(e)
-            add_message(f"Cancelling {key}...{msg}")
+            add_message(f"CANCELLING {key}...{msg}")

@@ -6,7 +6,7 @@ def get(name, default = None):
     kvstore = Collection("kvstore")
     
     try:
-        key = kvstore.find(name = name)[0]
+        key = kvstore.find(name=name)[0]
     except:
         key = kvstore.get_object()
         key.object["name"] = name
@@ -24,7 +24,7 @@ def set(name, value):
     kvstore = Collection("kvstore")
     
     try:
-        key = kvstore.find(name = name)[0]
+        key = kvstore.find(name=name)[0]
     except:
         key = kvstore.get_object()
     
@@ -34,7 +34,7 @@ def set(name, value):
 
 def delete(name):
     try:
-        key = Collection("kvstore").find(name = name)[0]
+        key = Collection("kvstore").find(name=name)[0]
         key.destroy()
     except:
         pass

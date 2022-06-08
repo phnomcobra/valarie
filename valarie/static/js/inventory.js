@@ -346,6 +346,9 @@ $('#inventory').on('select_node.jstree', function (evt, data) {
                                     } else if(obj.item.method == 'run controller') {
                                         inventoryObject = resp;
                                         executeController();
+                                    } else if(obj.item.method == 'open result') {
+                                        inventoryObject = resp;
+                                        openResult();
                                     } else if(obj.item.method == 'restart valarie') {
                                         restartValarie();
                                     } else if(obj.item.method == 'run task') {

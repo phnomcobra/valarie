@@ -24,7 +24,9 @@ FIXED_OBJUUIDS = (
     TASK_PROTO_OBJUUID,
     CONSOLE_PROTO_OBJUUID,
     SETTINGS_CONTAINER_OBJUUID,
-) 
+)
+
+IMMOBILE_TYPES = ["result link"]
 
 def __get_child_tree_nodes(nodes, object, collection):
     try:
@@ -81,12 +83,13 @@ def get_fq_name(objuuid):
 def set_parent_objuuid(objuuid, parent_objuuid):
     assert objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {objuuid}"
     assert parent_objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {parent_objuuid}"
+
+    collection = Collection("inventory")
+    current = collection.get_object(objuuid)
+
+    assert current.object['type'] not in IMMOBILE_TYPES, f'''Change parent for {current.object['type']} not permitted'''
     
     if objuuid != parent_objuuid:
-        collection = Collection("inventory")
-    
-        current = collection.get_object(objuuid)
-        
         old_parent_objuuid = current.object["parent"]
         current.object["parent"] = parent_objuuid
         current.set()
