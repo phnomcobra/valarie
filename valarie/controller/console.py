@@ -1,9 +1,28 @@
 #!/usr/bin/python3
+"""This module implements code for creating consoles and generating
+lists of console objects used by the frontend for rendering."""
 
-from valarie.dao.document import Collection
+from typing import List
+
+from valarie.dao.document import Collection, Object
 from valarie.controller.config import get_console_template
 
-def create_console(parent_objuuid, name = "New Console", objuuid = None):
+def create_console(parent_objuuid: str, name: str = "New Console", objuuid: str = None) -> Object:
+    """This function creates and returns a console object in the inventory.
+
+    Args:
+        parent_objuuid:
+            The UUID of this controller's parent inventory object.
+
+        name:
+            The name of this controller object.
+
+        objuuid:
+            The UUID for this controller object.
+
+    Returns:
+        The document object for this console.
+    """
     collection = Collection("inventory")
     console = collection.get_object(objuuid)
     console.object = {
@@ -51,17 +70,22 @@ def create_console(parent_objuuid, name = "New Console", objuuid = None):
     console.set()
 
     parent = collection.get_object(parent_objuuid)
-    parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
+    parent.object["children"] = collection.find_objuuids(parent=parent_objuuid)
     parent.set()
 
     return console
 
-def get_consoles():
+def get_consoles() -> List[Object]:
+    """This function returns a list of all the console objects in the inventory.
+
+    Returns:
+        A list of document objects.
+    """
     collection = Collection("inventory")
 
     console_objects = []
 
-    for object in collection.find(type = "console"):
-        console_objects.append(object.object)
+    for console in collection.find(type="console"):
+        console_objects.append(console.object)
 
     return console_objects
