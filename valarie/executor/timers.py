@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from valarie.controller.messaging import add_message
+from valarie.router.messaging import add_message
 
 timers = {}
 

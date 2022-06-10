@@ -1,16 +1,67 @@
 #!/usr/bin/python3
 
-import cherrypy
-import json
-import traceback
+from valarie.dao.document import Collection
+from valarie.controller.config import get_console_template
 
-from valarie.controller.messaging import add_message
-from valarie.model.console import get_consoles
+def create_console(parent_objuuid, name = "New Console", objuuid = None):
+    collection = Collection("inventory")
+    console = collection.get_object(objuuid)
+    console.object = {
+        "type" : "console",
+        "parent" : parent_objuuid,
+        "children" : [],
+        "name" : name,
+        "body" : get_console_template(),
+        "icon" : "/images/console_icon.png",
+        "concurrency" : 1,
+        "context" : {
+            "delete" : {
+                "label" : "Delete",
+                "action" : {
+                    "method" : "delete node",
+                    "route" : "inventory/delete",
+                    "params" : {
+                        "objuuid" : console.objuuid
+                    }
+                }
+            },
+            "edit" : {
+                "label" : "Edit",
+                "action" : {
+                    "method" : "edit console",
+                    "route" : "inventory/get_object",
+                    "params" : {
+                        "objuuid" : console.objuuid
+                    }
+                }
+            },
+            "copy" : {
+                "label" : "Copy",
+                "action" : {
+                    "method" : "copy node",
+                    "route" : "inventory/copy_object",
+                    "params" : {
+                        "objuuid" : console.objuuid
+                    }
+                }
+            }
+        }
+    }
 
-class Console(object):
-    @cherrypy.expose
-    def get_consoles(self):
-        try:
-            return json.dumps(get_consoles())
-        except:
-            add_message(traceback.format_exc())
+    console.set()
+
+    parent = collection.get_object(parent_objuuid)
+    parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
+    parent.set()
+
+    return console
+
+def get_consoles():
+    collection = Collection("inventory")
+
+    console_objects = []
+
+    for object in collection.find(type = "console"):
+        console_objects.append(object.object)
+
+    return console_objects

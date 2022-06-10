@@ -6,8 +6,8 @@ import json
 
 from os import system
 from threading import Timer
-from valarie.controller.messaging import add_message
-from valarie.model.config import get_config
+from valarie.router.messaging import add_message
+from valarie.controller.config import get_config
 
 def restart():
     command = get_config()["restartcmd"]

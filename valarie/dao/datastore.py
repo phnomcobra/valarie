@@ -6,9 +6,9 @@ CHUNK_SIZE = 65536
 
 def create_binary_file(parent_objuuid, name = "New Binary File", objuuid = None):
     collection = Collection("inventory")
-    
+
     binary_file = collection.get_object(objuuid)
-    
+
     binary_file.object = {
         "type" : "binary file",
         "parent" : parent_objuuid,
@@ -41,31 +41,31 @@ def create_binary_file(parent_objuuid, name = "New Binary File", objuuid = None)
             }
         }
     }
-    
+
     binary_file.set()
-    
+
     if parent_objuuid != "#":
         parent = collection.get_object(parent_objuuid)
         parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
         parent.set()
-    
+
     return binary_file
 
 def new_chunk():
     datastore = Collection("datastore")
-    
+
     chunk = datastore.get_object()
     chunk.object = {
         "data" : bytearray(CHUNK_SIZE),
         "type" : "chunk",
     }
     chunk.set()
-    
+
     return chunk
 
 def new_sequence(sequuid = None):
     datastore = Collection("datastore")
-    
+
     sequence = datastore.get_object(sequuid)
     sequence.object = {
         "chunks" : [],
@@ -73,34 +73,34 @@ def new_sequence(sequuid = None):
         "type" : "sequence"
     }
     sequence.set()
-    
+
     return sequence
 
 def delete_sequence(sequuid):
     datastore = Collection("datastore")
-    
+
     sequence = datastore.get_object(sequuid)
-    
+
     if "chunks" in sequence.object:
         for chunkid in sequence.object["chunks"]:
             datastore.get_object(chunkid).destroy()
-    
+
     sequence.destroy()
 
 def copy_sequence(sequuid):
     inp_f = File(sequuid)
     out_f = File()
-    
+
     chunk = inp_f.read(CHUNK_SIZE)
     out_f.write(chunk)
-    
+
     while len(chunk) > 0:
         chunk = inp_f.read(CHUNK_SIZE)
         out_f.write(chunk)
-    
+
     out_f.close()
     inp_f.close()
-    
+
     return out_f._File__sequence.objuuid
 
 class File:
@@ -113,7 +113,7 @@ class File:
         self.__chunk_changed = False
         self.__end_of_sequence = False
         self.__following_write = False
-        
+
         if sequuid in self.__datastore.find_objuuids(type = "sequence"):
             self.__sequence = self.__datastore.get_object(sequuid)
             self.__chunk = self.__datastore.get_object(self.__sequence.object["chunks"][0])
@@ -122,60 +122,60 @@ class File:
             self.__chunk = new_chunk()
             self.__sequence.object["chunks"].append(self.__chunk.objuuid)
             self.__sequence.set()
-        
+
     def __del__(self):
         self.close()
-    
+
     def sequuid(self):
         return self.__sequence.object["objuuid"]
-    
+
     def delete(self):
         delete_sequence(self.__sequence.object["objuuid"])
-    
+
     def tell(self):
         return self.__position
-    
+
     def size(self):
         return self.__sequence.object["size"]
-    
+
     def close(self):
         self.__sequence.set()
         self.__chunk.set()
-    
+
     def open(self, **kargs):
         self.__init__(kargs)
-    
+
     def seek(self, seek_position):
         if seek_position < 0 or seek_position >= self.__sequence.object["size"]:
             raise IndexError("Position out of bounds!")
-        
+
         i = int(seek_position / CHUNK_SIZE)
         if self.__chunk_index != i:
             if self.__chunk_changed == True:
                 self.__chunk.set()
-                
+
             self.__chunk = self.__datastore.get_object(self.__sequence.object["chunks"][i])
             self.__chunk_index = i
-            
+
             self.__chunk_changed = False
-            
+
         self.__chunk_position = seek_position % CHUNK_SIZE
-        
+
         self.__position = seek_position
-        
+
         self.__following_write = False
-        
+
         self.__end_of_sequence = False
-    
+
     def read(self, num_bytes = None):
         buffer = bytearray()
-        
+
         if self.__end_of_sequence == True:
             pass
         elif num_bytes == None:
             for i in range(self.__position, self.__sequence.object["size"]):
                 buffer.append(self.__chunk.object["data"][self.__chunk_position])
-                
+
                 try:
                     self.seek(1 + self.__position)
                 except IndexError:
@@ -184,13 +184,13 @@ class File:
         else:
             for i in range(self.__position, self.__position + num_bytes):
                 buffer.append(self.__chunk.object["data"][self.__chunk_position])
-                
+
                 try:
                     self.seek(1 + self.__position)
                 except IndexError:
                     self.__end_of_sequence = True
                     break
-        
+
         return buffer
 
     def truncate(self, num_bytes = None):
@@ -198,13 +198,13 @@ class File:
             self.resize(self.__position + 1)
         else:
             self.resize(num_bytes)
-    
+
     def resize(self, num_bytes):
         self.__sequence.object["size"] = num_bytes
-        
+
         num_chunks = int(num_bytes / CHUNK_SIZE) + 1
         num_chunks_exist = len(self.__sequence.object["chunks"])
-        
+
         if num_chunks_exist < num_chunks:
             for i in range(num_chunks_exist, num_chunks):
                 chunk = new_chunk()
@@ -213,12 +213,12 @@ class File:
             for i in range(num_chunks_exist - 1, num_chunks - 1, -1):
                 self.__datastore.get_object(self.__sequence.object["chunks"][i]).destroy()
                 self.__sequence.object["chunks"].pop()
-    
+
     def write(self, raw_buffer):
         buffer = bytearray()
-        
+
         buffer.extend(raw_buffer)
-        
+
         if self.__following_write == True and \
            len(buffer) > 0 and \
            self.size() < self.__position + len(buffer) + 1:
@@ -228,14 +228,14 @@ class File:
              len(buffer) > 0 and \
              self.size() < self.__position + len(buffer):
             self.resize(self.__position + len(buffer))
-        
+
         for i in range(0, len(buffer)):
             self.__chunk.object["data"][self.__chunk_position] = buffer[i]
             self.__chunk_changed = True
-            
+
             if i < len(buffer) - 1:
                 self.seek(1 + self.__position)
-        
+
         self.__following_write = True
 
 collection = Collection("datastore")
