@@ -14,13 +14,13 @@ from valarie.router.messaging import add_message
 
 from valarie.dao.document import Collection
 
-from valarie.controller.datastore import File as DatastoreFile
+from valarie.dao.datastore import File as DatastoreFile
 from valarie.controller.container import create_container
 from valarie.controller.task import create_task
 from valarie.controller.procedure import create_procedure
 from valarie.controller.controller import create_controller
 from valarie.controller.textfile import create_text_file
-from valarie.controller.datastore import create_binary_file
+from valarie.dao.datastore import create_binary_file
 from valarie.controller.host import create_host
 from valarie.controller.hostgroup import create_host_group
 from valarie.controller.console import create_console

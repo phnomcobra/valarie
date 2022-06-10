@@ -4,7 +4,7 @@ import cherrypy
 import traceback
 
 from valarie.dao.document import Collection
-from valarie.controller.datastore import delete_sequence, copy_sequence
+from valarie.dao.datastore import delete_sequence, copy_sequence
 from valarie.controller.container import create_container
 from valarie.router.messaging import add_message
 from valarie.router.flags import touch_flag

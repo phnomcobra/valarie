@@ -4,7 +4,7 @@ import hashlib
 
 from valarie.dao.utils import sucky_uuid
 
-from valarie.controller.datastore import File, create_binary_file
+from valarie.dao.datastore import File, create_binary_file
 from valarie.controller.textfile import create_text_file
 from valarie.controller.container import create_container
 
