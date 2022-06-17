@@ -1,12 +1,28 @@
 #!/usr/bin/python3
+"""This module implements functions for creating and enumerating host groups."""
 
 from valarie.dao.document import Collection
 from valarie.router.messaging import add_message
 
-def create_host_group(parent_objuuid, name = "New Host Group", objuuid = None):
-    collection = Collection("inventory")
+def create_host_group(parent_objuuid: str, name: str = "New Host Group", objuuid: str = None):
+    """This function creates and returns a host group object in the inventory.
 
-    group = collection.get_object(objuuid)
+    Args:
+        parent_objuuid:
+            The UUID of this controller's parent inventory object.
+
+        name:
+            The name of this host group object.
+
+        objuuid:
+            The UUID for this host group object.
+
+    Returns:
+        The document object for this host group.
+    """
+    inventory = Collection("inventory")
+
+    group = inventory.get_object(objuuid)
 
     group.object = {
         "type" : "host group",
@@ -51,52 +67,72 @@ def create_host_group(parent_objuuid, name = "New Host Group", objuuid = None):
 
     group.set()
 
-    parent = collection.get_object(parent_objuuid)
-    parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
+    parent = inventory.get_object(parent_objuuid)
+    parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
     parent.set()
 
     return group
 
 def get_host_grid(grpuuid):
-    collection = Collection("inventory")
+    """This function creates and returns a host group object in the inventory.
 
-    group = collection.get_object(grpuuid)
+    Args:
+        grpuuid:
+            The UUID of the host group.
+
+    Returns:
+        A list of objects. Each object contains the type, name, host, and UUID for
+        each host or nested host group. Nest hostgroups have the names joined with
+        <br> HTML tags.
+    """
+
+    inventory = Collection("inventory")
+
+    group = inventory.get_object(grpuuid)
 
     grid_data = []
 
-    for hstuuid in group.object["hosts"]:
-        host = collection.get_object(hstuuid)
+    for hstuuid in group.object["hosts"]: # pylint: disable=too-many-nested-blocks
+        host = inventory.get_object(hstuuid)
 
         if "type" in host.object:
             if host.object["type"] == "host":
-                grid_data.append({"type" : host.object["type"], \
-                                  "name" : host.object["name"], \
-                                  "host" : host.object["host"], \
-                                  "objuuid" : host.object["objuuid"]})
+                grid_data.append(
+                    {
+                        "type": host.object["type"],
+                        "name": host.object["name"],
+                        "host": host.object["host"],
+                        "objuuid": host.object["objuuid"]
+                    }
+                )
             elif host.object["type"] == "host group":
                 hosts = []
 
                 for uuid in host.object["hosts"]:
-                    h = collection.get_object(uuid)
+                    nested_host = inventory.get_object(uuid)
 
-                    if "type" in h.object:
-                        if h.object["type"] == "host":
-                            hosts.append("{0} ({1})".format(h.object["name"], \
-                                                            h.object["host"]))
-                        elif h.object["type"] == "host group":
-                            hosts.append(h.object["name"])
+                    if "type" in nested_host.object:
+                        if nested_host.object["type"] == "host":
+                            hosts.append(
+                                f'{nested_host.object["name"]} ({nested_host.object["host"]})'
+                            )
+                        elif nested_host.object["type"] == "host group":
+                            hosts.append(nested_host.object["name"])
                     else:
                         host.object["hosts"].remove(uuid)
                         host.set()
-                        h.destroy()
+                        nested_host.destroy()
 
-
-                grid_data.append({"type" : host.object["type"], \
-                                  "name" : host.object["name"], \
-                                  "host" : str("<br>").join(hosts), \
-                                  "objuuid" : host.object["objuuid"]})
+                grid_data.append(
+                    {
+                        "type": host.object["type"],
+                        "name": host.object["name"],
+                        "host": str("<br>").join(hosts),
+                        "objuuid": host.object["objuuid"]
+                    }
+                )
         else:
-            add_message("host {0} is missing!".format(hstuuid))
+            add_message(f"host {hstuuid} is missing!")
             host.destroy()
             group.object["hosts"].remove(hstuuid)
             group.set()
