@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """This module implements the controller routes."""
 
-import json
+from typing import List, Dict
 
 import cherrypy
 
@@ -15,7 +15,8 @@ class Controller():
     """This class encapsulates the controller routes."""
     @classmethod
     @cherrypy.expose
-    def get_procedure_grid(cls, objuuid: str) -> str:
+    @cherrypy.tools.json_out()
+    def get_procedure_grid(cls, objuuid: str) -> List[Dict]:
         """This function returns a list of procedure dictionaries.
         Each dictionary contains a type, name, and UUID.
 
@@ -26,11 +27,12 @@ class Controller():
         Returns:
             JSON string of procedures.
         """
-        return json.dumps(get_procedure_grid(objuuid))
+        return get_procedure_grid(objuuid)
 
     @classmethod
     @cherrypy.expose
-    def get_host_grid(cls, objuuid: str) -> str:
+    @cherrypy.tools.json_out()
+    def get_host_grid(cls, objuuid: str) -> List[Dict]:
         """This function returns a list of host dictionaries.
         Each dictionary contains a type, name, host, and UUID.
 
@@ -41,11 +43,12 @@ class Controller():
         Returns:
             JSON string of hosts.
         """
-        return json.dumps(get_host_grid(objuuid))
+        return get_host_grid(objuuid)
 
     @classmethod
     @cherrypy.expose
-    def get_tiles(cls, objuuid: str) -> str:
+    @cherrypy.tools.json_out()
+    def get_tiles(cls, objuuid: str) -> dict:
         """This function returns a dictionary consisting of a
         list of host objects and procedure objects.
 
@@ -56,4 +59,4 @@ class Controller():
         Returns:
             JSON string of hosts and procedures.
         """
-        return json.dumps(get_tiles(objuuid))
+        return get_tiles(objuuid)

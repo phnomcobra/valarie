@@ -4,8 +4,13 @@ import cherrypy
 import os
 
 from valarie.router.root import Root
+from valarie.router.messaging import add_message
 from valarie.executor.timers import cancel_timers
 from valarie.controller.config import get_host, get_port
+
+def on_cherrypy_log(msg, level):
+    if level >= 40:
+        add_message(f'<font color="red">{msg}</font>')
 
 def start():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,5 +28,6 @@ def start():
 
     cherrypy.config.update(config)
     cherrypy.engine.subscribe('stop', cancel_timers)
+    cherrypy.engine.subscribe('log', on_cherrypy_log)
     cherrypy.quickstart(Root())
 

@@ -2,7 +2,6 @@
 """This module implements the flag routes used to
 signal the UI to take some action on a flag being changed."""
 
-import json
 from typing import Any
 
 import cherrypy
@@ -13,7 +12,8 @@ class Flags():
     """This class encapsulates the flag routes."""
     @classmethod
     @cherrypy.expose
-    def set(cls, key: str, value: Any) -> str:
+    @cherrypy.tools.json_out()
+    def set(cls, key: str, value: Any) -> dict:
         """This function sets the value of a flag and returns the key and value.
 
         Args:
@@ -26,15 +26,15 @@ class Flags():
         Returns:
             JSON string of the flag's key and value.
         """
-        item = {
+        return {
             "key" : key,
             "value" : set_flag(key, value)
         }
-        return json.dumps(item)
 
     @classmethod
     @cherrypy.expose
-    def get(cls, key: str) -> str:
+    @cherrypy.tools.json_out()
+    def get(cls, key: str) -> dict:
         """This function gets the value of a flag and returns the key and value.
 
         Args:
@@ -44,15 +44,15 @@ class Flags():
         Returns:
             JSON string of the flag's key and value.
         """
-        item = {
+        return {
             "key" : key,
             "value" : get_flag(key)
         }
-        return json.dumps(item)
 
     @classmethod
     @cherrypy.expose
-    def touch(cls, key: str) -> str:
+    @cherrypy.tools.json_out()
+    def touch(cls, key: str) -> dict:
         """This function touches the value of a flag and returns the key and value.
 
         Args:
@@ -62,8 +62,7 @@ class Flags():
         Returns:
             JSON string of the flag's key and value.
         """
-        item = {
+        return {
             "key" : key,
             "value" : touch_flag(key)
         }
-        return json.dumps(item)

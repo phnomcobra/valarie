@@ -36,19 +36,17 @@ from valarie.controller.inventory import (
     get_fq_name
 )
 
-class Inventory(object):
+class Inventory():
     def __init__(self):
         self.moving = False
 
+    @classmethod
     @cherrypy.expose
-    def get_child_tree_nodes(self, objuuid):
-        try:
-            return json.dumps(get_child_tree_nodes(objuuid))
-        except:
-            add_message(traceback.format_exc())
+    def get_child_tree_nodes(cls, objuuid: str) -> str:
+        return json.dumps(get_child_tree_nodes(objuuid))
 
     @cherrypy.expose
-    def move_object(self, objuuid, parent_objuuid):
+    def move_object(self, objuuid: str, parent_objuuid: str):
         while self.moving:
             sleep(.1)
 
@@ -56,20 +54,15 @@ class Inventory(object):
             self.moving = True
             set_parent_objuuid(objuuid, parent_objuuid)
             return json.dumps({})
-        except:
-            add_message(traceback.format_exc())
         finally:
             self.moving = False
 
     @cherrypy.expose
-    def copy_object(self, objuuid):
-        try:
-            while self.moving:
-                sleep(.1)
+    def copy_object(self, objuuid: str) -> str:
+        while self.moving:
+            sleep(.1)
 
-            return json.dumps(copy_object(objuuid).object)
-        except:
-            add_message(traceback.format_exc())
+        return json.dumps(copy_object(objuuid).object)
 
     @cherrypy.expose
     def create_container(self, objuuid):
