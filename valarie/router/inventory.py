@@ -6,14 +6,14 @@ import traceback
 import zipfile
 import io
 import hashlib
+from typing import Dict, List
 
 from cherrypy.lib.static import serve_fileobj
 from time import sleep
 
 from valarie.router.messaging import add_message
 
-from valarie.dao.document import Collection
-
+from valarie.dao.document import Collection, Object
 from valarie.dao.datastore import File as DatastoreFile
 from valarie.controller.container import create_container
 from valarie.controller.task import create_task
@@ -42,196 +42,162 @@ class Inventory():
 
     @classmethod
     @cherrypy.expose
-    def get_child_tree_nodes(cls, objuuid: str) -> str:
-        return json.dumps(get_child_tree_nodes(objuuid))
+    @cherrypy.tools.json_out()
+    def get_child_tree_nodes(cls, objuuid: str) -> List[dict]:
+        return get_child_tree_nodes(objuuid)
 
     @cherrypy.expose
-    def move_object(self, objuuid: str, parent_objuuid: str):
+    @cherrypy.tools.json_out()
+    def move_object(self, objuuid: str, parent_objuuid: str) -> dict:
         while self.moving:
             sleep(.1)
 
         try:
             self.moving = True
             set_parent_objuuid(objuuid, parent_objuuid)
-            return json.dumps({})
+            return {}
         finally:
             self.moving = False
 
     @cherrypy.expose
-    def copy_object(self, objuuid: str) -> str:
+    @cherrypy.tools.json_out()
+    def copy_object(self, objuuid: str) -> Object:
         while self.moving:
             sleep(.1)
 
-        return json.dumps(copy_object(objuuid).object)
+        return copy_object(objuuid).object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_container(cls, objuuid: str) -> Object:
+        return create_container(objuuid, "New Container").object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_host(cls, objuuid: str) -> Object:
+        return create_host(objuuid, "New Host").object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_text_file(cls, objuuid: str) -> Object:
+        return create_text_file(objuuid, "New Text File.txt").object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_host_group(cls, objuuid: str) -> Object:
+        return create_host_group(objuuid, "New Host Group").object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_console(cls, objuuid: str) -> Object:
+        return create_console(objuuid, "New Console").object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_task(cls, objuuid: str) -> Object:
+        return create_task(objuuid, "New Task").object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_status_code(cls, objuuid: str) -> Object:
+        return create_status_code(objuuid, "New Status Code").object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_procedure(cls, objuuid: str) -> Object:
+        return create_procedure(objuuid, "New Procedure").object
+
+    @classmethod
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_controller(cls, objuuid: str) -> Object:
+        return create_controller(objuuid, "New Controller").object
 
     @cherrypy.expose
-    def create_container(self, objuuid):
-        try:
-            container = create_container(objuuid, "New Container")
+    @cherrypy.tools.json_out()
+    def delete(self, objuuid: str) -> dict:
+        while self.moving:
+            sleep(.1)
+        delete_node(objuuid)
+        return { "id": objuuid }
 
-            return json.dumps(container.object)
-        except:
-            add_message(traceback.format_exc())
-
+    @classmethod
     @cherrypy.expose
-    def create_host(self, objuuid):
-        try:
-            host = create_host(objuuid, "New Host")
+    @cherrypy.tools.json_out()
+    def context(cls, objuuid: str) -> List[Dict]:
+        return get_context_menu(objuuid)
 
-            return json.dumps(host.object)
-        except:
-            add_message(traceback.format_exc())
-
+    @classmethod
     @cherrypy.expose
-    def create_text_file(self, objuuid):
-        try:
-            text_file = create_text_file(objuuid, "New Text File.txt")
+    @cherrypy.tools.json_out()
+    def get_object(cls, objuuid: str) -> Object:
+        return Collection("inventory").get_object(objuuid).object
 
-            return json.dumps(text_file.object)
-        except:
-            add_message(traceback.format_exc())
-
+    @classmethod
     @cherrypy.expose
-    def create_host_group(self, objuuid):
-        try:
-            group = create_host_group(objuuid, "New Host Group")
+    @cherrypy.tools.json_out()
+    def get_status_objects(cls) -> List:
+        return get_status_objects()
 
-            return json.dumps(group.object)
-        except:
-            add_message(traceback.format_exc())
-
+    @classmethod
     @cherrypy.expose
-    def create_console(self, objuuid):
-        try:
-            console = create_console(objuuid, "New Console")
+    @cherrypy.tools.json_out()
+    def post_object(cls) -> Object:
+        cl = cherrypy.request.headers['Content-Length']
+        object = json.loads(cherrypy.request.body.read(int(cl)))
 
-            return json.dumps(console.object)
-        except:
-            add_message(traceback.format_exc())
+        collection = Collection("inventory")
+        current = collection.get_object(object["objuuid"])
+        current.object = object
+        current.set()
 
-    @cherrypy.expose
-    def create_task(self, objuuid):
-        try:
-            task = create_task(objuuid, "New Task")
-
-            return json.dumps(task.object)
-        except:
-            add_message(traceback.format_exc())
-
-    @cherrypy.expose
-    def create_status_code(self, objuuid):
-        try:
-            status_code = create_status_code(objuuid, "New Status Code")
-
-            return json.dumps(status_code.object)
-        except:
-            add_message(traceback.format_exc())
-
-    @cherrypy.expose
-    def create_procedure(self, objuuid):
-        try:
-            procedure = create_procedure(objuuid, "New Procedure")
-
-            return json.dumps(procedure.object)
-        except:
-            add_message(traceback.format_exc())
-
-    @cherrypy.expose
-    def create_controller(self, objuuid):
-        try:
-            controller = create_controller(objuuid, "New Controller")
-
-            return json.dumps(controller.object)
-        except:
-            add_message(traceback.format_exc())
-
-    @cherrypy.expose
-    def delete(self, objuuid):
-        try:
-            while self.moving:
-                sleep(.1)
-
-            delete_node(objuuid)
-            return json.dumps({"id" : objuuid})
-        except:
-            add_message(traceback.format_exc())
-
-    @cherrypy.expose
-    def context(self, objuuid):
-        try:
-            return json.dumps(get_context_menu(objuuid))
-        except:
-            add_message(traceback.format_exc())
-
-    @cherrypy.expose
-    def get_object(self, objuuid):
-        try:
-            return json.dumps(Collection("inventory").get_object(objuuid).object)
-        except:
-            add_message(traceback.format_exc())
-
-    @cherrypy.expose
-    def get_status_objects(self):
-        try:
-            return json.dumps(get_status_objects())
-        except:
-            add_message(traceback.format_exc())
-
-    @cherrypy.expose
-    def post_object(self):
-        try:
-            cl = cherrypy.request.headers['Content-Length']
-            object = json.loads(cherrypy.request.body.read(int(cl)))
-
-            collection = Collection("inventory")
-            current = collection.get_object(object["objuuid"])
-            current.object = object
-            current.set()
-
-            return json.dumps(current.object)
-        except:
-            add_message(traceback.format_exc())
+        return current.object
 
     @cherrypy.expose
     def export_objects_zip(self, objuuids):
         add_message("inventory controller: exporting inventory objects...")
 
-        try:
-            collection = Collection("inventory")
+        collection = Collection("inventory")
 
-            inventory = {}
+        inventory = {}
 
-            dstuuids = []
+        dstuuids = []
 
-            for objuuid in objuuids.split(","):
-                current = collection.get_object(objuuid)
+        for objuuid in objuuids.split(","):
+            current = collection.get_object(objuuid)
 
-                if current.object["type"] in ["result link"]:
-                    continue
+            if current.object["type"] in ["result link"]:
+                continue
 
-                inventory[objuuid] = current.object
+            inventory[objuuid] = current.object
 
-                if current.object["type"] == "binary file":
-                    dstuuids.append(current.object["sequuid"])
+            if current.object["type"] == "binary file":
+                dstuuids.append(current.object["sequuid"])
 
-                add_message("inventory controller: exported: {0}, type: {1}, name: {2}".format(objuuid, current.object["type"], current.object["name"]))
+            add_message(f"inventory controller: exported: {objuuid}, type: {current.object['type']}, name: {current.object['name']}")
 
-            cherrypy.response.headers['Content-Type'] = "application/x-download"
-            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
+        cherrypy.response.headers['Content-Type'] = "application/x-download"
+        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
 
-            mem_file = io.BytesIO()
+        mem_file = io.BytesIO()
 
-            with zipfile.ZipFile(mem_file, mode = 'w', compression = zipfile.ZIP_DEFLATED) as zf:
-                zf.writestr('inventory.json', json.dumps(inventory, indent = 4, sort_keys = True))
+        with zipfile.ZipFile(mem_file, mode = 'w', compression = zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr('inventory.json', json.dumps(inventory, indent = 4, sort_keys = True))
 
-                for dstuuid in dstuuids:
-                    zf.writestr('{0}.bin'.format(dstuuid), DatastoreFile(dstuuid).read())
+            for dstuuid in dstuuids:
+                zf.writestr('{0}.bin'.format(dstuuid), DatastoreFile(dstuuid).read())
 
-            add_message("INVENTORY EXPORT COMPLETE")
+        add_message("INVENTORY EXPORT COMPLETE")
 
-            return serve_fileobj(mem_file.getvalue())
-        except:
-            add_message(traceback.format_exc())
+        return serve_fileobj(mem_file.getvalue())
 
     @cherrypy.expose
     def export_files_zip(self, objuuids):
