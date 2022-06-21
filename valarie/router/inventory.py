@@ -42,12 +42,12 @@ class Inventory():
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def get_child_tree_nodes(cls, objuuid: str) -> List[dict]:
+    def get_child_tree_nodes(cls, objuuid: str) -> List[Dict]:
         return get_child_tree_nodes(objuuid)
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def move_object(self, objuuid: str, parent_objuuid: str) -> dict:
+    def move_object(self, objuuid: str, parent_objuuid: str) -> Dict:
         while self.moving:
             sleep(.1)
 
@@ -122,7 +122,7 @@ class Inventory():
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def delete(self, objuuid: str) -> dict:
+    def delete(self, objuuid: str) -> Dict:
         while self.moving:
             sleep(.1)
         delete_node(objuuid)

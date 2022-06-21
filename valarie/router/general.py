@@ -2,6 +2,7 @@
 """This module implements the restart route used for restarting valarie."""
 
 from threading import Timer
+from typing import Dict
 
 import cherrypy
 
@@ -13,7 +14,7 @@ class General(): # pylint: disable=too-few-public-methods
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def restart(cls) -> dict:
+    def restart(cls) -> Dict:
         """This function registers the route that restarts valarie."""
         add_message("general controller: restarting in 3 seconds...")
         Timer(3, restart).start()

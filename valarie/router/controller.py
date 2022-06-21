@@ -48,7 +48,7 @@ class Controller():
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def get_tiles(cls, objuuid: str) -> dict:
+    def get_tiles(cls, objuuid: str) -> Dict:
         """This function returns a dictionary consisting of a
         list of host objects and procedure objects.
 

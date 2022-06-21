@@ -2,7 +2,7 @@
 """This module implements the flag routes used to
 signal the UI to take some action on a flag being changed."""
 
-from typing import Any
+from typing import Any, Dict
 
 import cherrypy
 
@@ -13,7 +13,7 @@ class Flags():
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def set(cls, key: str, value: Any) -> dict:
+    def set(cls, key: str, value: Any) -> Dict:
         """This function sets the value of a flag and returns the key and value.
 
         Args:
@@ -34,7 +34,7 @@ class Flags():
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def get(cls, key: str) -> dict:
+    def get(cls, key: str) -> Dict:
         """This function gets the value of a flag and returns the key and value.
 
         Args:
@@ -52,7 +52,7 @@ class Flags():
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def touch(cls, key: str) -> dict:
+    def touch(cls, key: str) -> Dict:
         """This function touches the value of a flag and returns the key and value.
 
         Args:
