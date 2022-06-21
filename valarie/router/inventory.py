@@ -314,6 +314,16 @@ class Inventory():
     @classmethod
     @cherrypy.expose
     def export_objects_zip(cls, objuuids: str) -> Any:
+        """This function registers the endpoint that exports inventory objects to
+        a ZIP archive.
+
+        Args:
+            objuuids:
+                A comma delivered list of UUIDs of the inventory objects to export.
+
+        Returns:
+            A static file response.
+        """
         add_message("inventory controller: exporting inventory objects...")
 
         inventory = Collection("inventory")
@@ -353,6 +363,17 @@ class Inventory():
     @classmethod
     @cherrypy.expose
     def export_files_zip(cls, objuuids: str) -> Any:
+        """This function registers the endpoint that exports certain inventory
+        objects to a ZIP archive. This mode of export deals exclusively with text files,
+        binary files, and result objects.
+
+        Args:
+            objuuids:
+                A comma delivered list of UUIDs of the inventory objects to export.
+
+        Returns:
+            A static file response.
+        """
         add_message("inventory controller: exporting inventory files...")
 
         inventory = Collection("inventory")
@@ -391,6 +412,13 @@ class Inventory():
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def import_objects_zip(cls, file: Any) -> Dict:
+        """This function registers the endpoint that imports inventory
+        objects from a ZIP archive.
+
+        Args:
+            file:
+                A file handle.
+        """
         add_message("inventory controller: importing inventory objects...")
 
         archive = zipfile.ZipFile(file.file, 'r')
@@ -424,6 +452,13 @@ class Inventory():
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def import_files_zip(cls, file: Any) -> Dict:
+        """This function registers the endpoint that imports text and
+        binary files from a ZIP archive into the inventory.
+
+        Args:
+            file:
+                A file handle.
+        """
         add_message("inventory controller: importing inventory files...")
         load_zip(zipfile.ZipFile(file.file, 'r'))
         add_message("INVENTORY IMPORT COMPLETE")
@@ -433,6 +468,13 @@ class Inventory():
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def import_file(cls, file: Any) -> Dict:
+        """This function registers the endpoint that imports an individual text
+        or binary file into the inventory.
+
+        Args:
+            file:
+                A file handle.
+        """
         add_message("inventory controller: importing inventory file...")
 
         fdata = file.file.read()
