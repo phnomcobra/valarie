@@ -9,14 +9,13 @@ from valarie.executor.timers import cancel_timers
 from valarie.controller.config import get_host, get_port
 
 def on_cherrypy_log(msg, level):
-    if level >= 40:
-        add_message(f'<font color="red">{msg}</font>')
+    add_message(f'<font color="red">{msg}</font>')
 
 def start():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     config = {
-        'log.screen': True,
+        'log.screen': False,
         'tools.staticdir.on' : True,
         'tools.sessions.on' : True,
         'tools.sessions.locking' : 'explicit',
@@ -30,4 +29,3 @@ def start():
     cherrypy.engine.subscribe('stop', cancel_timers)
     cherrypy.engine.subscribe('log', on_cherrypy_log)
     cherrypy.quickstart(Root())
-

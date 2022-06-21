@@ -8,7 +8,6 @@ import hashlib
 from typing import Any, Dict, List
 
 from cherrypy.lib.static import serve_fileobj
-from time import sleep
 
 from valarie.router.messaging import add_message
 
@@ -36,34 +35,22 @@ from valarie.controller.inventory import (
 )
 
 class Inventory():
-    def __init__(self):
-        self.moving = False
-
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def get_child_tree_nodes(cls, objuuid: str) -> List[Dict]:
         return get_child_tree_nodes(objuuid)
 
+    @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def move_object(self, objuuid: str, parent_objuuid: str) -> Dict:
-        while self.moving:
-            sleep(.1)
+    def move_object(cls, objuuid: str, parent_objuuid: str) -> Dict:
+        set_parent_objuuid(objuuid, parent_objuuid)
 
-        try:
-            self.moving = True
-            set_parent_objuuid(objuuid, parent_objuuid)
-            return {}
-        finally:
-            self.moving = False
-
+    @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def copy_object(self, objuuid: str) -> Object:
-        while self.moving:
-            sleep(.1)
-
         return copy_object(objuuid).object
 
     @classmethod
@@ -120,11 +107,10 @@ class Inventory():
     def create_controller(cls, objuuid: str) -> Object:
         return create_controller(objuuid, "New Controller").object
 
+    @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def delete(self, objuuid: str) -> Dict:
-        while self.moving:
-            sleep(.1)
+    def delete(cls, objuuid: str) -> Dict:
         delete_node(objuuid)
         return { "id": objuuid }
 

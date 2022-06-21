@@ -1,9 +1,12 @@
 #!/usr/bin/python3
 
-import cherrypy
 import traceback
+from time import sleep
+
+import cherrypy
 
 from valarie.dao.document import Collection
+from valarie.controller import kvstore
 from valarie.dao.datastore import delete_sequence, copy_sequence
 from valarie.controller.container import create_container
 from valarie.router.messaging import add_message
@@ -27,6 +30,14 @@ FIXED_OBJUUIDS = (
 )
 
 IMMOBILE_TYPES = ["result link"]
+
+def lock():
+    while kvstore.get('inventory lock', default=False) is True:
+        sleep(1)
+    kvstore.set('inventory lock', True)
+
+def unlock():
+    kvstore.set('inventory lock', False)
 
 def __get_child_tree_nodes(nodes, object, collection):
     try:
@@ -81,6 +92,8 @@ def get_fq_name(objuuid):
     return __get_fq_name("", collection.get_object(objuuid).object, collection)
 
 def set_parent_objuuid(objuuid, parent_objuuid):
+    lock()
+
     assert objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {objuuid}"
     assert parent_objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {parent_objuuid}"
 
@@ -104,7 +117,11 @@ def set_parent_objuuid(objuuid, parent_objuuid):
             new_parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
             new_parent.set()
 
+    unlock()
+
 def delete_node(objuuid):
+    lock()
+
     assert objuuid not in FIXED_OBJUUIDS, f"Deletion is not permitted for {objuuid}"
     assert no_fixed_objects(objuuid), f"Deletion is not permitted because {objuuid} contains fixed objects"
 
@@ -135,6 +152,8 @@ def delete_node(objuuid):
         parent = collection.get_object(parent_objuuid)
         parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
         parent.set()
+
+    unlock()
 
 def get_context_menu(objuuid):
     return Collection("inventory").get_object(objuuid).object["context"]
@@ -200,6 +219,8 @@ def __copy_object(objuuid, parent_objuuid, collection, old_objuuids, new_objuuid
         current.destroy()
 
 def copy_object(objuuid):
+    lock()
+
     assert objuuid not in FIXED_OBJUUIDS, f"Copying is not permitted for {objuuid}"
     assert no_fixed_objects(objuuid), f"Copying is not permitted because {objuuid} contains fixed objects"
 
@@ -251,6 +272,8 @@ def copy_object(objuuid):
 
     if len(child_objuuids) > 0:
         touch_flag("inventoryState")
+
+    unlock()
 
     return clone
 
@@ -335,3 +358,5 @@ if not len(collection.find(type = "config")):
     create_console_template()
     create_task_template()
     create_settings_container()
+
+unlock()
