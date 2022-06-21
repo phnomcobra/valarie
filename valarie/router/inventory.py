@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""This module implements the inventory routes."""
 
 import cherrypy
 import json
@@ -35,82 +36,213 @@ from valarie.controller.inventory import (
 )
 
 class Inventory():
+    """This class registers the inventory endpoint methods as endpoints."""
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def get_child_tree_nodes(cls, objuuid: str) -> List[Dict]:
+        """This function registers the endpoint that retrieves a list of jstree
+        child nodes beginning at the specified UUID in the inventory.
+
+        Args:
+            objuuid:
+                The UUID to discover nodes from.
+
+        Returns:
+            JSON string of list of jstree nodes.
+        """
         return get_child_tree_nodes(objuuid)
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def move_object(cls, objuuid: str, parent_objuuid: str) -> Dict:
+        """This function moves an object to a new location in the invnentory by
+        changing which object is its parent.
+
+        Args:
+            objuuid:
+                The UUID of the object to move.
+
+            parent_object:
+                The UUID of the object's new parent.
+        """
         set_parent_objuuid(objuuid, parent_objuuid)
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def copy_object(self, objuuid: str) -> Object:
+    def copy_object(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that copies an object and its
+        children in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the object to copy.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return copy_object(objuuid).object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_container(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a container
+        object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the container's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_container(objuuid, "New Container").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_host(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a host
+        object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the host's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_host(objuuid, "New Host").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_text_file(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a text file
+        object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the text file's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_text_file(objuuid, "New Text File.txt").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_host_group(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a host group
+        object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the host groups's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_host_group(objuuid, "New Host Group").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_console(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a console
+        object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the console's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_console(objuuid, "New Console").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_task(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a task
+        object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the task's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_task(objuuid, "New Task").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_status_code(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a status
+        code object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the status code's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_status_code(objuuid, "New Status Code").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_procedure(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a procedure
+        object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the procedure's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_procedure(objuuid, "New Procedure").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def create_controller(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that creates a controller
+        object in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the controller's parent object.
+
+        Returns:
+            JSON string of the newly created inventory object.
+        """
         return create_controller(objuuid, "New Controller").object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def delete(cls, objuuid: str) -> Dict:
+        """This function registers the endpoint that deletes an object and
+        its children in the inventory.
+
+        Args:
+            objuuid:
+                The UUID of the object to delete.
+
+        Returns:
+            JSON string of the id just deleted.
+        """
         delete_node(objuuid)
         return { "id": objuuid }
 
@@ -118,26 +250,59 @@ class Inventory():
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def context(cls, objuuid: str) -> List[Dict]:
+        """This function registers the endpoint that retrieves an inventory
+        objects context menu list.
+
+        Args:
+            objuuid:
+                The UUID of the inventory object.
+
+        Returns:
+            JSON string of a list of context menu items.
+        """
         return get_context_menu(objuuid)
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def get_object(cls, objuuid: str) -> Object:
+        """This function registers the endpoint that retrieves an inventory
+        object.
+
+        Args:
+            objuuid:
+                The UUID of the inventory object.
+
+        Returns:
+            JSON string of the inventory object.
+        """
         return Collection("inventory").get_object(objuuid).object
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def get_status_objects(cls) -> List:
+        """This function registers the endpoint that retrieves a
+        list of status objects that are present in the inventory.
+
+        Returns:
+            JSON string of the status code objects.
+        """
         return get_status_objects()
 
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
     def post_object(cls) -> Object:
-        cl = cherrypy.request.headers['Content-Length']
-        object = json.loads(cherrypy.request.body.read(int(cl)))
+        """This function registers the endpoint that posts an inventory
+        object. An inventory object is either created or updated with the
+        object that is posted.
+
+        Returns:
+            JSON string of the inventory object.
+        """
+        object = cherrypy.request.json
 
         inventory = Collection("inventory")
         current = inventory.get_object(object["objuuid"])

@@ -11,7 +11,7 @@ class HostGroup(): # pylint: disable=too-few-public-methods
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def get_host_grid(cls, objuuid: str) -> list:
-        """This function registers the endpoint retrieving summary data for
+        """This function registers the endpoint for retrieving summary data for
         each member of the host group. Members may be UUIDs for host or host
         group objects. This endpoint's response is used for populating host grid
         controls in the front end.
