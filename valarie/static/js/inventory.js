@@ -10,7 +10,7 @@ var selected_objuuids = [];
 
  $('#inventory').jstree({
     'contextmenu': {
-        'items': 
+        'items':
             function (obj) {
                 return contextMenu;
         }
@@ -54,7 +54,7 @@ $(document).on('dnd_stop.vakata', function (e, data) {
     if(data.event.target.className == 'jsgrid-grid-body' ||
        data.event.target.className == 'jsgrid-cell') {
         var nodes = $('#inventory').jstree().get_selected(true);
-        
+
         if(nodes.length == 0) {
             $.ajax({
                 'url' : 'inventory/get_object',
@@ -63,7 +63,7 @@ $(document).on('dnd_stop.vakata', function (e, data) {
                 'data' : {'objuuid' : data.data.nodes[0]},
                 'success' : function(resp) {
                     $('#inventory').jstree("deselect_all");
-                    
+
                     if(resp['type'] == 'task' && document.getElementById('taskGrid')) {
                         addProcedureTask(resp['objuuid']);
                     } else if(resp['type'] == 'host' &&
@@ -78,7 +78,7 @@ $(document).on('dnd_stop.vakata', function (e, data) {
                               inventoryObject['procedures'].indexOf(resp['objuuid']) == -1 &&
                               document.getElementById('procedureGrid')) {
                         addControllerProcedure(resp['objuuid']);
-                    } else if(resp['type'] == 'task' && 
+                    } else if(resp['type'] == 'task' &&
                               inventoryObject['procedures'].indexOf(resp['objuuid']) == -1 &&
                               document.getElementById('procedureGrid')) {
                         addControllerProcedure(resp['objuuid']);
@@ -86,7 +86,7 @@ $(document).on('dnd_stop.vakata', function (e, data) {
                 }
             });
         }
-        
+
         for(i in nodes) {
             $.ajax({
                 'url' : 'inventory/get_object',
@@ -95,7 +95,7 @@ $(document).on('dnd_stop.vakata', function (e, data) {
                 'method': 'POST',
                 'success' : function(resp) {
                     $('#inventory').jstree("deselect_all");
-                    
+
                     if(resp['type'] == 'task' && document.getElementById('taskGrid')) {
                         addProcedureTask(resp['objuuid']);
                     } else if(resp['type'] == 'host' &&
@@ -110,7 +110,7 @@ $(document).on('dnd_stop.vakata', function (e, data) {
                               inventoryObject['procedures'].indexOf(resp['objuuid']) == -1 &&
                               document.getElementById('procedureGrid')) {
                         addControllerProcedure(resp['objuuid']);
-                    } else if(resp['type'] == 'task' && 
+                    } else if(resp['type'] == 'task' &&
                               inventoryObject['procedures'].indexOf(resp['objuuid']) == -1 &&
                               document.getElementById('procedureGrid')) {
                         addControllerProcedure(resp['objuuid']);
@@ -123,34 +123,34 @@ $(document).on('dnd_stop.vakata', function (e, data) {
 
 var exportObjectsZipFromInventory = function() {
     $('.nav-tabs a[href="#console"]').tab('show');
-    
+
     var nodes = $('#inventory').jstree().get_selected(true);
-    
+
     var objuuids = []
     for(i in nodes)
         objuuids.push(nodes[i].id);
-    
+
     window.location = 'inventory/export_objects_zip?objuuids=' + objuuids.join(',');
 }
 
 var exportFilesZipFromInventory = function() {
     $('.nav-tabs a[href="#console"]').tab('show');
-    
+
     var nodes = $('#inventory').jstree().get_selected(true);
-    
+
     var objuuids = []
     for(i in nodes)
         objuuids.push(nodes[i].id);
-    
+
     window.location = 'inventory/export_files_zip?objuuids=' + objuuids.join(',');
 }
 
 var importFileToInventory = function(item) {
     $('.nav-tabs a[href="#console"]').tab('show');
-    
+
     var formData = new FormData();
     formData.append("file", item.files[0], item.files[0].name);
-         
+
     $.ajax({
         url: 'inventory/import_file',  //Server script to process data
         type: 'POST',
@@ -161,15 +161,15 @@ var importFileToInventory = function(item) {
         success: function(resp) {
             $('#inventory').jstree('refresh');
         }
-    }); 
+    });
 }
 
 var importObjectsZipToInventory = function(item) {
     $('.nav-tabs a[href="#console"]').tab('show');
-    
+
     var formData = new FormData();
     formData.append("file", item.files[0], item.files[0].name);
-     
+
     $.ajax({
         url: 'inventory/import_objects_zip',  //Server script to process data
         type: 'POST',
@@ -180,15 +180,15 @@ var importObjectsZipToInventory = function(item) {
         success: function(resp) {
             $('#inventory').jstree('refresh');
         }
-    }); 
+    });
 }
 
 var importFilesZipToInventory = function(item) {
     $('.nav-tabs a[href="#console"]').tab('show');
-    
+
     var formData = new FormData();
     formData.append("file", item.files[0], item.files[0].name);
-     
+
     $.ajax({
         url: 'inventory/import_files_zip',  //Server script to process data
         type: 'POST',
@@ -199,7 +199,7 @@ var importFilesZipToInventory = function(item) {
         success: function(resp) {
             $('#inventory').jstree('refresh');
         }
-    }); 
+    });
 }
 
 var createNode = function(object) {
@@ -237,7 +237,7 @@ $('#inventory').on('dblclick.jstree', function (evt, data) {
 
 $('#inventory').on('select_node.jstree', function (evt, data) {
         contextMenu = {};
-        
+
         $.ajax({
             'url' : 'inventory/context',
             'dataType' : 'json',
@@ -417,10 +417,10 @@ var addAttributeTextBox = function(fieldName, inventoryKey) {
     var attributeTable = document.getElementById("attributesTable");
     var attributeRow = attributeTable.insertRow(-1);
     var attributeCell;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = fieldName;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     var id = 'inventory-obj-key-' + inventoryKey;
     attributeCell.innerHTML = '<input type="text" id="' + id + '" onchange="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" onkeyup="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" style="width:99%"></input>';
@@ -431,21 +431,21 @@ var addAttributeRadioGroup = function(fieldName, inventoryKey, radioButtons) {
     var attributeTable = document.getElementById("attributesTable");
     var attributeRow = attributeTable.insertRow(-1);
     var attributeCell;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = fieldName;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = '';
     for(var i = 0; i < radioButtons.length; i++) {
         if(inventoryObject[inventoryKey] == radioButtons[i].value) {
-            attributeCell.innerHTML += '<input type="radio" name="radio-' + inventoryKey + 
-                                       '" value="' + radioButtons[i].value + 
+            attributeCell.innerHTML += '<input type="radio" name="radio-' + inventoryKey +
+                                       '" value="' + radioButtons[i].value +
                                        '" checked=true onclick="inventoryObject[&quot;' + inventoryKey + '&quot;]=this.value;inventoryObject[&quot;changed&quot;]=true;">' +
                                        radioButtons[i].name + '<br>';
         } else {
-            attributeCell.innerHTML += '<input type="radio" name="radio-' + inventoryKey + 
-                                       '" value="' + radioButtons[i].value + 
+            attributeCell.innerHTML += '<input type="radio" name="radio-' + inventoryKey +
+                                       '" value="' + radioButtons[i].value +
                                        '" onclick="inventoryObject[&quot;' + inventoryKey + '&quot;]=this.value;inventoryObject[&quot;changed&quot;]=true;">' +
                                        radioButtons[i].name + '<br>';
         }
@@ -456,10 +456,10 @@ var addAttributeTextArea = function(fieldName, inventoryKey) {
     var attributeTable = document.getElementById("attributesTable");
     var attributeRow = attributeTable.insertRow(-1);
     var attributeCell;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = fieldName;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     var id = 'inventory-obj-key-' + inventoryKey;
     attributeCell.innerHTML = '<textarea rows = "5" id="' + id + '" onchange="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" onkeyup="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" style="width:98%;"></textarea>';
@@ -470,10 +470,10 @@ var addAttributePassword = function(fieldName, inventoryKey) {
     var attributeTable = document.getElementById("attributesTable");
     var attributeRow = attributeTable.insertRow(-1);
     var attributeCell;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = fieldName;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     var id = 'inventory-obj-key-' + inventoryKey;
     attributeCell.innerHTML = '<input type="password" id="' + id + '" onchange="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" onkeyup="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" style="width:99%"></input>';
@@ -484,14 +484,14 @@ var addAttributeCheckBox = function(fieldName, inventoryKey) {
     var attributeTable = document.getElementById("attributesTable");
     var attributeRow = attributeTable.insertRow(-1);
     var attributeCell;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = fieldName;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     var id = 'inventory-obj-key-' + inventoryKey;
     attributeCell.innerHTML = '<input type="checkbox" id="' + id + '" onchange="this.value = this.checked;setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)"></input>';
-    
+
     if(inventoryObject[inventoryKey] == 'true' || inventoryObject[inventoryKey] == true) {
         document.getElementById(id).checked = true;
         document.getElementById(id).value = true;
@@ -505,10 +505,10 @@ var addAttributeColor = function(fieldName, inventoryKey) {
     var attributeTable = document.getElementById("attributesTable");
     var attributeRow = attributeTable.insertRow(-1);
     var attributeCell;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = fieldName;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     var id = 'inventory-obj-key-' + inventoryKey;
     attributeCell.innerHTML = '<input class="jscolor" id="' + id + '" onchange="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" onkeyup="setInventoryKey(&quot;' + inventoryKey + '&quot;, &quot;' + id + '&quot;)" style="width:99%"></input>';
@@ -521,10 +521,10 @@ var addAttributeText = function(fieldName, inventoryKey) {
     var attributeTable = document.getElementById("attributesTable");
     var attributeRow = attributeTable.insertRow(-1);
     var attributeCell;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = fieldName;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     var id = 'inventory-obj-key-' + inventoryKey;
     attributeCell.innerHTML = '<div id="' + id + '"></div>';
@@ -535,10 +535,10 @@ var addAttributeStatic = function(fieldName, value) {
     var attributeTable = document.getElementById("attributesTable");
     var attributeRow = attributeTable.insertRow(-1);
     var attributeCell;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = fieldName;
-    
+
     attributeCell = attributeRow.insertCell(-1);
     attributeCell.innerHTML = value;
 }
@@ -554,12 +554,12 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
             $http.post('inventory/post_object', JSON.stringify(inventoryObject)
             ).then(function successCallback(response) {
                 saving = false;
-                
+
                 if(inventoryObject['refreshTree']) {
                     $('#inventory').jstree('refresh');
                     inventoryObject['refreshTree'] = false;
                 }
-                
+
             }, function errorCallback(response) {
                 $('.nav-tabs a[href="#console"]').tab('show');
                 addMessage("save failure " + inventoryObject['objuuid']);
@@ -567,28 +567,28 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
                 document.getElementById('connectionStatus').innerHTML = '<font style="color:#F00">NO CONN</font>';
             });
         }
-        
+
         if(!polling_messages) {
             polling_messages = true;
-            
+
             $http.post("messaging/get_messages").then(function (response) {
                 polling_messages = false;
                 var messageData = '<table>';
-                var responseJSON = angular.fromJson(response)['data']['messages'];
+                var responseJSON = angular.fromJson(response)['data'];
                 for(item in responseJSON) {
                     messageData += '<tr><td>' + responseJSON[item]['timestamp'] + '</td><td>' + responseJSON[item]['message'] + '</td></tr>';
                 }
                 messageData += '</table>'
-            
+
                 $scope.messages = $sce.trustAsHtml(messageData);
             }, function errorCallback(response) {
                 polling_messages = false;
             });
         }
-        
+
         if(!polling_inventory) {
             polling_inventory = true;
-            
+
             $.ajax({
                 'url' : 'flags/get',
                 'dataType' : 'json',
@@ -598,7 +598,7 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
                 },
                 'success' : function(resp) {
                     polling_inventory = false;
-                    
+
                     if(inventoryStateFlag != resp.value) {
                         inventoryStateFlag = resp.value;
                         $('#inventory').jstree('refresh');
@@ -609,10 +609,10 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
                 }
             });
         }
-        
+
         if(!polling_queue) {
             polling_queue = true;
-            
+
             $.ajax({
                 'url' : 'flags/get',
                 'dataType' : 'json',
@@ -622,13 +622,13 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
                 },
                 'success' : function(resp) {
                     polling_queue = false;
-                    
+
                     updateQueueState();
                     document.getElementById('connectionStatus').innerHTML = '<font style="color:#0F0">OK</font>';
                 },
                 'error' : function(resp) {
                     polling_queue = false;
-                    
+
                     document.getElementById('connectionStatus').innerHTML = '<font style="color:#F00">NO CONN</font>';
                 }
             });
@@ -650,7 +650,7 @@ var addMessage = function (message) {
 var setInventoryKey = function (key, div) {
     inventoryObject[key] = document.getElementById(div).value;
     inventoryObject['changed'] = true;
-    
+
     if(key == 'name') {
         $("#inventory").jstree('rename_node', inventoryObject['objuuid'] , inventoryObject[key]);
         document.title = inventoryObject.name;
@@ -672,7 +672,7 @@ var touchInventory = function() {
     });
 }
 
-/* Exists to mitigate css race condition 
+/* Exists to mitigate css race condition
 between BS transitions and jsgrid instantiation. */
 var refreshJSGrids = function() {
     $('.jsgrid').each(function(){
@@ -683,10 +683,10 @@ var refreshJSGrids = function() {
 var cutInventoryItems = function() {
     var nodes = $('#inventory').jstree().get_selected(true);
     var objuuids = [];
-    
+
     for(i in nodes)
         objuuids.push(nodes[i].id);
-    
+
     for(i in objuuids) {
         var node = $("#inventory").jstree("get_node", "#" + objuuids[i]);
         var parent = $("#inventory").jstree("get_node", "#" + node.parent);
@@ -694,34 +694,34 @@ var cutInventoryItems = function() {
             selected_objuuids.push(objuuids[i]);
             $("#" + objuuids[i] + " >a").css("background", "yellow");
         }
-        
+
     }
-    
+
     $('#inventory').jstree("deselect_all");
 }
 
 var unCutInventoryItems = function() {
     for(i in selected_objuuids)
-        $("#" + selected_objuuids[i] + " >a").css("background", "white");    
+        $("#" + selected_objuuids[i] + " >a").css("background", "white");
     selected_objuuids = [];
 }
 
 var deleteInventoryItems = function() {
     var nodes = $('#inventory').jstree().get_selected(true);
-    
+
     $('#inventory').jstree("deselect_all");
-    
+
     var objuuids = [];
-    
+
     for(i in nodes)
         objuuids.push(nodes[i].id);
-    
+
     for(i in objuuids) {
         var node = $("#inventory").jstree("get_node", "#" + objuuids[i]);
         var parent = $("#inventory").jstree("get_node", "#" + node.parent);
         if(!parent.state.selected) {
             deleteNode(objuuids[i]);
-        
+
             $.ajax({
                 'url' : 'inventory/delete',
                 'dataType' : 'json',
@@ -746,11 +746,11 @@ var deleteInventoryItems = function() {
 
 var pasteInventoryItems = function() {
     var parent_objuuid = $('#inventory').jstree().get_selected(true)[0];
-    
+
     for(i in selected_objuuids) {
         $('#inventory').jstree("move_node", selected_objuuids[i], parent_objuuid.id, 0);
         $("#" + selected_objuuids[i] + " >a").css("background", "white");
-                
+
         $.ajax({
             'url' : 'inventory/move_object',
             'dataType' : 'json',
@@ -769,7 +769,7 @@ var pasteInventoryItems = function() {
                 $('#inventory').jstree('refresh');
             }
         });
-    }    
+    }
     selected_objuuids = [];
 }
 

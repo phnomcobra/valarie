@@ -1,44 +1,53 @@
 #!/usr/bin/python3
+"""This module implements the routes for posting and reading messages to the
+message board displayed in the UI."""
+from typing import Dict, List
 
 import cherrypy
-import json
 
-from threading import Lock
-from time import time, strftime, localtime
-from copy import deepcopy
+from valarie.controller.messaging import add_message, get_messages
 
-message_lock = Lock()
-messages = {
-    "messages" : []
-}
-
-def add_message(message, timestamp = None):
-    if not timestamp:
-        timestamp = time()
-    
-    cherrypy.log(strftime('%H:%M:%S', localtime(timestamp)), str(message))
-    
-    message_lock.acquire()
-    messages["messages"] = [{"message" : deepcopy(message), "timestamp" : strftime('%H:%M:%S', localtime(timestamp))}] + messages["messages"][:49]
-    message_lock.release()
-
-def get_messages():
-    message_lock.acquire()
-    temp = deepcopy(messages)
-    message_lock.release()
-    return temp
-
-class Messaging(object):
+class Messaging():
+    """This class registers the endpoint methods as endpoints."""
+    @classmethod
     @cherrypy.expose
-    def add_message(self, message, timestamp):
+    @cherrypy.tools.json_out()
+    def add_message(cls, message: str, timestamp: float) -> Dict:
+        """This function registers the endpoint that posts a
+        message with a timestamp.
+
+        Args:
+            message:
+                Message string.
+
+            timestamp:
+                10 digit epoch timestamp.
+        """
         add_message(message, timestamp)
-        return json.dumps({})
-    
+        return {}
+
+    @classmethod
     @cherrypy.expose
-    def add_message(self, message):
+    @cherrypy.tools.json_out()
+    def add_message(cls, message: str) -> Dict:
+        """This function registers the endpoint that posts a message.
+
+        Args:
+            message:
+                Message string.
+
+        """
         add_message(message)
-        return json.dumps({})
-    
+        return {}
+
+    @classmethod
     @cherrypy.expose
-    def get_messages(self):
-        return json.dumps(get_messages())
+    @cherrypy.tools.json_out()
+    def get_messages(cls) -> List[Dict]:
+        """This function registers the endpoint returns a list of the messages.
+
+        Returns:
+            A list of message strings.
+        """
+        return get_messages()
+

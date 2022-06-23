@@ -16,11 +16,6 @@ for current in inventory.find():
 
     if 'body' in current.object.keys():
         current.object['body'] = str(current.object['body']).replace(
-            'valarie.controller.messaging',
-            'valarie.router.messaging'
-        )
-
-        current.object['body'] = str(current.object['body']).replace(
             'valarie.model.datastore',
             'valarie.dao.datastore'
         )
