@@ -4,7 +4,7 @@ import cherrypy
 import json
 import traceback
 
-from valarie.router.messaging import add_message
+from valarie.controller.messaging import add_message
 from valarie.controller.procedure import get_task_grid, get_host_grid
 from valarie.executor.procedure import get_jobs_grid, queue_procedure
 

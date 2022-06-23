@@ -4,7 +4,7 @@ import cherrypy
 import json
 import traceback
 
-from valarie.router.messaging import add_message
+from valarie.controller.messaging import add_message
 from valarie.controller.results import get_controller_results, get_procedure_result, get_result
 
 class Results(object):

@@ -4,7 +4,7 @@ import cherrypy
 import json
 import traceback
 
-from valarie.router.messaging import add_message
+from valarie.controller.messaging import add_message
 from valarie.controller.task import get_host_grid
 from valarie.executor.task import execute
 

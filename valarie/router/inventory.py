@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 
 from cherrypy.lib.static import serve_fileobj
 
-from valarie.router.messaging import add_message
+from valarie.controller.messaging import add_message
 
 from valarie.dao.document import Collection, Object
 from valarie.dao.datastore import File as DatastoreFile

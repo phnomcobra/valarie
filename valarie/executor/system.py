@@ -3,7 +3,7 @@
 
 from subprocess import Popen, PIPE
 
-from valarie.router.messaging import add_message
+from valarie.controller.messaging import add_message
 
 def system(command: str) -> int:
     """This function executes a command on the system.
