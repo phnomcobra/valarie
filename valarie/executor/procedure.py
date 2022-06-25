@@ -162,8 +162,6 @@ def queue_procedure(hstuuid, prcuuid, ctruuid = None):
                     }
 
                     set_job(jobuuid, job)
-
-                    add_message(f'''Queued procedure "{job['procedure']['name']}" on "{job['host']['name']}"''')
         elif temp.object["type"] == "task":
             for hstuuid in hstuuids:
                 host = inventory.get_object(hstuuid)
@@ -197,8 +195,6 @@ def queue_procedure(hstuuid, prcuuid, ctruuid = None):
                     }
 
                     set_job(jobuuid, job)
-
-                    add_message(f'''Queued task "{job['procedure']['name']}" on "{job['host']['name']}"''')
     else:
         temp.destroy()
 
@@ -214,8 +210,6 @@ class TaskError:
 def run_procedure(host_object, procedure_object, console_object, jobuuid = None, ctruuid = None):
     inventory = Collection("inventory")
     results = Collection("results")
-
-    add_message(f'''Running "{procedure_object['name']}" on "{host_object['name']}"''')
 
     try:
         result_overwrite = ('true' in str(procedure_object['resultoverwrite']).lower())
@@ -427,8 +421,6 @@ def run_procedure(host_object, procedure_object, console_object, jobuuid = None,
             update_inventory = False
         if update_inventory:
             touch_flag('inventoryState')
-
-        add_message(f'''Finished "{procedure_object['name']}" on "{host_object['name']}"''')
     except:
         add_message(traceback.format_exc())
 

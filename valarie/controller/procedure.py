@@ -1,73 +1,95 @@
 #!/usr/bin/python3
+"""This module implements functions for creating procedure objects, and retrieving
+host and task grid data for the jsgrid controls in the frontend."""
+from typing import Dict, List
 
-from valarie.dao.document import Collection
+from valarie.dao.document import Collection, Object
 from valarie.router.messaging import add_message
 
-def create_procedure(parent_objuuid, name = "New Procedure", objuuid = None):
-    collection = Collection("inventory")
+def create_procedure(
+        parent_objuuid: str,
+        name: str = "New Procedure",
+        objuuid: str = None
+    ) -> Object:
+    """This is a function used to create a procedure object in the inventory.
 
-    procedure = collection.get_object(objuuid)
+    Args:
+        parent_objuuid:
+            Parent object UUID.
+
+        name:
+            Name of the procedure object.
+
+        objuuid:
+            UUID of the procedure object.
+
+    Returns:
+        An inventory object.
+    """
+    inventory = Collection("inventory")
+
+    procedure = inventory.get_object(objuuid)
 
     procedure.object = {
-        "type" : "procedure",
-        "parent" : parent_objuuid,
-        "children" : [],
-        "name" : name,
-        "tasks" : [],
-        "title" : "",
-        "description" : "",
-        "resultexpirationperiod" : 3600,
-        "resultinventoryupdate" : False,
-        "resultoverwrite" : True,
-        "resultlinkenable" : False,
-        "enabled" : False,
-        "seconds" : "0",
-        "minutes" : "*",
-        "hours" : "*",
-        "dayofmonth" : "*",
-        "dayofweek" : "*",
-        "year" : "*",
-        "rfcs" : [],
-        "hosts" : [],
-        "icon" : "/images/procedure_icon.png",
-        "context" : {
-            "delete" : {
-                "label" : "Delete",
-                "action" : {
-                    "method" : "delete node",
-                    "route" : "inventory/delete",
-                    "params" : {
-                        "objuuid" : procedure.objuuid
+        "type": "procedure",
+        "parent": parent_objuuid,
+        "children": [],
+        "name": name,
+        "tasks": [],
+        "title": "",
+        "description": "",
+        "resultexpirationperiod": 3600,
+        "resultinventoryupdate": False,
+        "resultoverwrite": True,
+        "resultlinkenable": False,
+        "enabled": False,
+        "seconds": "0",
+        "minutes": "*",
+        "hours": "*",
+        "dayofmonth": "*",
+        "dayofweek": "*",
+        "year": "*",
+        "rfcs": [],
+        "hosts": [],
+        "icon": "/images/procedure_icon.png",
+        "context": {
+            "delete": {
+                "label": "Delete",
+                "action": {
+                    "method": "delete node",
+                    "route": "inventory/delete",
+                    "params": {
+                        "objuuid": procedure.objuuid
                     }
                 }
             },
-            "edit" : {
-                "label" : "Edit",
-                "action" : {
-                    "method" : "edit procedure",
-                    "route" : "inventory/get_object",
-                    "params" : {
-                        "objuuid" : procedure.objuuid
+            "edit": {
+                "label": "Edit",
+                "action": {
+                    "method": "edit procedure",
+                    "route": "inventory/get_object",
+                    "params": {
+                        "objuuid": procedure.objuuid
                     }
                 }
             },
-            "run" : {
-                "label" : "Open",
-                "action" : {
-                    "method" : "run procedure",
-                    "route" : "inventory/get_object",
-                    "params" : {
-                        "objuuid" : procedure.objuuid
+            "run": {
+                "label": "Open",
+                "action": {
+                    "method": "run procedure",
+                    "route": "inventory/get_object",
+                    "params": {
+                        "objuuid": procedure.objuuid
                     }
                 }
             },
-            "copy" : {
-                "label" : "Copy",
-                "action" : {
-                    "method" : "copy node",
-                    "route" : "inventory/copy_object",
-                    "params" : {
-                        "objuuid" : procedure.objuuid
+            "copy": {
+                "label": "Copy",
+                "action": {
+                    "method": "copy node",
+                    "route": "inventory/copy_object",
+                    "params": {
+                        "objuuid": procedure.objuuid
                     }
                 }
             }
@@ -76,26 +98,26 @@ def create_procedure(parent_objuuid, name = "New Procedure", objuuid = None):
 
     procedure.set()
 
-    parent = collection.get_object(parent_objuuid)
-    parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
+    parent = inventory.get_object(parent_objuuid)
+    parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
     parent.set()
 
     return procedure
 
-def get_task_grid(prcuuid):
-    collection = Collection("inventory")
+def get_task_grid(prcuuid: str) -> List[Dict]:
+    inventory = Collection("inventory")
 
-    procedure = collection.get_object(prcuuid)
+    procedure = inventory.get_object(prcuuid)
 
     grid_data = []
 
     for tskuuid in procedure.object["tasks"]:
-        task = collection.get_object(tskuuid)
+        task = inventory.get_object(tskuuid)
 
         if "type" in task.object:
             item = {
-                "name" : task.object["name"],
-                "objuuid" : task.object["objuuid"]
+                "name": task.object["name"],
+                "objuuid": task.object["objuuid"]
             }
 
             grid_data.append(item)
@@ -103,31 +125,31 @@ def get_task_grid(prcuuid):
             add_message("task {0} is missing!".format(tskuuid))
 
             item = {
-                "name" : "MISSING!",
-                "objuuid" : tskuuid
+                "name": "MISSING!",
+                "objuuid": tskuuid
             }
 
             grid_data.append(item)
 
     return grid_data
 
-def get_host_grid(prcuuid):
-    collection = Collection("inventory")
+def get_host_grid(prcuuid: str) -> List[Dict]:
+    inventory = Collection("inventory")
 
-    procedure = collection.get_object(prcuuid)
+    procedure = inventory.get_object(prcuuid)
 
     grid_data = []
 
     for hstuuid in procedure.object["hosts"]:
-        host = collection.get_object(hstuuid)
+        host = inventory.get_object(hstuuid)
 
         if "type" in host.object:
             if host.object["type"] == "host":
                 item = {
-                    "type" : host.object["type"],
-                    "name" : host.object["name"],
-                    "host" : host.object["host"],
-                    "objuuid" : host.object["objuuid"]
+                    "type": host.object["type"],
+                    "name": host.object["name"],
+                    "host": host.object["host"],
+                    "objuuid": host.object["objuuid"]
                 }
 
                 grid_data.append(item)
@@ -135,19 +157,19 @@ def get_host_grid(prcuuid):
                 hosts = []
 
                 for uuid in host.object["hosts"]:
-                    c = collection.get_object(uuid)
-                    if "name" in c.object:
-                        hosts.append(c.object["name"])
+                    current = inventory.get_object(uuid)
+                    if "name" in current.object:
+                        hosts.append(current.object["name"])
                     else:
-                        c.destroy()
+                        current.destroy()
                         host.object["hosts"].remove(uuid)
                         host.set()
 
                 item = {
-                    "type" : host.object["type"],
-                    "name" : host.object["name"],
-                    "host" : str("<br>").join(hosts),
-                    "objuuid" : host.object["objuuid"]
+                    "type": host.object["type"],
+                    "name": host.object["name"],
+                    "host": str("<br>").join(hosts),
+                    "objuuid": host.object["objuuid"]
                 }
 
                 grid_data.append(item)

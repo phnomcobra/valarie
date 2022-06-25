@@ -3,6 +3,7 @@
 host grids, queuing single and multiple procedures, and getting the queue
 grid."""
 
+import queue
 from typing import Dict, List
 
 import cherrypy
@@ -67,19 +68,15 @@ class Procedure():
     @cherrypy.expose
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def queue_procedures(cls, queuelist: List[Dict]) -> List[Dict]:
+    def queue_procedures(cls) -> List[Dict]:
         """This function registers the endpoint that queues multiple
         procedures execution.
-
-        Args:
-            queuelist:
-                A list of dictionaries where each contains a host UUID,
-                procedure UUID, and optionally a controller UUID.
 
         Returns:
             A list of dictionaries where each contains a host UUID,
             procedure UUID, and optionally a controller UUID.
         """
+        queuelist = cherrypy.request.json
         for item in queuelist:
             if "ctruuid" in item:
                 ctruuid = item["ctruuid"]

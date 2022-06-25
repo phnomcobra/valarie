@@ -34,18 +34,18 @@ var addControllerHost = function(objuuid) {
 
 var executeController = function() {
     controllerStateUpdating = false;
-    
+
     document.title = inventoryObject.name;
     document.getElementById('bodyTitle').innerHTML = inventoryObject.type.toUpperCase() + ': ' + inventoryObject.name;
     $('.nav-tabs a[href="#body"]').tab('show');
-    
+
     document.getElementById('body').innerHTML = '<div id="controllerTableDiv" style="width:inherit;height:inherit"><table id="controllerTable"></table></div><div id="procedureResultAccordion" style="display:none"></div>';
     document.getElementById('menuBarDynamic').innerHTML = '';
-    
+
     initAttributes();
     addAttributeText('Controller UUID', 'objuuid');
     addAttributeTextBox('Controller Name', 'name');
-    
+
     $.ajax({
         'url' : 'controller/get_tiles',
         'dataType' : 'json',
@@ -55,10 +55,10 @@ var executeController = function() {
             var table = document.getElementById('controllerTable');
             var row;
             var cell;
-            
+
             row = table.insertRow(-1);
             cell = row.insertCell(-1);
-            
+
             if(resp.procedures.length >= resp.hosts.length) {
                 for(var x = 0; x < resp.hosts.length; x++) {
                     cell = row.insertCell(-1);
@@ -68,17 +68,17 @@ var executeController = function() {
                     cell.setAttribute('onclick', 'hostClick(this)');
                     cell.innerHTML = resp.hosts[x].name;
                 }
-                
+
                 for(var y = 0; y < resp.procedures.length; y++) {
                     row = table.insertRow(-1);
-                    
+
                     cell = row.insertCell(-1);
                     cell.innerHTML = resp.procedures[y].name;
                     cell.setAttribute('data-procedure-objuuid', resp.procedures[y].objuuid);
                     cell.setAttribute('data-selected', 'false');
                     cell.setAttribute('onclick', 'procedureClick(this)');
                     cell.setAttribute('class', 'controllerProcedureCell');
-                    
+
                     for(var x = 0; x < resp.hosts.length; x++) {
                         cell = row.insertCell(-1);
                         cell.setAttribute('id', 'controller-cell-' + resp.hosts[x].objuuid + '-' + resp.procedures[y].objuuid);
@@ -90,9 +90,9 @@ var executeController = function() {
                         cell.setAttribute('data-selected', 'false');
                         cell.setAttribute('onclick', 'cellClick(this)');
                         cell.setAttribute('class', 'controllerCell');
-                        
+
                         cell.style.borderColor = '#CCC';
-                       
+
                         document.getElementById('procedureResultAccordion').innerHTML += '<div id="section-header-' + resp.hosts[x].objuuid + '-' + resp.procedures[y].objuuid + '"></div>';
                         document.getElementById('procedureResultAccordion').innerHTML += '<pre><code id="section-body-' + resp.hosts[x].objuuid + '-' + resp.procedures[y].objuuid + '"></code></pre>';
                     }
@@ -106,17 +106,17 @@ var executeController = function() {
                     cell.setAttribute('onclick', 'procedureClick(this)');
                     cell.setAttribute('class', 'controllerProcedureCell');
                 }
-                
+
                 for(var y = 0; y < resp.hosts.length; y++) {
                     row = table.insertRow(-1);
-                    
+
                     cell = row.insertCell(-1);
                     cell.setAttribute('data-host-objuuid', resp.hosts[y].objuuid);
                     cell.setAttribute('data-selected', 'false');
                     cell.setAttribute('class', 'controllerHostCell');
                     cell.setAttribute('onclick', 'hostClick(this)');
                     cell.innerHTML = resp.hosts[y].name;
-                    
+
                     for(var x = 0; x < resp.procedures.length; x++) {
                         cell = row.insertCell(-1);
                         cell.setAttribute('id', 'controller-cell-' + resp.hosts[y].objuuid + '-' + resp.procedures[x].objuuid);
@@ -128,18 +128,18 @@ var executeController = function() {
                         cell.setAttribute('data-selected', 'false');
                         cell.setAttribute('onclick', 'cellClick(this)');
                         cell.setAttribute('class', 'controllerCell');
-                        
+
                         cell.style.borderColor = '#CCC';
-                       
+
                         document.getElementById('procedureResultAccordion').innerHTML += '<div id="section-header-' + resp.hosts[y].objuuid + '-' + resp.procedures[x].objuuid + '"></div>';
                         document.getElementById('procedureResultAccordion').innerHTML += '<pre><code id="section-body-' + resp.hosts[y].objuuid + '-' + resp.procedures[x].objuuid + '"></code></pre>';
                     }
                 }
             }
-            
+
             updateControllerStateData();
             updateControllerTimer();
-            
+
             $("#procedureResultAccordion").accordion({
                 collapsible: true,
                 heightStyle: "content",
@@ -147,7 +147,7 @@ var executeController = function() {
             });
         }
     });
-    
+
     link = document.createElement("a");
     link.setAttribute("href", "#");
     link.innerHTML = "Edit";
@@ -155,7 +155,7 @@ var executeController = function() {
     cell.setAttribute('onclick', 'editController()');
     cell.appendChild(link);
     document.getElementById('menuBarDynamic').appendChild(cell);
-    
+
     link = document.createElement("a");
     link.setAttribute("href", "#");
     link.innerHTML = "Details";
@@ -163,7 +163,7 @@ var executeController = function() {
     cell.setAttribute('onclick', 'toggleControllerDetails()');
     cell.appendChild(link);
     document.getElementById('menuBarDynamic').appendChild(cell);
-    
+
     link = document.createElement("a");
     link.setAttribute("href", "#");
     link.innerHTML = "Run";
@@ -171,7 +171,7 @@ var executeController = function() {
     cell.setAttribute('onclick', 'executeSelectedProcedures()');
     cell.appendChild(link);
     document.getElementById('menuBarDynamic').appendChild(cell);
-    
+
     link = document.createElement("a");
     link.setAttribute("href", "#");
     link.innerHTML = "Select All";
@@ -179,7 +179,7 @@ var executeController = function() {
     cell.setAttribute('onclick', 'selectAllProcedures()');
     cell.appendChild(link);
     document.getElementById('menuBarDynamic').appendChild(cell);
-    
+
     link = document.createElement("a");
     link.setAttribute("href", "#");
     link.innerHTML = "Clear Selected";
@@ -198,7 +198,7 @@ var toggleControllerDetails = function(item) {
         document.getElementById('controllerTableDiv').style.display = 'none';
         document.getElementById('procedureResultAccordion').style.display = 'block';
         showControllerDetails = true;
-        
+
         $('#controllerTable tr').each(function(){
             $(this).find('td').each(function(){
                 if($(this)[0].id) {
@@ -226,7 +226,7 @@ var cellClick = function(item) {
 var hostClick = function(item) {
     if(item.getAttribute('data-selected') == 'true') {
         item.setAttribute('data-selected', false);
-        
+
         $('#controllerTable tr').each(function(){
             $(this).find('td').each(function(){
                 if($(this)[0].id) {
@@ -239,7 +239,7 @@ var hostClick = function(item) {
         });
     } else {
         item.setAttribute('data-selected', true);
-        
+
         $('#controllerTable tr').each(function(){
             $(this).find('td').each(function(){
                 if($(this)[0].id) {
@@ -256,7 +256,7 @@ var hostClick = function(item) {
 var procedureClick = function(item) {
     if(item.getAttribute('data-selected') == 'true') {
         item.setAttribute('data-selected', false);
-        
+
         $('#controllerTable tr').each(function(){
             $(this).find('td').each(function(){
                 if($(this)[0].id) {
@@ -269,7 +269,7 @@ var procedureClick = function(item) {
         });
     } else {
         item.setAttribute('data-selected', true);
-        
+
         $('#controllerTable tr').each(function(){
             $(this).find('td').each(function(){
                 if($(this)[0].id) {
@@ -285,13 +285,13 @@ var procedureClick = function(item) {
 
 var executeSelectedProcedures = function() {
     var items = [];
-    
+
     $('#controllerTable tr').each(function(){
         $(this).find('td').each(function(){
             if($(this)[0].id) {
                 if($(this)[0].attributes['data-selected'].value == 'true') {
                     items.push({
-                        "prcuuid" : $(this)[0].attributes['data-procedure-objuuid'].value, 
+                        "prcuuid" : $(this)[0].attributes['data-procedure-objuuid'].value,
                         "hstuuid" : $(this)[0].attributes['data-host-objuuid'].value,
                         "ctruuid" : inventoryObject.objuuid
                     });
@@ -299,14 +299,13 @@ var executeSelectedProcedures = function() {
             }
         });
     });
-    
+
     $.ajax({
         'url' : 'procedure/queue_procedures',
         'dataType' : 'json',
+        'contentType' : 'application/json',
         'method': 'POST',
-        'data' : {
-            'queuelist' : JSON.stringify(items)
-        },
+        'data' : JSON.stringify(items),
         'success' : function(resp){
             $('.nav-tabs a[href="#queue"]').tab('show');
         },
@@ -340,7 +339,7 @@ var deselectAllProcedures = function() {
 
 var drawCells = function(resultItems) {
     var cell;
-    
+
     for(var i = 0; i < resultItems.length; i++) {
         cell = document.getElementById('controller-cell-' + resultItems[i].host.objuuid + '-' + resultItems[i].procedure.objuuid);
 
@@ -352,7 +351,7 @@ var drawCells = function(resultItems) {
                 cell.style.color = '#' + resultItems[i].status.cfg;
                 cell.style.backgroundColor = '#' + resultItems[i].status.cbg;
             }
-            
+
             cell.innerHTML = resultItems[i].status.abbreviation;
         } else {
             cell.style.color = '#' + resultItems[i].status.cfg;
@@ -413,7 +412,7 @@ var updateControllerStateData = function() {
 var loadAndEditController = function(objuuid) {
     document.getElementById('body').innerHTML = '';
     document.getElementById('menuBarDynamic').innerHTML = '';
-    
+
     $.ajax({
         'url' : 'inventory/get_object',
         'dataType' : 'json',
@@ -431,14 +430,14 @@ var editController = function() {
     initAttributes();
     addAttributeText('Controller UUID', 'objuuid');
     addAttributeTextBox('Controller Name', 'name');
-    
+
     document.title = inventoryObject.name;
     document.getElementById('bodyTitle').innerHTML = inventoryObject.type.toUpperCase() + ': ' + inventoryObject.name;
     $('.nav-tabs a[href="#body"]').tab('show');
-    
+
     document.getElementById('body').innerHTML = '<div id="procedureGrid" style="padding:10px;float:left"></div><div id="hostGrid" style="padding:10px;margin-left:50%"></div>';
     document.getElementById('menuBarDynamic').innerHTML = '';
-    
+
     link = document.createElement("a");
     link.setAttribute("href", "#");
     link.innerHTML = "Open";
@@ -446,27 +445,27 @@ var editController = function() {
     cell.setAttribute('onclick', 'executeController()');
     cell.appendChild(link);
     document.getElementById('menuBarDynamic').appendChild(cell);
-    
+
     $("#procedureGrid").jsGrid({
         height: "calc(100% - 5px)",
         width: "calc(50% - 10px)",
         autoload: true,
-        
+
         deleteButton: true,
         confirmDeleting: false,
         sorting: false,
-        
+
         rowClass: function(item, itemIndex) {
             return "client-" + itemIndex;
         },
-        
+
         editing: true,
         onItemEditing: function(args) {
             if(args.item.type == "procedure")
                 loadAndEditProcedure(args.item.objuuid);
             else if(args.item.type == "task")
                 loadAndEditTask(args.item.objuuid);
-        },   
+        },
 
         controller: {
             loadData: function(filter) {
@@ -486,17 +485,17 @@ var editController = function() {
                 inventoryObject['changed'] = true;
             }
         },
-        
+
         fields: [
             {name : "name", type : "text", title : "Procedure Name"},
             {name : "objuuid", type : "text", visible: false},
             {name : "type", type : "text", visible: false},
             {type : "control" }
         ],
- 
+
         onRefreshed: function() {
             var $gridData = $("#procedureGrid .jsgrid-grid-body tbody");
- 
+
             $gridData.sortable({
                 update: function(e, ui) {
                     // array of indexes
@@ -504,12 +503,12 @@ var editController = function() {
                     var indexes = $.map($gridData.sortable("toArray", { attribute: "class" }), function(classes) {
                         return clientIndexRegExp.exec(classes)[1];
                     });
- 
+
                     // arrays of items
                     var items = $.map($gridData.find("tr"), function(row) {
                         return $(row).data("JSGridItem");
                     });
-                    
+
                     inventoryObject['procedures'] = [];
                     for(var i in items) {
                         inventoryObject['procedures'].push(items[i].objuuid);
@@ -519,19 +518,19 @@ var editController = function() {
             });
         }
     });
-    
+
     $("#hostGrid").jsGrid({
         height: "calc(100% - 5px)",
         width: "calc(50% - 10px)",
         autoload: true,
-        
+
         deleteButton: true,
         confirmDeleting: false,
-        
+
         rowClass: function(item, itemIndex) {
             return "client-" + itemIndex;
         },
-        
+
         editing: true,
         onItemEditing: function(args) {
             if(args.item.type == 'host') {
@@ -539,9 +538,9 @@ var editController = function() {
             } else if (args.item.type == 'host group') {
                 loadAndEditHostGroup(args.item.objuuid);
             }
-        },   
+        },
         sorting: false,
- 
+
         controller: {
             loadData: function(filter) {
                 return $.ajax({
@@ -560,17 +559,17 @@ var editController = function() {
                 inventoryObject['changed'] = true;
             }
         },
-        
+
         fields: [
             {name : "name", type : "text", title : "Host Name"},
             {name : "host", type : "text", title : "Host"},
             {name : "objuuid", type : "text", visible: false},
             {type : "control" }
         ],
- 
+
         onRefreshed: function() {
             var $gridData = $("#hostGrid .jsgrid-grid-body tbody");
- 
+
             $gridData.sortable({
                 update: function(e, ui) {
                     // array of indexes
@@ -578,12 +577,12 @@ var editController = function() {
                     var indexes = $.map($gridData.sortable("toArray", { attribute: "class" }), function(classes) {
                         return clientIndexRegExp.exec(classes)[1];
                     });
- 
+
                     // arrays of items
                     var items = $.map($gridData.find("tr"), function(row) {
                         return $(row).data("JSGridItem");
                     });
-                    
+
                     inventoryObject['hosts'] = [];
                     for(var i in items) {
                         inventoryObject['hosts'].push(items[i].objuuid);
@@ -593,8 +592,8 @@ var editController = function() {
             });
         }
     });
-    
-    
-    
+
+
+
     setTimeout(refreshJSGrids, 1000);
 }
