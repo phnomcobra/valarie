@@ -3,7 +3,6 @@
 host grids, queuing single and multiple procedures, and getting the queue
 grid."""
 
-import queue
 from typing import Dict, List
 
 import cherrypy
