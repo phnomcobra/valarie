@@ -105,6 +105,16 @@ def create_procedure(
     return procedure
 
 def get_task_grid(prcuuid: str) -> List[Dict]:
+    """This is a function used to get a list of a procedure's tasks.
+
+    Args:
+        prcuuid:
+            Procedure's object UUID.
+
+    Returns:
+        A list of dictionaries. Each dictionary contains a name, and
+        object UUID of the task.
+    """
     inventory = Collection("inventory")
 
     procedure = inventory.get_object(prcuuid)
@@ -134,6 +144,16 @@ def get_task_grid(prcuuid: str) -> List[Dict]:
     return grid_data
 
 def get_host_grid(prcuuid: str) -> List[Dict]:
+    """This is a function used to get a list of a procedure's hosts.
+
+    Args:
+        prcuuid:
+            Procedure's object UUID.
+
+    Returns:
+        A list of dictionaries. Each dictionary contains a name,
+        object UUID of the host, the host, and type.
+    """
     inventory = Collection("inventory")
 
     procedure = inventory.get_object(prcuuid)
