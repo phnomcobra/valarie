@@ -7,7 +7,7 @@ from typing import Dict
 import cherrypy
 
 from valarie.controller.general import restart
-from valarie.router.messaging import add_message
+from valarie.controller.messaging import add_message
 
 class General(): # pylint: disable=too-few-public-methods
     """This class encapsulates the general purpose endpoints."""
