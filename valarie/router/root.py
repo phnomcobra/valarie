@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-
+"""This module mounts the static index endpoint and registers the
+various cherrypy classes into the root of the application."""
 import cherrypy
 
 from valarie.view.index import index_view
@@ -15,7 +16,9 @@ from valarie.router.flags import Flags
 from valarie.router.task import Task
 from valarie.router.general import General
 
-class Root(object):
+class Root(): # pylint: disable=too-few-public-methods
+    """This class mounts the static index endpoint and registers the
+    various cherrypy classes into the root of the application."""
     inventory = Inventory()
     messaging = Messaging()
     procedure = Procedure()
@@ -27,6 +30,13 @@ class Root(object):
     hostgroup = HostGroup()
     general = General()
 
+    @classmethod
     @cherrypy.expose
-    def index(self):
+    def index(cls) -> str:
+        """This function registers the endpoint that retrieves the
+        index page.
+
+        Returns:
+            An HTML string.
+        """
         return index_view()
