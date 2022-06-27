@@ -194,7 +194,7 @@ def get_host_grid(prcuuid: str) -> List[Dict]:
 
                 grid_data.append(item)
         else:
-            add_message("host {0} is missing!".format(hstuuid))
+            add_message(f"host {hstuuid} is missing!")
             host.destroy()
             procedure.object["hosts"].remove(hstuuid)
             procedure.set()
