@@ -1,14 +1,36 @@
 #!/usr/bin/python3
-
+"""This module implements functions for result link objects; retrieving
+results by controller, procedure, and result UUID; deleting results; and
+the results worker."""
 from threading import Timer
 from time import time
+from typing import Dict, List
 
 from valarie.executor.timers import timers
-from valarie.dao.document import Collection
+from valarie.dao.document import Collection, Object
 from valarie.controller.inventory import delete_node
 from valarie.router.flags import touch_flag
 
-def create_result_link(parent_objuuid, name="New Result Link", objuuid=None):
+def create_result_link(
+        parent_objuuid: str,
+        name: str = "New Result Link",
+        objuuid: str = None
+    ) -> Object:
+    """This is a function used to create a result link object in the inventory.
+
+    Args:
+        parent_objuuid:
+            Parent object UUID.
+
+        name:
+            Name of the link object.
+
+        objuuid:
+            UUID of the link object.
+
+    Returns:
+        An inventory object.
+    """
     inventory = Collection("inventory")
 
     result = inventory.get_object(objuuid)
@@ -42,34 +64,61 @@ def create_result_link(parent_objuuid, name="New Result Link", objuuid=None):
 
     return result
 
-def delete(objuuid):
-    results = Collection("results")
-    results.get_object(objuuid).destroy()
+def get_hosts(
+        hstuuid: str,
+        hstuuids: List[str],
+        grpuuids: List[str],
+        inventory: Collection
+    ):
+    """This is a recursion function used to aggregate all of the nested hosts that a
+    host, more precisely a host group encapsulates.
 
-def get_hosts(hstuuid, hstuuids, grpuuids, inventory):
-    o = inventory.get_object(hstuuid)
+    Args:
+        hstuuid:
+            The host or host group object that recusion begins from.
 
-    if "type" in o.object:
-        if o.object["type"] == "host":
+        hstuuids:
+            List of accumulated host object UUIDs.
+
+        grpuuids:
+            List of accumulated host group object UUIDs.
+
+        inventory:
+            The inventory collection.
+    """
+    current = inventory.get_object(hstuuid)
+
+    if "type" in current.object:
+        if current.object["type"] == "host":
             if hstuuid not in hstuuids:
                 hstuuids.append(hstuuid)
-        elif o.object["type"] == "host group":
-            for uuid in o.object["hosts"]:
-                c = inventory.get_object(uuid)
-                if "type" in c.object:
-                    if c.object["type"] == "host group":
+        elif current.object["type"] == "host group":
+            for uuid in current.object["hosts"]:
+                nested = inventory.get_object(uuid)
+                if "type" in nested.object:
+                    if nested.object["type"] == "host group":
                         if uuid not in grpuuids:
                             grpuuids.append(uuid)
                             get_hosts(uuid, hstuuids, grpuuids, inventory)
-                    elif c.object["type"] == "host":
+                    elif nested.object["type"] == "host":
                         if uuid not in hstuuids:
                             hstuuids.append(uuid)
                 else:
-                    o.object["hosts"].remove(uuid)
-                    o.set()
-                    c.destroy()
+                    current.object["hosts"].remove(uuid)
+                    current.set()
+                    nested.destroy()
 
-def get_controller_results(ctruuid):
+def get_controller_results(ctruuid: str) -> List[Dict]:
+    """This is a function used to retrieve the latest results for a
+    controller object.
+
+    Args:
+        ctruuid:
+            The controller object UUID.
+
+    Returns:
+        List of result dictionaries.
+    """
     results = Collection("results")
     inventory = Collection("inventory")
 
@@ -86,11 +135,11 @@ def get_controller_results(ctruuid):
         for prcuuid in controller.object["procedures"]:
             try:
                 result = None
-                for r in results.find(hstuuid=hstuuid, prcuuid=prcuuid):
+                for current in results.find(hstuuid=hstuuid, prcuuid=prcuuid):
                     if result is None:
-                        result = r.object
-                    elif result['start'] < r.object['start']:
-                        result = r.object
+                        result = current.object
+                    elif result['start'] < current.object['start']:
+                        result = current.object
 
                 if result["start"] != None and result["stop"] != None:
                     result["duration"] = result["stop"] - result["start"]
@@ -110,7 +159,20 @@ def get_controller_results(ctruuid):
 
     return controller_results
 
-def get_procedure_result(prcuuid, hstuuid):
+def get_procedure_result(prcuuid: str, hstuuid: str) -> List[Dict]:
+    """This is a function used to retrieve the latest results for a
+    particular host/procedure combination.
+
+    Args:
+        prcuuid:
+            The procedure object UUID.
+
+        hstuuid:
+            The host object UUID.
+
+    Returns:
+        List of result dictionaries.
+    """
     inventory = Collection("inventory")
     results = Collection("results")
 
@@ -123,11 +185,12 @@ def get_procedure_result(prcuuid, hstuuid):
     for hstuuid in hstuuids:
         try:
             result = None
-            for r in results.find(hstuuid=hstuuid, prcuuid=prcuuid):
+            # get the latest result for a host/procedure UUID pair.
+            for current in results.find(hstuuid=hstuuid, prcuuid=prcuuid):
                 if result is None:
-                    result = r.object
-                elif result['start'] < r.object['start']:
-                    result = r.object
+                    result = current.object
+                elif result['start'] < current.object['start']:
+                    result = current.object
 
             if result["start"] != None and result["stop"] != None:
                 result["duration"] = result["stop"] - result["start"]
@@ -137,12 +200,21 @@ def get_procedure_result(prcuuid, hstuuid):
                 result["duration"] = 0
 
             result_objects.append(result)
-        except IndexError:
+        except:
             continue
 
     return result_objects
 
-def get_result(resuuid):
+def get_result(resuuid: str) -> List[Dict]:
+    """This is a function used to retrieve a specific result.
+
+    Args:
+        resuuid:
+            The result object UUID.
+
+    Returns:
+        List of result dictionaries.
+    """
     results = Collection("results")
     result = results.get_object(resuuid)
 
@@ -156,6 +228,8 @@ def get_result(resuuid):
     return [result.object]
 
 def worker():
+    """This is a worker function used to process expiration of results
+    and result links."""
     timers["results worker"] = Timer(60, worker)
     timers["results worker"].start()
 
@@ -178,7 +252,7 @@ def worker():
             except:
                 update_inventory = False
 
-            if time() - result.object["start"] > expiration_period and expiration_period is not 0:
+            if time() - result.object["start"] > expiration_period and expiration_period != 0:
                 if "linkuuid" in result.object:
                     delete_node(result.object['linkuuid'])
                     if update_inventory:
