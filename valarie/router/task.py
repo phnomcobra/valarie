@@ -25,7 +25,7 @@ class Task():
         Returns:
             A list of host items for jsgrid.
         """
-        get_host_grid(objuuid)
+        return get_host_grid(objuuid)
 
     @classmethod
     @cherrypy.expose
@@ -44,4 +44,4 @@ class Task():
         Returns:
             A list of host items for jsgrid.
         """
-        execute(tskuuid, hstuuid)
+        return execute(tskuuid, hstuuid)

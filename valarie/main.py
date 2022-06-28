@@ -8,7 +8,7 @@ from valarie.router.messaging import add_message
 from valarie.executor.timers import cancel_timers
 from valarie.controller.config import get_host, get_port
 
-def on_cherrypy_log(msg, level):
+def on_cherrypy_log(msg, level): # pylint: disable=unused-argument
     add_message(f'<font color="red">{msg}</font>')
 
 def start():
@@ -16,13 +16,15 @@ def start():
 
     config = {
         'log.screen': False,
-        'tools.staticdir.on' : True,
-        'tools.sessions.on' : True,
-        'tools.sessions.locking' : 'explicit',
-        'tools.staticdir.dir' : os.path.join(current_dir, './static'),
-        'server.thread_pool' : 100,
-        'server.socket_host' : get_host(),
-        'server.socket_port' : get_port()
+        'tools.staticdir.on': True,
+        'tools.sessions.on': True,
+        'tools.sessions.locking': 'explicit',
+        'tools.staticdir.dir': os.path.join(current_dir, './static'),
+        'server.thread_pool': 100,
+        'server.socket_host': get_host(),
+        'server.socket_port': get_port()
+        # 'log.access_file': 'access.log',
+        # 'log.error_file': 'error.log'
     }
 
     cherrypy.config.update(config)

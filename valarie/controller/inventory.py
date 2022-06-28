@@ -12,7 +12,7 @@ from valarie.controller import kvstore
 from valarie.dao.datastore import delete_sequence, copy_sequence
 from valarie.controller.container import create_container
 from valarie.router.messaging import add_message
-from valarie.router.flags import touch_flag
+from valarie.controller import kvstore as kv
 from valarie.controller.config import (
     CONFIG_OBJUUID,
     TASK_PROTO_OBJUUID,
@@ -77,8 +77,8 @@ def __get_child_tree_nodes(nodes: List[Dict], current: Object, inventory: Collec
         for objuuid in inventory.find_objuuids(parent=current.objuuid):
             nodes = __get_child_tree_nodes(nodes, inventory.get_object(objuuid), inventory)
     except KeyError:
-        cherrypy.log(traceback.format_exc())
-        cherrypy.log(current.object)
+        add_message(traceback.format_exc())
+        add_message(str(current.object))
 
     return nodes
 
@@ -426,7 +426,7 @@ def copy_object(objuuid: str) -> Object:
             add_message(f'mutated {new.objuuid}')
 
     if len(child_objuuids) > 0:
-        touch_flag("inventoryState")
+        kv.touch("inventoryState")
 
     unlock()
 

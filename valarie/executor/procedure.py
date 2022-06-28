@@ -9,7 +9,7 @@ from imp import new_module
 
 from valarie.dao.document import Collection
 from valarie.dao.utils import sucky_uuid
-from valarie.router.flags import touch_flag
+from valarie.controller import kvstore as kv
 from valarie.router.messaging import add_message
 from valarie.executor.timers import timers
 from valarie.controller.config import get_config
@@ -23,13 +23,13 @@ def update_job(jobuuid, key, value):
     job_lock.acquire()
     jobs[jobuuid][key] = value
     job_lock.release()
-    touch_flag("queueState")
+    kv.touch("queueState")
 
 def set_job(jobuuid, value):
     job_lock.acquire()
     jobs[jobuuid] = value
     job_lock.release()
-    touch_flag("queueState")
+    kv.touch("queueState")
 
 def get_job(jobuuid):
     try:
@@ -48,7 +48,7 @@ def del_job(jobuuid):
     except KeyError:
         pass
     finally:
-        touch_flag("queueState")
+        kv.touch("queueState")
         job_lock.release()
 
 def get_jobs_grid():
@@ -302,9 +302,9 @@ def run_procedure(host_object, procedure_object, console_object, jobuuid = None,
         result.set()
 
         if host_object["objuuid"] in procedure_object["hosts"]:
-            touch_flag("procedure-" + procedure_object["objuuid"])
+            kv.touch("procedure-" + procedure_object["objuuid"])
         if ctruuid:
-            touch_flag("controller-" + ctruuid)
+            kv.touch("controller-" + ctruuid)
     except:
         add_message(traceback.format_exc())
 
@@ -383,18 +383,18 @@ def run_procedure(host_object, procedure_object, console_object, jobuuid = None,
             result.set()
 
             if host_object["objuuid"] in procedure_object["hosts"]:
-                touch_flag("procedure-" + procedure_object["objuuid"])
+                kv.touch("procedure-" + procedure_object["objuuid"])
             if ctruuid:
-                touch_flag("controller-" + ctruuid)
+                kv.touch("controller-" + ctruuid)
 
         if procedure_status != None:
             result.object['status'] = procedure_status
             result.set()
 
             if host_object["objuuid"] in procedure_object["hosts"]:
-                touch_flag("procedure-" + procedure_object["objuuid"])
+                kv.touch("procedure-" + procedure_object["objuuid"])
             if ctruuid:
-                touch_flag("controller-" + ctruuid)
+                kv.touch("controller-" + ctruuid)
 
         try:
             result_link_enabled = ('true' in str(procedure_object['resultlinkenable']).lower())
@@ -420,7 +420,7 @@ def run_procedure(host_object, procedure_object, console_object, jobuuid = None,
         except:
             update_inventory = False
         if update_inventory:
-            touch_flag('inventoryState')
+            kv.touch('inventoryState')
     except:
         add_message(traceback.format_exc())
 
@@ -533,7 +533,7 @@ def worker():
                     running_jobs_counts[jobs[key]["console"]["objuuid"]] += 1
                 else:
                     del jobs[key]
-                    touch_flag("queueState")
+                    kv.touch("queueState")
 
         for key in list(jobs.keys()):
             if running_jobs_count < int(get_config()["concurrency"]):
@@ -555,7 +555,7 @@ def worker():
                         running_jobs_count += 1
                         running_jobs_counts[jobs[key]["host"]["objuuid"]] += 1
                         running_jobs_counts[jobs[key]["console"]["objuuid"]] += 1
-                        touch_flag("queueState")
+                        kv.touch("queueState")
     except:
         add_message("queue exception\n{0}".format(traceback.format_exc()))
 

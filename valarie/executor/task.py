@@ -1,27 +1,54 @@
 #!/usr/bin/python3
-
+"""This module implements functions and classes for synchronously executing tasks."""
 import traceback
+from typing import Any, Dict
+from imp import new_module
+from time import time
 
 from valarie.dao.document import Collection
 from valarie.router.messaging import add_message
 
-from imp import new_module
-from time import time
+class TaskError: # pylint: disable=too-few-public-methods
+    """The class is used to encapsulate errors as Task objects."""
+    def __init__(self, uuid: str):
+        """The TaskError's contructor.
 
-class TaskError:
-    def __init__(self, uuid):
+        Args:
+            uuid:
+                A task object's UUID.
+        """
         self.output = ['<font color="red">'] + traceback.format_exc().split("\n") + ["</font>"]
         self.uuid = uuid
         self.status = 5
 
-    def execute(self, cli):
+    def execute(self, cli: Any) -> int: # pylint: disable=unused-argument
+        """This function exists to maintain the interface of an ordinary Task
+        object.
+
+        Args:
+            cli:
+                A console object. This is not used for task errors so it can
+                be anything.
+        """
         return self.status
 
-def execute(tskuuid, hstuuid):
+def execute(tskuuid: str, hstuuid: str) -> Dict:
+    """This is a function used to run a task and return its result.
+
+    Args:
+        tskuuid:
+            UUID of the task object.
+
+        hstuuid:
+            UUID of the host object.
+
+    Returns:
+        A dictionary of the result.
+    """
     inventory = Collection("inventory")
     results = Collection("results")
 
-    for result in results.find(hstuuid = hstuuid, tskuuid = tskuuid):
+    for result in results.find(hstuuid=hstuuid, tskuuid=tskuuid):
         result.destroy()
 
     result = results.get_object()
@@ -31,12 +58,12 @@ def execute(tskuuid, hstuuid):
     status_code_body = ""
     status_data = {}
 
-    for status in inventory.find(type = "status"):
+    for status in inventory.find(type="status"):
         try:
-            status_code_body += "{0}=int('{1}')\n".format(status.object["alias"], status.object["code"])
+            status_code_body += f"""{status.object["alias"]}=int('{status.object["code"]}')\n"""
             status_data[int(status.object["code"])] = status.object
-        except:
-            add_message(traceback.format_exc())
+        except (KeyError, ValueError) as exception:
+            add_message(str(exception))
 
     host = inventory.get_object(hstuuid)
     result.object['host'] = {}
@@ -47,8 +74,9 @@ def execute(tskuuid, hstuuid):
     tempmodule = new_module("tempmodule")
 
     try:
+        # pylint: disable=exec-used
         exec(inventory.get_object(host.object["console"]).object["body"], tempmodule.__dict__)
-        cli = tempmodule.Console(host = host.object)
+        cli = tempmodule.Console(host=host.object)
 
         try:
             inv_task = inventory.get_object(tskuuid)
@@ -59,19 +87,19 @@ def execute(tskuuid, hstuuid):
             result.object['task']["stop"] = None
             result.object['task']["tskuuid"] = tskuuid
 
-            inv_task.object["body"] in tempmodule.__dict__
-            exec(inv_task.object["body"] + "\n" + status_code_body, tempmodule.__dict__)
+            # pylint: disable=exec-used
+            exec(f'{inv_task.object["body"]}\n{status_code_body}', tempmodule.__dict__)
             task = tempmodule.Task()
 
             try:
                 task.execute(cli)
-            except:
+            except: # pylint: disable=bare-except
                 task = TaskError(tskuuid)
                 add_message(traceback.format_exc())
-        except:
+        except: # pylint: disable=bare-except
             task = TaskError(tskuuid)
             add_message(traceback.format_exc())
-    except:
+    except: # pylint: disable=bare-except
         task = TaskError(tskuuid)
         add_message(traceback.format_exc())
 
@@ -79,18 +107,9 @@ def execute(tskuuid, hstuuid):
 
     try:
         result.object['status'] = status_data[task.status]
-
-        result.object['status'] = {}
-        result.object['status']["name"] = status_data[task.status]["name"]
-        result.object['status']["code"] = status_data[task.status]["code"]
-        result.object['status']["abbreviation"] = status_data[task.status]["abbreviation"]
-        result.object['status']["cfg"] = status_data[task.status]["cfg"]
-        result.object['status']["cbg"] = status_data[task.status]["cbg"]
-        result.object['status']["sfg"] = status_data[task.status]["sfg"]
-        result.object['status']["sbg"] = status_data[task.status]["sbg"]
-    except:
-        add_message(traceback.format_exc())
-        result.object['status'] = {"code" : task.status}
+    except KeyError as exception:
+        add_message(str(exception))
+        result.object['status'] = {"code": task.status}
 
     result.object['stop'] = time()
     result.set()

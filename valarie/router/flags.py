@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 import cherrypy
 
-from valarie.controller.flags import get_flag, set_flag, touch_flag
+from valarie.controller import kvstore as kv
 
 class Flags():
     """This class encapsulates the flag routes."""
@@ -28,7 +28,7 @@ class Flags():
         """
         return {
             "key" : key,
-            "value" : set_flag(key, value)
+            "value" : kv.set(key, value)
         }
 
     @classmethod
@@ -46,7 +46,7 @@ class Flags():
         """
         return {
             "key" : key,
-            "value" : get_flag(key)
+            "value" : kv.get(key)
         }
 
     @classmethod
@@ -64,5 +64,5 @@ class Flags():
         """
         return {
             "key" : key,
-            "value" : touch_flag(key)
+            "value" : kv.touch(key)
         }

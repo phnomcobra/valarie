@@ -9,7 +9,7 @@ from typing import Dict, List
 from valarie.executor.timers import timers
 from valarie.dao.document import Collection, Object
 from valarie.controller.inventory import delete_node
-from valarie.router.flags import touch_flag
+from valarie.controller import kvstore as kv
 
 def create_result_link(
         parent_objuuid: str,
@@ -263,7 +263,7 @@ def worker():
             result.destroy()
 
     if refresh_inventory:
-        touch_flag("inventoryState")
+        kv.touch("inventoryState")
 
 collection = Collection("results")
 collection.create_attribute("start", "['start']")
