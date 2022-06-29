@@ -1,12 +1,31 @@
 #!/usr/bin/python3
+"""This module implements functions for creating text file inventory objects."""
+from valarie.dao.document import Collection, Object
 
-from valarie.dao.document import Collection
+def create_text_file(
+        parent_objuuid: str,
+        name: str = "New Text File",
+        objuuid: str = None
+    ) -> Object:
+    """This is a function used to create a text file object in the inventory.
 
-def create_text_file(parent_objuuid, name = "New Text File", objuuid = None):
-    collection = Collection("inventory")
-    
-    text_file = collection.get_object(objuuid)
-    
+    Args:
+        parent_objuuid:
+            Parent object UUID.
+
+        name:
+            Name of the text file object.
+
+        objuuid:
+            UUID of the text file object.
+
+    Returns:
+        An inventory object.
+    """
+    inventory = Collection("inventory")
+
+    text_file = inventory.get_object(objuuid)
+
     text_file.object = {
         "type" : "text file",
         "parent" : parent_objuuid,
@@ -48,12 +67,12 @@ def create_text_file(parent_objuuid, name = "New Text File", objuuid = None):
             }
         }
     }
-    
+
     text_file.set()
-    
+
     if parent_objuuid != "#":
-        parent = collection.get_object(parent_objuuid)
-        parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
+        parent = inventory.get_object(parent_objuuid)
+        parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
         parent.set()
-    
+
     return text_file

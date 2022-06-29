@@ -5,8 +5,6 @@ import traceback
 from time import sleep
 from typing import Any, Dict, List
 
-import cherrypy
-
 from valarie.dao.document import Collection, Object
 from valarie.controller import kvstore
 from valarie.dao.datastore import delete_sequence, copy_sequence

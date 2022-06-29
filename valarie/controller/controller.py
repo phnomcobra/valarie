@@ -1,12 +1,9 @@
 #!/usr/bin/python3
 """This module implements code for creating controllers and generating
 lists of hosts and procedure objects used by the frontend for rendering."""
+from typing import Dict, List
 
-from typing import Dict
-from typing import List
-
-from valarie.dao.document import Collection
-from valarie.dao.document import Object
+from valarie.dao.document import Collection, Object
 from valarie.router.messaging import add_message
 
 def create_controller(
@@ -107,14 +104,14 @@ def get_procedure_grid(ctruuid: str) -> List[Dict]:
     Returns:
         List of dictionaries.
     """
-    collection = Collection("inventory")
+    inventory = Collection("inventory")
 
-    controller = collection.get_object(ctruuid)
+    controller = inventory.get_object(ctruuid)
 
     grid_data = []
 
     for prcuuid in controller.object["procedures"]:
-        procedure = collection.get_object(prcuuid)
+        procedure = inventory.get_object(prcuuid)
 
         if "type" in procedure.object:
             grid_data.append({
@@ -145,14 +142,14 @@ def get_host_grid(ctruuid: str) -> List[Dict]:
     Returns:
         List of dictionaries.
     """
-    collection = Collection("inventory")
+    inventory = Collection("inventory")
 
-    controller = collection.get_object(ctruuid)
+    controller = inventory.get_object(ctruuid)
 
     grid_data = []
 
     for hstuuid in controller.object["hosts"]:
-        host = collection.get_object(hstuuid)
+        host = inventory.get_object(hstuuid)
 
         if "type" in host.object:
             if host.object["type"] == "host":
@@ -168,7 +165,7 @@ def get_host_grid(ctruuid: str) -> List[Dict]:
                 hosts = []
 
                 for uuid in host.object["hosts"]:
-                    member_host = collection.get_object(uuid)
+                    member_host = inventory.get_object(uuid)
                     if "name" in member_host.object:
                         hosts.append(member_host.object["name"])
                     else:
@@ -248,22 +245,22 @@ def get_tiles(ctruuid: str) -> dict:
     Returns:
         Dictionary containing lists of procedure and host UUIDs.
     """
-    collection = Collection("inventory")
+    inventory = Collection("inventory")
 
-    controller = collection.get_object(ctruuid)
+    controller = inventory.get_object(ctruuid)
 
     procedures = []
     for prcuuid in controller.object["procedures"]:
-        procedures.append(collection.get_object(prcuuid).object)
+        procedures.append(inventory.get_object(prcuuid).object)
 
     hstuuids = []
     grpuuids = []
 
     for hstuuid in controller.object["hosts"]:
-        get_hosts(hstuuid, hstuuids, grpuuids, collection)
+        get_hosts(hstuuid, hstuuids, grpuuids, inventory)
 
     hosts = []
     for hstuuid in hstuuids:
-        hosts.append(collection.get_object(hstuuid).object)
+        hosts.append(inventory.get_object(hstuuid).object)
 
     return {"hosts" : hosts, "procedures" : procedures}

@@ -1,10 +1,15 @@
 #!/usr/bin/python3
 """This module implements functions for creating and enumerating host groups."""
+from typing import Dict, List
 
-from valarie.dao.document import Collection
+from valarie.dao.document import Collection, Object
 from valarie.router.messaging import add_message
 
-def create_host_group(parent_objuuid: str, name: str = "New Host Group", objuuid: str = None):
+def create_host_group(
+        parent_objuuid: str,
+        name: str = "New Host Group",
+        objuuid: str = None
+    ) -> Object:
     """This function creates and returns a host group object in the inventory.
 
     Args:
@@ -73,7 +78,7 @@ def create_host_group(parent_objuuid: str, name: str = "New Host Group", objuuid
 
     return group
 
-def get_host_grid(grpuuid):
+def get_host_grid(grpuuid: str) -> List[Dict]:
     """This function creates and returns a host group object in the inventory.
 
     Args:

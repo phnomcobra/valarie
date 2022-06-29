@@ -1,12 +1,31 @@
 #!/usr/bin/python3
+"""This module implements code for creating containers."""
+from valarie.dao.document import Collection, Object
 
-from valarie.dao.document import Collection
+def create_container(
+        parent_objuuid: str,
+        name: str = "New Container",
+        objuuid: str = None
+    ) -> Object:
+    """This function creates and returns a container object in the inventory.
 
-def create_container(parent_objuuid, name = "New Container", objuuid = None):
-    collection = Collection("inventory")
-    
-    container = collection.get_object(objuuid)
-    
+    Args:
+        parent_objuuid:
+            The UUID of this container's parent inventory object.
+
+        name:
+            The name of this container object.
+
+        objuuid:
+            The UUID for this container object.
+
+    Returns:
+        The document object for this container.
+    """
+    inventory = Collection("inventory")
+
+    container = inventory.get_object(objuuid)
+
     container.object = {
         "type" : "container",
         "parent" : parent_objuuid,
@@ -135,14 +154,14 @@ def create_container(parent_objuuid, name = "New Container", objuuid = None):
             }
         }
     }
-    
+
     container.set()
-    
+
     if parent_objuuid == "#":
         container.object["icon"] = "images/tree_icon.png"
     else:
-        parent = collection.get_object(parent_objuuid)
-        parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
+        parent = inventory.get_object(parent_objuuid)
+        parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
         parent.set()
-    
+
     return container

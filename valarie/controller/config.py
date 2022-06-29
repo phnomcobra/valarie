@@ -1,6 +1,8 @@
 #!/usr/bin/python3
+"""This module sets and exposes the default values for configuration and templates."""
+from typing import Dict
 
-from valarie.dao.document import Collection
+from valarie.dao.document import Collection, Object
 
 CONFIG_OBJUUID = "bec8aa75-575e-4014-961c-d2df363c66bf"
 TASK_PROTO_OBJUUID = "4d22259a-8000-49c7-bb6b-cf8526dbff70"
@@ -14,16 +16,16 @@ from subprocess import Popen, PIPE
 class Console:
     def get_remote_host(self):
         return "127.0.0.1"
-    
-    def system(self, command, return_tuple = False, sudo_command = True):
-        process = Popen(command, shell = True, stdout = PIPE, stderr = PIPE)
+
+    def system(self, command, return_tuple=False, sudo_command=True):
+        process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         output_buffer, stderr_buffer = process.communicate()
         status = process.returncode
-        
+
         if return_tuple:
             return status, output_buffer, stderr_buffer
         elif 0 != int(status):
-            return '{0}<font color="red"><br>{1}</font><br>'.format(output_buffer, stderr_buffer)
+            return f'{output_buffer}<font color="red"><br>{stderr_buffer}</font><br>'
         else:
             return output_buffer
 '''
@@ -39,7 +41,7 @@ class Task:
 
     def execute(self, cli):
         try:
-            status, stdout, stderr = cli.system("whoami", return_tuple = True)
+            status, stdout, stderr = cli.system("whoami", return_tuple=True)
             if status:
                 self.output.append(str(stderr))
                 self.status = STATUS_FAILURE
@@ -53,19 +55,40 @@ class Task:
         return self.status
 '''
 
-def get_config():
+def get_config() -> Dict:
+    """This function gets the configuration object in the inventory.
+
+    Returns:
+        A document object dictionary.
+    """
     return Collection("inventory").get_object(CONFIG_OBJUUID).object
 
-def get_host():
+def get_host() -> str:
+    """This function gets the host the web server will serve on.
+
+    Returns:
+        A host string.
+    """
     return Collection("inventory").get_object(CONFIG_OBJUUID).object["host"]
 
-def get_port():
+def get_port() -> int:
+    """This function gets the port the web server will serve on.
+
+    Returns:
+        A port number as an int.
+    """
     return int(Collection("inventory").get_object(CONFIG_OBJUUID).object["port"])
 
-def create_config():
-    collection = Collection("inventory")
+def create_config() -> Object:
+    """This function creates and returns the configuration object
+    in the inventory.
 
-    config = collection.get_object(CONFIG_OBJUUID)
+    Returns:
+        The document object for the configuration settings.
+    """
+    inventory = Collection("inventory")
+
+    config = inventory.get_object(CONFIG_OBJUUID)
 
     config.object = {
         "type" : "config",
@@ -99,18 +122,29 @@ def create_config():
             }
         }
     }
-    
+
     config.set()
-    
+
     return config
 
-def get_console_template():
+def get_console_template() -> str:
+    """This function gets the console template.
+
+    Returns:
+        String of the console template.
+    """
     return Collection("inventory").get_object(CONSOLE_PROTO_OBJUUID).object["body"]
 
-def create_console_template():
-    collection = Collection("inventory")
+def create_console_template() -> Object:
+    """This function creates and returns the console template object
+    in the inventory using the default console body.
 
-    console = collection.get_object(CONSOLE_PROTO_OBJUUID)
+    Returns:
+        The document object for the console.
+    """
+    inventory = Collection("inventory")
+
+    console = inventory.get_object(CONSOLE_PROTO_OBJUUID)
 
     console.object = {
         "type" : "console",
@@ -133,19 +167,30 @@ def create_console_template():
             }
         }
     }
-    
+
     console.set()
-    
+
     return console
 
-def get_task_template():
+def get_task_template() -> str:
+    """This function gets the task template.
+
+    Returns:
+        String of the task template.
+    """
     return Collection("inventory").get_object(TASK_PROTO_OBJUUID).object["body"]
 
-def create_task_template():
-    collection = Collection("inventory")
-    
-    task = collection.get_object(TASK_PROTO_OBJUUID)
-    
+def create_task_template() -> Object:
+    """This function creates and returns the task template object
+    in the inventory using the default task body.
+
+    Returns:
+        The document object for the task.
+    """
+    inventory = Collection("inventory")
+
+    task = inventory.get_object(TASK_PROTO_OBJUUID)
+
     task.object = {
         "type" : "task",
         "parent" : SETTINGS_CONTAINER_OBJUUID,
@@ -167,17 +212,23 @@ def create_task_template():
             }
         }
     }
-    
+
     task.set()
-    
+
     return task
 
 
-def create_settings_container():
-    collection = Collection("inventory")
-    
-    container = collection.get_object(SETTINGS_CONTAINER_OBJUUID)
-    
+def create_settings_container() -> Object:
+    """This function creates and returns settings container for the
+    inventory.
+
+    Returns:
+        The document object for the container.
+    """
+    inventory = Collection("inventory")
+
+    container = inventory.get_object(SETTINGS_CONTAINER_OBJUUID)
+
     container.object = {
         "type" : "container",
         "parent" : "#",
@@ -191,7 +242,7 @@ def create_settings_container():
         "context" : {
         }
     }
-    
+
     container.set()
-    
+
     return container

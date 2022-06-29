@@ -1,22 +1,48 @@
 #!/usr/bin/python3
+"""This module implements functions for getting and creating status
+code objects."""
+from typing import Dict, List
 
-from valarie.dao.document import Collection
+from valarie.dao.document import Collection, Object
 
-def get_status_objects():
-    collection = Collection("inventory")
-    
+def get_status_objects() -> List[Dict]:
+    """This function returns all of the status objects.
+
+    Returns:
+        List of inventory object dictionaries."""
+    inventory = Collection("inventory")
+
     status_objects = []
-    
-    for object in collection.find(type = "status"):
+
+    for object in inventory.find(type="status"):
         status_objects.append(object.object)
-        
+
     return status_objects
 
-def create_status_code(parent_objuuid, name = "New Status Code", objuuid = None):
-    collection = Collection("inventory")
-    
-    status = collection.get_object(objuuid)
-    
+def create_status_code(
+        parent_objuuid: str,
+        name: str = "New Status Code",
+        objuuid: str = None
+    ) -> Object:
+    """This is a function used to create a status code object in the inventory.
+
+    Args:
+        parent_objuuid:
+            Parent object UUID.
+
+        name:
+            Name of the status code object.
+
+        objuuid:
+            UUID of the status code object.
+
+    Returns:
+        An inventory object.
+    """
+    inventory = Collection("inventory")
+
+    status = inventory.get_object(objuuid)
+
     status.object = {
         "type" : "status",
         "parent" : parent_objuuid,
@@ -63,12 +89,11 @@ def create_status_code(parent_objuuid, name = "New Status Code", objuuid = None)
             }
         }
     }
-    
+
     status.set()
-    
-    parent = collection.get_object(parent_objuuid)
-    parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
+
+    parent = inventory.get_object(parent_objuuid)
+    parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
     parent.set()
-    
+
     return status
-    

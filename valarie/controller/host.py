@@ -1,11 +1,30 @@
 #!/usr/bin/python3
+"""This module implements code for creating hosts."""
+from valarie.dao.document import Collection, Object
 
-from valarie.dao.document import Collection
+def create_host(
+        parent_objuuid: str,
+        name: str = "New Host",
+        objuuid: str = None
+    ) -> Object:
+    """This function creates and returns a host object in the inventory.
 
-def create_host(parent_objuuid, name = "New Host", objuuid = None):
-    collection = Collection("inventory")
+    Args:
+        parent_objuuid:
+            The UUID of this host's parent inventory object.
 
-    host = collection.get_object(objuuid)
+        name:
+            The name of this host object.
+
+        objuuid:
+            The UUID for this host object.
+
+    Returns:
+        The document object for this host.
+    """
+    inventory = Collection("inventory")
+
+    host = inventory.get_object(objuuid)
 
     host.object = {
         "type" : "host",
@@ -50,11 +69,11 @@ def create_host(parent_objuuid, name = "New Host", objuuid = None):
             }
         }
     }
-    
+
     host.set()
-    
-    parent = collection.get_object(parent_objuuid)
-    parent.object["children"] = collection.find_objuuids(parent = parent_objuuid)
+
+    parent = inventory.get_object(parent_objuuid)
+    parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
     parent.set()
-    
+
     return host
