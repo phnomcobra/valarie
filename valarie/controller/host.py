@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 """This module implements code for creating hosts."""
+from typing import List
+
 from valarie.dao.document import Collection, Object
 
 def create_host(
@@ -77,3 +79,50 @@ def create_host(
     parent.set()
 
     return host
+
+def get_hosts(
+        hstuuid: str,
+        hstuuids: List[str],
+        grpuuids: List[str],
+        inventory: Collection
+    ):
+    """This function accumulates associated host and host group UUIDs.
+
+    This is a recursive function that is used to resolve a list of host UUIDs.
+    In the event that a host UUID is referencing a host group;
+    and by extension, a UUID in a host group is referencing another host group(s);
+    this recursion function traverses the inventory and accumulates host and host group UUIDs.
+
+    Args:
+        hstuuid:
+            The initial UUID to begin traversing the inventory from.
+
+        hstuuids:
+            List of host UUIDs.
+
+        grpuuids:
+            List of host group UUIDs.
+
+        inventory:
+    """
+    current = inventory.get_object(hstuuid)
+
+    if "type" in current.object: # pylint: disable=too-many-nested-blocks
+        if current.object["type"] == "host":
+            if hstuuid not in hstuuids:
+                hstuuids.append(hstuuid)
+        elif current.object["type"] == "host group":
+            for uuid in current.object["hosts"]:
+                nested = inventory.get_object(uuid)
+                if "type" in nested.object:
+                    if nested.object["type"] == "host group":
+                        if uuid not in grpuuids:
+                            grpuuids.append(uuid)
+                            get_hosts(uuid, hstuuids, grpuuids, inventory)
+                    elif nested.object["type"] == "host":
+                        if uuid not in hstuuids:
+                            hstuuids.append(uuid)
+                else:
+                    current.object["hosts"].remove(uuid)
+                    current.set()
+                    nested.destroy()

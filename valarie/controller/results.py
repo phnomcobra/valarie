@@ -10,6 +10,7 @@ from valarie.executor.timers import timers
 from valarie.dao.document import Collection, Object
 from valarie.controller.inventory import delete_node
 from valarie.controller import kvstore as kv
+from valarie.controller.host import get_hosts
 
 def create_result_link(
         parent_objuuid: str,
@@ -63,50 +64,6 @@ def create_result_link(
         parent.set()
 
     return result
-
-def get_hosts(
-        hstuuid: str,
-        hstuuids: List[str],
-        grpuuids: List[str],
-        inventory: Collection
-    ):
-    """This is a recursion function used to aggregate all of the nested hosts that a
-    host, more precisely a host group encapsulates.
-
-    Args:
-        hstuuid:
-            The host or host group object that recusion begins from.
-
-        hstuuids:
-            List of accumulated host object UUIDs.
-
-        grpuuids:
-            List of accumulated host group object UUIDs.
-
-        inventory:
-            The inventory collection.
-    """
-    current = inventory.get_object(hstuuid)
-
-    if "type" in current.object:
-        if current.object["type"] == "host":
-            if hstuuid not in hstuuids:
-                hstuuids.append(hstuuid)
-        elif current.object["type"] == "host group":
-            for uuid in current.object["hosts"]:
-                nested = inventory.get_object(uuid)
-                if "type" in nested.object:
-                    if nested.object["type"] == "host group":
-                        if uuid not in grpuuids:
-                            grpuuids.append(uuid)
-                            get_hosts(uuid, hstuuids, grpuuids, inventory)
-                    elif nested.object["type"] == "host":
-                        if uuid not in hstuuids:
-                            hstuuids.append(uuid)
-                else:
-                    current.object["hosts"].remove(uuid)
-                    current.set()
-                    nested.destroy()
 
 def get_controller_results(ctruuid: str) -> List[Dict]:
     """This is a function used to retrieve the latest results for a

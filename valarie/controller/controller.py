@@ -5,6 +5,7 @@ from typing import Dict, List
 
 from valarie.dao.document import Collection, Object
 from valarie.router.messaging import add_message
+from valarie.controller.host import get_hosts
 
 def create_controller(
         parent_objuuid: str,
@@ -188,49 +189,6 @@ def get_host_grid(ctruuid: str) -> List[Dict]:
             controller.set()
 
     return grid_data
-
-def get_hosts(hstuuid: str, hstuuids: List[str], grpuuids: List[str], inventory: Collection):
-    """This function accumulates associated host and host group UUIDs.
-
-    This is a recursive function that is used to resolve a list of host UUIDs.
-    In the event that a host UUID is referencing a host group;
-    and by extension, a UUID in a host group is referencing another host group(s);
-    this recursion function traverses the inventory and accumulates host and host group UUIDs.
-
-    Args:
-        hstuuid:
-            The initial UUID to begin traversing the inventory from.
-
-        hstuuids:
-            List of host UUIDs.
-
-        grpuuids:
-            List of host group UUIDs.
-
-        inventory:
-            Document collection of the inventory.
-    """
-    o = inventory.get_object(hstuuid) # pylint: disable=invalid-name
-
-    if "type" in o.object: # pylint: disable=too-many-nested-blocks
-        if o.object["type"] == "host":
-            if hstuuid not in hstuuids:
-                hstuuids.append(hstuuid)
-        elif o.object["type"] == "host group":
-            for uuid in o.object["hosts"]:
-                c = inventory.get_object(uuid) # pylint: disable=invalid-name
-                if "type" in c.object:
-                    if c.object["type"] == "host group":
-                        if uuid not in grpuuids:
-                            grpuuids.append(uuid)
-                            get_hosts(uuid, hstuuids, grpuuids, inventory)
-                    elif c.object["type"] == "host":
-                        if uuid not in hstuuids:
-                            hstuuids.append(uuid)
-                else:
-                    o.object["hosts"].remove(uuid)
-                    o.set()
-                    c.destroy()
 
 def get_tiles(ctruuid: str) -> dict:
     """This function returns a list of host and procedure UUIDs.
