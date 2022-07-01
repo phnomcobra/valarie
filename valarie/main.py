@@ -1,7 +1,8 @@
 #!/usr/bin/python3
+"""This module configures and starts the web server."""
+import os
 
 import cherrypy
-import os
 
 from valarie.router.root import Root
 from valarie.router.messaging import add_message
@@ -9,9 +10,12 @@ from valarie.executor.timers import cancel_timers
 from valarie.controller.config import get_host, get_port
 
 def on_cherrypy_log(msg, level): # pylint: disable=unused-argument
+    """This function subscribes the add_message function to the log
+    channel on cherrypy's bus."""
     add_message(f'<font color="red">{msg}</font>')
 
 def start():
+    """This function configures and starts the web server."""
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     config = {
@@ -23,8 +27,6 @@ def start():
         'server.thread_pool': 100,
         'server.socket_host': get_host(),
         'server.socket_port': get_port()
-        # 'log.access_file': 'access.log',
-        # 'log.error_file': 'error.log'
     }
 
     cherrypy.config.update(config)

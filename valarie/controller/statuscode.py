@@ -14,8 +14,8 @@ def get_status_objects() -> List[Dict]:
 
     status_objects = []
 
-    for object in inventory.find(type="status"):
-        status_objects.append(object.object)
+    for status in inventory.find(type="status"):
+        status_objects.append(status.object)
 
     return status_objects
 

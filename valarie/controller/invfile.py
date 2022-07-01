@@ -12,7 +12,7 @@ from valarie.controller.container import create_container
 
 CHAR_THRESHOLD = 0.3
 TEXT_CHARACTERS = ''.join(
-    [chr(code) for code in range(32,127)] + list('\b\f\n\r\t')
+    [chr(code) for code in range(32, 127)] + list('\b\f\n\r\t')
 ).encode()
 
 def is_binary(file_data: bytes) -> bool:
@@ -58,6 +58,7 @@ def load_zip(archive: ZipFile, root_objuuid: str = "#"):
 
     load_files(files, root_objuuid)
 
+# pylint: disable=too-many-locals
 def load_files(files: Dict[str, bytes], root_objuuid: str = "#"):
     """This function reads a dictionary of byte arrays and loads them
     into the inventory and datastore. Archive names are tokenized and
@@ -123,26 +124,24 @@ def load_files(files: Dict[str, bytes], root_objuuid: str = "#"):
         for i, sfname in enumerate(sfnames):
             if i == len(sfnames) - 1:
                 if is_binary(fdata):
-                    # binary file inventory object
-                    bf = create_binary_file(parent_objuuid, sfname)
+                    binary_file = create_binary_file(parent_objuuid, sfname)
 
-                    # data store file
-                    df = File(bf.object["sequuid"])
+                    datastore_file = File(binary_file.object["sequuid"])
 
                     sha1hash = hashlib.sha1()
 
-                    df.write(fdata)
+                    datastore_file.write(fdata)
                     sha1hash.update(fdata)
 
-                    df.close()
+                    datastore_file.close()
 
-                    bf.object["size"] = df.size()
-                    bf.object["sha1sum"] = sha1hash.hexdigest()
-                    bf.set()
+                    binary_file.object["size"] = datastore_file.size()
+                    binary_file.object["sha1sum"] = sha1hash.hexdigest()
+                    binary_file.set()
                 else:
-                    tf = create_text_file(parent_objuuid, sfname)
-                    tf.object["body"] = fdata.decode()
-                    tf.set()
+                    text_file = create_text_file(parent_objuuid, sfname)
+                    text_file.object["body"] = fdata.decode()
+                    text_file.set()
             else:
                 parent_objuuid = current_container["containers"][sfname]["objuuid"]
 

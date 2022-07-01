@@ -29,6 +29,7 @@ class Messaging():
     @classmethod
     @cherrypy.expose
     @cherrypy.tools.json_out()
+    # pylint: disable=function-redefined
     def add_message(cls, message: str) -> Dict:
         """This function registers the endpoint that posts a message.
 
@@ -50,4 +51,3 @@ class Messaging():
             A list of message strings.
         """
         return get_messages()
-

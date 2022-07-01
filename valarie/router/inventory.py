@@ -1,17 +1,15 @@
 #!/usr/bin/python3
 """This module implements the inventory routes."""
-
-import cherrypy
 import json
 import zipfile
 import io
 import hashlib
 from typing import Any, Dict, List
 
+import cherrypy
 from cherrypy.lib.static import serve_fileobj
 
 from valarie.controller.messaging import add_message
-
 from valarie.dao.document import Collection, Object
 from valarie.dao.datastore import File as DatastoreFile
 from valarie.controller.container import create_container
@@ -35,7 +33,7 @@ from valarie.controller.inventory import (
     get_fq_name
 )
 
-class Inventory():
+class Inventory(): # pylint: disable=too-many-public-methods
     """This class registers the inventory endpoint methods as endpoints."""
     @classmethod
     @cherrypy.expose
@@ -244,7 +242,7 @@ class Inventory():
             JSON string of the id just deleted.
         """
         delete_node(objuuid)
-        return { "id": objuuid }
+        return {"id": objuuid}
 
     @classmethod
     @cherrypy.expose
@@ -302,11 +300,11 @@ class Inventory():
         Returns:
             JSON string of the inventory object.
         """
-        object = cherrypy.request.json
+        posted_object = cherrypy.request.json
 
         inventory = Collection("inventory")
-        current = inventory.get_object(object["objuuid"])
-        current.object = object
+        current = inventory.get_object(posted_object["objuuid"])
+        current.object = posted_object
         current.set()
 
         return current.object
@@ -343,18 +341,19 @@ class Inventory():
             if current.object["type"] == "binary file":
                 dstuuids.append(current.object["sequuid"])
 
-            add_message(f"inventory controller: exported: {objuuid}, type: {current.object['type']}, name: {current.object['name']}")
+            add_message(f"inventory controller: exported: {objuuid}, "\
+                        f"type: {current.object['type']}, name: {current.object['name']}")
 
         cherrypy.response.headers['Content-Type'] = "application/x-download"
         cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
 
         mem_file = io.BytesIO()
 
-        with zipfile.ZipFile(mem_file, mode = 'w', compression = zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr('inventory.json', json.dumps(output, indent=4, sort_keys=True))
+        with zipfile.ZipFile(mem_file, mode='w', compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr('inventory.json', json.dumps(output, indent=4, sort_keys=True))
 
             for dstuuid in dstuuids:
-                zf.writestr('{0}.bin'.format(dstuuid), DatastoreFile(dstuuid).read())
+                archive.writestr('{0}.bin'.format(dstuuid), DatastoreFile(dstuuid).read())
 
         add_message("INVENTORY EXPORT COMPLETE")
 
@@ -381,7 +380,7 @@ class Inventory():
 
         mem_file = io.BytesIO()
 
-        with zipfile.ZipFile(mem_file, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
+        with zipfile.ZipFile(mem_file, mode='w', compression=zipfile.ZIP_DEFLATED) as archive:
             for objuuid in objuuids.split(","):
                 current = inventory.get_object(objuuid)
 
@@ -391,14 +390,17 @@ class Inventory():
 
                 if current.object["type"] == "binary file":
                     add_message("inventory controller: exported: " + filename)
-                    zf.writestr(filename, DatastoreFile(current.object["sequuid"]).read())
+                    archive.writestr(filename, DatastoreFile(current.object["sequuid"]).read())
                 elif current.object["type"] == "text file":
                     add_message("inventory controller: exported: " + filename)
-                    zf.writestr(filename, current.object["body"].encode())
+                    archive.writestr(filename, current.object["body"].encode())
                 elif current.object["type"] == "result link":
                     add_message("inventory controller: exported: " + filename)
                     result = results.get_object(current.object['resuuid'])
-                    zf.writestr(f'{filename}.json', json.dumps(result.object, indent=4).encode())
+                    archive.writestr(
+                        f'{filename}.json',
+                        json.dumps(result.object, indent=4).encode()
+                    )
 
         cherrypy.response.headers['Content-Type'] = "application/x-download"
         cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.files.zip'
@@ -425,22 +427,23 @@ class Inventory():
 
         objects = json.loads(archive.read("inventory.json"))
 
-        for _id, object in objects.items():
-            if object["type"] == "binary file":
-                datastore_file = DatastoreFile(object["sequuid"])
+        for _id, inventory_object in objects.items():
+            if inventory_object["type"] == "binary file":
+                datastore_file = DatastoreFile(inventory_object["sequuid"])
 
-                zipped_file = archive.open("{0}.bin".format(object["sequuid"]), "r")
+                zipped_file = archive.open("{0}.bin".format(inventory_object["sequuid"]), "r")
 
                 sha1hash = hashlib.sha1()
 
+                # pylint: disable=cell-var-from-loop
                 for chunk in iter(lambda: zipped_file.read(65536), b''):
                     datastore_file.write(chunk)
                     sha1hash.update(chunk)
 
                 datastore_file.close()
 
-                object["size"] = datastore_file.size()
-                object["sha1sum"] = sha1hash.hexdigest()
+                inventory_object["size"] = datastore_file.size()
+                inventory_object["sha1sum"] = sha1hash.hexdigest()
 
         import_objects(objects)
 

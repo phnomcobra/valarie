@@ -6,7 +6,6 @@ from time import sleep
 from typing import Any, Dict, List
 
 from valarie.dao.document import Collection, Object
-from valarie.controller import kvstore
 from valarie.dao.datastore import delete_sequence, copy_sequence
 from valarie.controller.container import create_container
 from valarie.router.messaging import add_message
@@ -36,13 +35,13 @@ def lock():
     the key value store is set to false. Upon sensing false, set the lock
     key to true and return.
     """
-    while kvstore.get('inventory lock', default=False) is True:
+    while kv.get('inventory lock', default=False) is True:
         sleep(1)
-    kvstore.set('inventory lock', True)
+    kv.set('inventory lock', True)
 
 def unlock():
     """This function sets the inventory lock key ro false in the key value store."""
-    kvstore.set('inventory lock', False)
+    kv.set('inventory lock', False)
 
 def __get_child_tree_nodes(nodes: List[Dict], current: Object, inventory: Collection):
     """This is a recursion function used to accumulate nodes used for jstree. This function
@@ -135,14 +134,10 @@ def __get_fq_name(name: str, current: Object, inventory: Collection) -> str:
     Returns:
         Name with the next level of accumulation
     """
-    if "parent" in current:
-        if current["parent"] != "#":
-            # pylint: disable=line-too-long
-            return f'{__get_fq_name(name, inventory.get_object(current["parent"]).object, inventory)}/{current["name"]}'
-        else:
-            return f'{name}/{current["name"]}'
-    else:
-        return f'{name}/{current["name"]}'
+    if current["parent"] != "#":
+        fq_name = __get_fq_name(name, inventory.get_object(current["parent"]).object, inventory)
+        return f'{fq_name}/{current["name"]}'
+    return f'{name}/{current["name"]}'
 
 def get_fq_name(objuuid: str) -> str:
     """This function used to compute an inventory object's fully qualified name.
@@ -273,27 +268,18 @@ def recstrrepl(current: Any, find: str, replace: str):
     """
     if isinstance(current, dict):
         for key, value in current.items():
-            if isinstance(value, dict) or isinstance(value, list):
+            if isinstance(value, (dict, list)):
                 recstrrepl(current[key], find, replace)
-            else:
-                try:
-                    current[key] = current[key].replace(find, replace)
-                except:
-                    pass
+            elif isinstance(current[key], str):
+                current[key] = current[key].replace(find, replace)
     elif isinstance(current, list):
         for i, value in enumerate(current):
-            if isinstance(value, dict) or isinstance(value, list):
+            if isinstance(value, (dict, list)):
                 recstrrepl(current[i], find, replace)
-            else:
-                try:
-                    current[i] = current[i].replace(find, replace)
-                except:
-                    pass
-    else:
-        try:
-            current = current.replace(find, replace)
-        except:
-            pass
+            elif isinstance(current[i], str):
+                current[i] = current[i].replace(find, replace)
+    elif isinstance(current, str):
+        current = current.replace(find, replace)
 
 def __copy_object(
         objuuid: str,
@@ -430,6 +416,7 @@ def copy_object(objuuid: str) -> Object:
 
     return clone
 
+# pylint: disable=too-many-branches
 def import_objects(objects: Dict[str, Object]):
     """This function imports objects into the inventory.
 
@@ -446,7 +433,8 @@ def import_objects(objects: Dict[str, Object]):
     obj_ttl = len(objects)
     obj_cnt = 1
 
-    for objuuid, object in objects.items():
+    # pylint: disable=too-many-nested-blocks
+    for objuuid, imported_object in objects.items():
         try:
             current = inventory.get_object(objuuid)
 
@@ -460,13 +448,13 @@ def import_objects(objects: Dict[str, Object]):
 
             if "children" in current.object:
                 old_children = current.object["children"]
-                current.object = object
+                current.object = imported_object
 
                 for child in old_children:
                     if child not in current.object["children"]:
                         current.object["children"].append(child)
             else:
-                current.object = object
+                current.object = imported_object
 
             if "parent" in current.object:
                 if current.object["parent"] in objuuids:
@@ -479,10 +467,10 @@ def import_objects(objects: Dict[str, Object]):
 
             current.set()
 
-            # pylint: disable=line-too-long
-            add_message(f'imported ({obj_cnt} of {obj_ttl}): {objuuid}, type: {object["type"]}, name: {object["name"]}')
-            obj_cnt = obj_cnt + 1
-        except:
+            add_message(f'imported ({obj_cnt} of {obj_ttl}): {objuuid},'\
+                        f'type: {imported_object["type"]}, name: {imported_object["name"]}')
+            obj_cnt += 1
+        except: # pylint: disable=bare-except
             add_message(traceback.format_exc())
 
     objuuids = inventory.list_objuuids()
@@ -510,10 +498,10 @@ collection.create_attribute("parent", "['parent']")
 collection.create_attribute("type", "['type']")
 collection.create_attribute("name", "['name']")
 
-if not len(collection.find(parent="#")):
+if not collection.find(parent="#"):
     create_container("#", "Root")
 
-if not len(collection.find(type="config")):
+if not collection.find(type="config"):
     create_config()
     create_console_template()
     create_task_template()

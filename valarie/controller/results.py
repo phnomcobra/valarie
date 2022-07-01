@@ -98,20 +98,20 @@ def get_controller_results(ctruuid: str) -> List[Dict]:
                     elif result['start'] < current.object['start']:
                         result = current.object
 
-                if result["start"] != None and result["stop"] != None:
+                if result["start"] is not None and result["stop"] is not None:
                     result["duration"] = result["stop"] - result["start"]
-                elif result["start"] != None:
+                elif result["start"] is not None:
                     result["duration"] = time() - result["start"]
                 else:
                     result["duration"] = 0
 
-                if result["stop"] == None:
+                if result["stop"] is None:
                     result["age"] = 0
                 else:
                     result["age"] = time() - result["stop"]
 
                 controller_results.append(result)
-            except:
+            except: # pylint: disable=bare-except
                 continue
 
     return controller_results
@@ -139,25 +139,25 @@ def get_procedure_result(prcuuid: str, hstuuid: str) -> List[Dict]:
     grpuuids = []
     get_hosts(hstuuid, hstuuids, grpuuids, inventory)
 
-    for hstuuid in hstuuids:
+    for current_hstuuid in hstuuids:
         try:
             result = None
             # get the latest result for a host/procedure UUID pair.
-            for current in results.find(hstuuid=hstuuid, prcuuid=prcuuid):
+            for current in results.find(hstuuid=current_hstuuid, prcuuid=prcuuid):
                 if result is None:
                     result = current.object
                 elif result['start'] < current.object['start']:
                     result = current.object
 
-            if result["start"] != None and result["stop"] != None:
+            if result["start"] is not None and result["stop"] is not None:
                 result["duration"] = result["stop"] - result["start"]
-            elif result["start"] != None:
+            elif result["start"] is not None:
                 result["duration"] = time() - result["start"]
             else:
                 result["duration"] = 0
 
             result_objects.append(result)
-        except:
+        except: # pylint: disable=bare-except
             continue
 
     return result_objects
@@ -175,9 +175,9 @@ def get_result(resuuid: str) -> List[Dict]:
     results = Collection("results")
     result = results.get_object(resuuid)
 
-    if result.object["start"] != None and result.object["stop"] != None:
+    if result.object["start"] is not None and result.object["stop"] is not None:
         result.object["duration"] = result.object["stop"] - result.object["start"]
-    elif result.object["start"] != None:
+    elif result.object["start"] is not None:
         result.object["duration"] = time() - result.object["start"]
     else:
         result.object["duration"] = 0
@@ -201,12 +201,14 @@ def worker():
 
             try:
                 expiration_period = int(procedure.object['resultexpirationperiod'])
-            except:
+            except (KeyError, ValueError):
                 expiration_period = 3600
 
             try:
-                update_inventory = ('true' in str(procedure.object['resultinventoryupdate']).lower())
-            except:
+                update_inventory = (
+                    'true' in str(procedure.object['resultinventoryupdate']).lower()
+                )
+            except (KeyError, ValueError):
                 update_inventory = False
 
             if time() - result.object["start"] > expiration_period and expiration_period != 0:
@@ -216,7 +218,7 @@ def worker():
                         refresh_inventory = True
 
                 result.destroy()
-        except:
+        except KeyError:
             result.destroy()
 
     if refresh_inventory:

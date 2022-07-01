@@ -218,6 +218,7 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
     else:
         temp.destroy()
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements
 def run_procedure(
         host_object: Dict,
         procedure_object: Dict,
@@ -502,6 +503,7 @@ def eval_cron_field(cron_str: str, now_val: int) -> bool:
 
     return result
 
+# pylint: disable=too-many-branches,too-many-statements
 def worker():
     """This function is the procedure worker that automatically queues
     procedures that have been enabled to run based on their cron settings.
@@ -547,6 +549,7 @@ def worker():
         if procedure.object["enabled"] in (True, "true"):
             for epoch_time in range(int(last_worker_time), int(time())):
                 now = datetime.fromtimestamp(epoch_time).now()
+                # pylint: disable=too-many-boolean-expressions
                 if (
                         eval_cron_field(procedure.object["seconds"], now.second) and
                         eval_cron_field(procedure.object["minutes"], now.minute) and
