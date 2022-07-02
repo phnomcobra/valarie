@@ -10,7 +10,7 @@ from imp import new_module
 from typing import Any, Dict, List
 
 from valarie.dao.document import Collection
-from valarie.dao.utils import sucky_uuid
+from valarie.dao.utils import get_uuid_str
 from valarie.controller import kvstore as kv
 from valarie.router.messaging import add_message
 from valarie.executor.timers import timers
@@ -164,7 +164,7 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
                 host = inventory.get_object(current_hstuuid)
 
                 if host.object["type"] == "host":
-                    jobuuid = sucky_uuid()
+                    jobuuid = get_uuid_str()
 
                     console = inventory.get_object(host.object["console"])
 
@@ -185,7 +185,7 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
             for current_hstuuid in hstuuids:
                 host = inventory.get_object(current_hstuuid)
                 if host.object["type"] == "host":
-                    jobuuid = sucky_uuid()
+                    jobuuid = get_uuid_str()
 
                     console = inventory.get_object(host.object["console"])
 

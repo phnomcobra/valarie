@@ -1,14 +1,28 @@
 #!/usr/bin/python3
-
+"""This module implements the Document, Collection, and Object classes.
+The document class wraps and abstracts the database and the various SQL
+driving functions. It serves as the base class with is inherited by the
+Collection and Object classes."""
 import sqlite3
 import pickle
+from typing import Dict
 
-from valarie.dao.utils import sucky_uuid
+from valarie.dao.utils import get_uuid_str
 
 DEFAULT_CONNECTION_STR = "default.sqlite"
 
 class Document:
-    def __init__(self, connection_str=DEFAULT_CONNECTION_STR):
+    """This class wraps and abstracts that database and the SQL driving
+    functions. The class manages objects, collections, and collection
+    attributes. Additonally, there is functionality for searching and
+    enumerating collections."""
+    def __init__(self, connection_str: str = DEFAULT_CONNECTION_STR):
+        """This function instantiates a document object and initiallizes
+        the database if it hasn't been initialized yet.
+
+        Args:
+            connection_str:
+                A Sqlite connection string."""
         self.connection_str = connection_str
         self.connection = sqlite3.connect(self.connection_str, 300)
         self.connection.text_factory = str
@@ -49,43 +63,64 @@ class Document:
         self.connection.commit()
 
     def vacuum(self):
-        try:
-            self.cursor.execute("VACUUM;")
-        finally:
-            self.connection.commit()
+        """This function compacts the database."""
+        self.cursor.execute("VACUUM;")
+        self.connection.commit()
 
+    def create_object(self, coluuid: str, objuuid: str):
+        """This function creates a new object in a collection.
+        With the exception of setting the object and collection
+        UUIDs, the object is empty.
 
-    def create_object(self, coluuid, objuuid):
-        try:
-            self.cursor.execute("insert into TBL_JSON_OBJ (COLUUID, OBJUUID, VALUE) values (?, ?, ?);", \
-                                (str(coluuid), str(objuuid), pickle.dumps({"objuuid" : objuuid, "coluuid" : coluuid})))
-        finally:
-            self.connection.commit()
+        Args:
+            coluuid:
+                The collection UUID.
 
+            objuuid:
+                The object UUID.
+        """
+        self.cursor.execute(
+            "insert into TBL_JSON_OBJ (COLUUID, OBJUUID, VALUE) values (?, ?, ?);",
+            (coluuid, objuuid, pickle.dumps({"objuuid": objuuid, "coluuid": coluuid}))
+        )
 
-    def set_object(self, coluuid, objuuid, object):
-        try:
+    def set_object(self, coluuid: str, objuuid: str, object: Dict):
+        """This function updates an object in a collection. The object dictionary,
+        object UUID, and collection UUID are updated. In addition, previously indexed
+        attributes are deleted and reset based on the updated object.
 
-            object["objuuid"] = objuuid
-            object["coluuid"] = coluuid
-            self.cursor.execute("update TBL_JSON_OBJ set VALUE = ? where OBJUUID = ?;", \
-                                (pickle.dumps(object), str(objuuid)))
+        Args:
+            coluuid:
+                The collection UUID.
 
-            self.cursor.execute("delete from TBL_JSON_IDX where OBJUUID = ?;", (objuuid,))
+            objuuid:
+                The object UUID.
 
-            attributes = self.list_attributes(coluuid)
-            for attribute_name in attributes:
-                try:
-                    self.cursor.execute("""insert into TBL_JSON_IDX (OBJUUID, COLUUID, ATTRIBUTE, VALUE)
-                                        values (?, ?, ?, ?);""", \
-                                        (str(objuuid), \
-                                         str(coluuid), \
-                                         str(attribute_name), \
-                                         str(eval("str(self.get_object(objuuid)" + attributes[attribute_name] + ")"))))
-                except:
-                    continue
-        finally:
-            self.connection.commit()
+            object:
+                The object dictionary that will be stored.
+        """
+        object["objuuid"] = objuuid
+        object["coluuid"] = coluuid
+        self.cursor.execute(
+            "update TBL_JSON_OBJ set VALUE = ? where OBJUUID = ?;",
+            (pickle.dumps(object), objuuid)
+        )
+
+        self.cursor.execute("delete from TBL_JSON_IDX where OBJUUID = ?;", (objuuid,))
+
+        for attribute_name, attribute in self.list_attributes(coluuid).items():
+            try:
+                self.cursor.execute(
+                    "insert into TBL_JSON_IDX (OBJUUID, COLUUID, ATTRIBUTE, VALUE)"\
+                    "values (?, ?, ?, ?);",
+                    (
+                        objuuid, coluuid, attribute_name,
+                        eval(f"str(self.get_object(objuuid){attribute})")
+                    )
+                )
+            except: # pylint: disable=bare-except
+                continue
+        self.connection.commit()
 
 
     def get_object(self, objuuid):
@@ -158,7 +193,7 @@ class Document:
     def create_collection(self, uuid=None, name="New Collection"):
         try:
             if not uuid:
-                uuid = sucky_uuid()
+                uuid = get_uuid_str()
 
             self.cursor.execute("insert into TBL_JSON_COL (COLUUID, NAME) values (?, ?);", \
                                 (str(uuid), str(name)))
@@ -289,7 +324,7 @@ class Collection(Document):
 
     def get_object(self, objuuid = None):
         if not objuuid:
-            objuuid = sucky_uuid()
+            objuuid = get_uuid_str()
         return Object(self.coluuid, objuuid, connection_str=self.connection_str)
 
     def list_objuuids(self):

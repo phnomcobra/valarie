@@ -5,7 +5,7 @@ import hashlib
 from typing import Dict
 from zipfile import ZipFile
 
-from valarie.dao.utils import sucky_uuid
+from valarie.dao.utils import get_uuid_str
 from valarie.dao.datastore import File, create_binary_file
 from valarie.controller.textfile import create_text_file
 from valarie.controller.container import create_container
@@ -101,7 +101,7 @@ def load_files(files: Dict[str, bytes], root_objuuid: str = "#"):
             if sdname not in current_container["containers"]:
                 current_container["containers"][sdname] = {
                     "containers" : {},
-                    "objuuid" : sucky_uuid()
+                    "objuuid" : get_uuid_str()
                 }
 
                 create_container(
