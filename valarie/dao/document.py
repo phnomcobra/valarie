@@ -5,7 +5,7 @@ driving functions. It serves as the base class with is inherited by the
 Collection and Object classes."""
 import sqlite3
 import pickle
-from typing import Dict
+from typing import Dict, List
 
 from valarie.dao.utils import get_uuid_str
 
@@ -70,7 +70,8 @@ class Document:
     def create_object(self, coluuid: str, objuuid: str):
         """This function creates a new object in a collection.
         With the exception of setting the object and collection
-        UUIDs, the object is empty.
+        UUIDs, the object is empty.  Objects being
+        stored are pickled and serialized.
 
         Args:
             coluuid:
@@ -83,11 +84,13 @@ class Document:
             "insert into TBL_JSON_OBJ (COLUUID, OBJUUID, VALUE) values (?, ?, ?);",
             (coluuid, objuuid, pickle.dumps({"objuuid": objuuid, "coluuid": coluuid}))
         )
+        self.connection.commit()
 
     def set_object(self, coluuid: str, objuuid: str, object: Dict):
         """This function updates an object in a collection. The object dictionary,
         object UUID, and collection UUID are updated. In addition, previously indexed
-        attributes are deleted and reset based on the updated object.
+        attributes are deleted and reset based on the updated object. Objects being
+        stored are pickled and serialized.
 
         Args:
             coluuid:
@@ -118,71 +121,141 @@ class Document:
                         eval(f"str(self.get_object(objuuid){attribute})")
                     )
                 )
-            except: # pylint: disable=bare-except
+            except (KeyError, ValueError):
                 continue
         self.connection.commit()
 
+    def get_object(self, objuuid: str) -> Dict:
+        """Select, load, and deserialize an object. Pickle is used to deserialize and
+        load the object.
 
-    def get_object(self, objuuid):
-        self.cursor.execute("select VALUE from TBL_JSON_OBJ where OBJUUID = ?;", (str(objuuid),))
+        Args:
+            objuuid:
+                An object's UUID.
+
+        Returns:
+            A dictionary of the object.
+        """
+        self.cursor.execute("select VALUE from TBL_JSON_OBJ where OBJUUID = ?;", (objuuid,))
         self.connection.commit()
         return pickle.loads(self.cursor.fetchall()[0][0])
 
-    def find_objects(self, coluuid, attribute, value):
-        self.cursor.execute("select OBJUUID from TBL_JSON_IDX where ATTRIBUTE = ? and VALUE = ? and COLUUID = ?;", \
-                            (str(attribute), str(value), str(coluuid)))
+    def find_objects(self, coluuid: str, attribute: str, value: str) -> List[str]:
+        """This function finds a list of object UUIDs by matching a value to an
+        indexed attribute.
+
+        Args:
+            coluuid:
+                The UUID of the collection to search against.
+
+            attribute:
+                The name of the attribute to search against.
+
+            value:
+                The value of the attribute to match on.
+
+        Returns:
+            A list of UUID strings.
+        """
+        self.cursor.execute(
+            "select OBJUUID from TBL_JSON_IDX where ATTRIBUTE = ? and VALUE = ? and COLUUID = ?;",
+            (attribute, value, coluuid)
+        )
         self.connection.commit()
         objuuids = []
-        for row in self.cursor.fetchall():
+        for row in self.cursor:
             objuuids.append(row[0])
         return objuuids
 
-    def delete_object(self, objuuid):
-        try:
-            self.cursor.execute("delete from TBL_JSON_OBJ where OBJUUID = ?;", (str(objuuid),))
-        finally:
-            self.connection.commit()
+    def delete_object(self, objuuid: str):
+        """This function deletes an object.
+
+        Args:
+            objuuid:
+                The object's UUID."""
+        self.cursor.execute("delete from TBL_JSON_OBJ where OBJUUID = ?;", (objuuid,))
+        self.connection.commit()
+
+    def create_attribute(self, coluuid: str, attribute: str, path: str):
+        """This function creates a new attribute for a collection. Upon creation of
+        the attribute, all of the collection's objects are indexed with the new
+        attribute.
+
+        The attribute path is one or multiple index operators used to select a key or
+        index out of a dictionary.
+
+            ["inner"]["outer"]
+
+        Args:
+            coluuid:
+                The collection UUID.
+
+            attribute:
+                The attribute name.
+
+            path:
+                The attribute path.
+        """
+        self.cursor.execute(
+            "insert into TBL_JSON_ATTR (COLUUID, ATTRIBUTE, PATH) values (?, ?, ?);",
+            (coluuid, attribute, path)
+        )
+
+        self.cursor.execute(
+            "select OBJUUID, VALUE from TBL_JSON_OBJ where COLUUID = ?;", (coluuid,)
+        )
+
+        for row in self.cursor:
+            try:
+                self.cursor.execute(
+                    "insert into TBL_JSON_IDX (OBJUUID, COLUUID, ATTRIBUTE, VALUE)"\
+                    "values (?, ?, ?, ?);",
+                    (row[0], coluuid, attribute, eval(f"str(pickle.loads(row[1]){path})"))
+                )
+            except (KeyError, ValueError):
+                continue
+
+        self.connection.commit()
+
+    def delete_attribute(self, coluuid: str, attribute: str):
+        """This function delete an attribute from a collection.
+
+        Args:
+            coluuid:
+                The collection UUID.
+
+            attribute:
+                The attribute name.
+        """
+        self.cursor.execute(
+            "delete from TBL_JSON_ATTR where COLUUID = ? and ATTRIBUTE = ?;",
+            (coluuid, attribute)
+        )
+
+        self.cursor.execute(
+            "delete from TBL_JSON_IDX where ATTRIBUTE = ? and COLUUID = ?;",
+            (attribute, coluuid)
+        )
+
+        self.connection.commit()
 
 
-    def create_attribute(self, coluuid, attribute, path):
-        try:
-            self.cursor.execute("insert into TBL_JSON_ATTR (COLUUID, ATTRIBUTE, PATH) values (?, ?, ?);", \
-                                (str(coluuid), str(attribute), str(path)))
+    def list_attributes(self, coluuid: str) -> Dict[str, str]:
+        """This function returns a dictionary of a collection's attribute names
+        and corresponding attribute paths.
 
-            self.cursor.execute("delete from TBL_JSON_IDX where ATTRIBUTE = ? and COLUUID = ?;", (str(attribute), str(coluuid)))
+        Args:
+            coluuid:
+                The collection's UUID.
 
-            self.cursor.execute("select OBJUUID, VALUE from TBL_JSON_OBJ where COLUUID = ?;", (str(coluuid),))
+        Returns:
+            A dictionary of attribute paths keyed by their attribute names.
+        """
+        self.cursor.execute(
+            "select ATTRIBUTE, PATH from TBL_JSON_ATTR where COLUUID = ?;",
+            (coluuid,)
+        )
 
-            objects = {}
-            for row in self.cursor.fetchall():
-                objects[row[0]] = pickle.loads(row[1])
-
-            for objuuid in objects:
-                try:
-                    self.cursor.execute("""insert into TBL_JSON_IDX (OBJUUID, COLUUID, ATTRIBUTE, VALUE)
-                                        values (?, ?, ?, ?);""", \
-                                        (str(objuuid), \
-                                         str(coluuid), \
-                                         str(attribute), \
-                                         str(eval("str(objects[objuuid]" + path + ")"))))
-                except:
-                    continue
-        except:
-            pass
-        finally:
-            self.connection.commit()
-
-
-    def delete_attribute(self, coluuid, attribute):
-        try:
-            self.cursor.execute("delete from TBL_JSON_ATTR where COLUUID = ? and ATTRIBUTE = ?;", \
-                                (str(coluuid), str(attribute)))
-        finally:
-            self.connection.commit()
-
-
-    def list_attributes(self, coluuid):
-        self.cursor.execute("select ATTRIBUTE, PATH from TBL_JSON_ATTR where COLUUID = ?;", (str(coluuid),))
         self.connection.commit()
 
         attributes = {}
@@ -190,25 +263,45 @@ class Document:
             attributes[row[0]] = row[1]
         return attributes
 
-    def create_collection(self, uuid=None, name="New Collection"):
-        try:
-            if not uuid:
-                uuid = get_uuid_str()
+    def create_collection(self, name: str) -> str:
+        """This function creates a new collection and returns its UUID.
 
-            self.cursor.execute("insert into TBL_JSON_COL (COLUUID, NAME) values (?, ?);", \
-                                (str(uuid), str(name)))
-        finally:
-            self.connection.commit()
+        Args:
+            name:
+                Name of the collection.
 
-        return uuid
+        Returns:
+            coluuid:
+                The collection's UUID.
+        """
+        coluuid = get_uuid_str()
 
-    def delete_collection(self, uuid):
-        try:
-            self.cursor.execute("delete from TBL_JSON_COL where COLUUID = ?;", (str(uuid),))
-        finally:
-            self.connection.commit()
+        self.cursor.execute(
+            "insert into TBL_JSON_COL (COLUUID, NAME) values (?, ?);",
+            (coluuid, name)
+        )
 
-    def list_collections(self):
+        self.connection.commit()
+
+        return coluuid
+
+    def delete_collection(self, coluuid: str):
+        """This function deletes a collection.
+
+        Args:
+            coluuid:
+                The collection's UUID.
+        """
+        self.cursor.execute("delete from TBL_JSON_COL where COLUUID = ?;", (coluuid,))
+        self.connection.commit()
+
+    def list_collections(self) -> Dict[str, str]:
+        """This function returns a dictionary of the collection UUIDs
+        keyed with collection names.
+
+        Returns:
+            A dictionary of names and collection UUIDs.
+        """
         self.cursor.execute("select NAME, COLUUID from TBL_JSON_COL;")
         self.connection.commit()
 
@@ -217,23 +310,15 @@ class Document:
             collections[row[0]] = row[1]
         return collections
 
-    def list_collection_objects(self, coluuid):
+    def list_collection_objects(self, coluuid: str) -> List[str]:
+        """This function returns a list of object UUIDs present in the collection..
+
+        Returns:
+            A list of object UUIDs.
+        """
         self.cursor.execute("select OBJUUID from TBL_JSON_OBJ where COLUUID = ?;", (coluuid,))
         self.connection.commit()
-
-        objuuids = []
-        for row in self.cursor.fetchall():
-            objuuids.append(row[0])
-        return objuuids
-
-    def list_objects(self):
-        self.cursor.execute("select OBJUUID from TBL_JSON_OBJ;")
-        self.connection.commit()
-
-        objuuids = []
-        for row in self.cursor.fetchall():
-            objuuids.append(row[0])
-        return objuuids
+        return [row[0] for row in self.cursor.fetchall()]
 
     def __del__(self):
         self.connection.close()
@@ -273,13 +358,19 @@ class Collection(Document):
         try:
             self.coluuid = Document.list_collections(self)[self.collection_name]
         except KeyError:
-            self.coluuid = Document.create_collection(self, name = self.collection_name)
+            self.coluuid = Document.create_collection(self, self.collection_name)
 
     def destroy(self):
         Document.delete_collection(self, self.coluuid)
 
     def create_attribute(self, attribute, path):
-        Document.create_attribute(self, self.coluuid, attribute, path)
+        attributes = Document.list_attributes(self, self.coluuid)
+        if (
+                (attribute in attributes.keys() and attributes[attribute] != path) or
+                attribute not in attributes.keys()
+            ):
+            Document.delete_attribute(self, attribute)
+            Document.create_attribute(self, self.coluuid, attribute, path)
 
     def delete_attribute(self, attribute):
         Document.delete_attribute(self, self.coluuid, attribute)
