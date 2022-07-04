@@ -37,6 +37,7 @@ class Document:
                                NAME VARCHAR(64) UNIQUE NOT NULL,
                                PRIMARY KEY (COLUUID));''')
 
+        # pylint: disable=line-too-long
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS TBL_JSON_OBJ (
                                OBJUUID VARCHAR(36),
                                COLUUID VARCHAR(36),
@@ -44,6 +45,7 @@ class Document:
                                PRIMARY KEY (OBJUUID),
                                FOREIGN KEY (COLUUID) REFERENCES TBL_JSON_COL(COLUUID) ON DELETE CASCADE);''')
 
+        # pylint: disable=line-too-long
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS TBL_JSON_ATTR (
                                COLUUID VARCHAR(36),
                                ATTRIBUTE VARCHAR(64),
@@ -51,6 +53,7 @@ class Document:
                                PRIMARY KEY (COLUUID, ATTRIBUTE),
                                FOREIGN KEY (COLUUID) REFERENCES TBL_JSON_COL(COLUUID) ON DELETE CASCADE);''')
 
+        # pylint: disable=line-too-long
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS TBL_JSON_IDX (
                                OBJUUID VARCHAR(36),
                                COLUUID VARCHAR(36),
@@ -86,7 +89,7 @@ class Document:
         )
         self.connection.commit()
 
-    def set_object(self, coluuid: str, objuuid: str, object: Dict):
+    def set_object(self, coluuid: str, objuuid: str, updated_object: Dict):
         """This function updates an object in a collection. The object dictionary,
         object UUID, and collection UUID are updated. In addition, previously indexed
         attributes are deleted and reset based on the updated object. Objects being
@@ -102,11 +105,11 @@ class Document:
             object:
                 The object dictionary that will be stored.
         """
-        object["objuuid"] = objuuid
-        object["coluuid"] = coluuid
+        updated_object["objuuid"] = objuuid
+        updated_object["coluuid"] = coluuid
         self.cursor.execute(
             "update TBL_JSON_OBJ set VALUE = ? where OBJUUID = ?;",
-            (pickle.dumps(object), objuuid)
+            (pickle.dumps(updated_object), objuuid)
         )
 
         self.cursor.execute("delete from TBL_JSON_IDX where OBJUUID = ?;", (objuuid,))
@@ -118,6 +121,7 @@ class Document:
                     "values (?, ?, ?, ?);",
                     (
                         objuuid, coluuid, attribute_name,
+                        # pylint: disable=eval-used
                         eval(f"str(self.get_object(objuuid){attribute})")
                     )
                 )
@@ -214,6 +218,7 @@ class Document:
                 self.cursor.execute(
                     "insert into TBL_JSON_IDX (OBJUUID, COLUUID, ATTRIBUTE, VALUE)"\
                     "values (?, ?, ?, ?);",
+                    # pylint: disable=eval-used
                     (row[0], coluuid, attribute, eval(f"str(pickle.loads(row[1]){path})"))
                 )
             except (KeyError, ValueError):
@@ -347,6 +352,7 @@ class Object(Document):
         Document.__init__(self, connection_str=connection_str)
         self.objuuid = objuuid
         self.coluuid = coluuid
+        self.object = None
         self.load()
 
     def load(self):
@@ -358,8 +364,8 @@ class Object(Document):
             self.object = Document.get_object(self, self.objuuid)
 
     def set(self):
-        Document.set_object(self, self.coluuid, self.objuuid, self.object)
         """Commit the object's state to the database."""
+        Document.set_object(self, self.coluuid, self.objuuid, self.object)
 
     def destroy(self):
         """Remove the object from the database."""
@@ -398,6 +404,7 @@ class Collection(Document):
         """This method deletes the collection from the database."""
         Document.delete_collection(self, self.coluuid)
 
+    # pylint: disable=arguments-differ
     def create_attribute(self, attribute: str, path: str):
         """This method creates or updates an attribute for the collection
         to indexed on. If an attribute is updated, the existing index state for the
@@ -417,9 +424,10 @@ class Collection(Document):
                 (attribute in attributes.keys() and attributes[attribute] != path) or
                 attribute not in attributes.keys()
             ):
-            Document.delete_attribute(self, attribute)
+            self.delete_attribute(attribute)
             Document.create_attribute(self, self.coluuid, attribute, path)
 
+    # pylint: disable=arguments-differ
     def delete_attribute(self, attribute: str):
         """This method deletes an attribute from the collection.
 
