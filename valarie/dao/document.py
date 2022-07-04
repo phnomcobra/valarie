@@ -135,6 +135,10 @@ class Document:
 
         Returns:
             A dictionary of the object.
+
+        Raises:
+            IndexError:
+                This is raised when a requested object does not exist.
         """
         self.cursor.execute("select VALUE from TBL_JSON_OBJ where OBJUUID = ?;", (objuuid,))
         self.connection.commit()
@@ -321,17 +325,32 @@ class Document:
         return [row[0] for row in self.cursor.fetchall()]
 
     def __del__(self):
+        """This destructor function closes the database connection."""
         self.connection.close()
 
 class Object(Document):
-    def __init__(self, coluuid, objuuid, connection_str=DEFAULT_CONNECTION_STR):
-        Document.__init__(self, connection_str=connection_str)
+    """This class encapsulates a collection object and implements methods
+    for construction, loading, setting, and destroying collection objects."""
+    def __init__(self, coluuid: str, objuuid: str, connection_str: str = DEFAULT_CONNECTION_STR):
+        """This function initilizes an instance of a collection object. It
+        initializes a document instance and loads the object from it.
 
+        Args:
+            coluuid:
+                The collection UUID.
+
+            objuuid:
+                The object UUID.
+
+            connection_str:
+                The sqlite connection string the document instance will use."""
+        Document.__init__(self, connection_str=connection_str)
         self.objuuid = objuuid
         self.coluuid = coluuid
         self.load()
 
     def load(self):
+        """Load an existing or create a new object and load."""
         try:
             self.object = Document.get_object(self, self.objuuid)
         except IndexError:
@@ -340,13 +359,28 @@ class Object(Document):
 
     def set(self):
         Document.set_object(self, self.coluuid, self.objuuid, self.object)
+        """Commit the object's state to the database."""
 
     def destroy(self):
+        """Remove the object from the database."""
         Document.delete_object(self, self.objuuid)
         self.object = None
 
 class Collection(Document):
-    def __init__(self, collection_name, connection_str=None):
+    """This class implements the document object collection. This is the primary
+    interface for searching and accessing objects."""
+    def __init__(self, collection_name: str, connection_str: str = None):
+        """This method contructs a collection instance. A collection name and
+        optionally a sqlite connection string is used for resolving or creating
+        a new document collection.
+
+        Args:
+            collection_name:
+                A collection's name.
+
+            connection_str:
+                A sqlite connection str.
+        """
         self.collection_name = collection_name
         if connection_str is None:
             self.connection_str = f'{collection_name}.sqlite'
@@ -361,9 +395,23 @@ class Collection(Document):
             self.coluuid = Document.create_collection(self, self.collection_name)
 
     def destroy(self):
+        """This method deletes the collection from the database."""
         Document.delete_collection(self, self.coluuid)
 
-    def create_attribute(self, attribute, path):
+    def create_attribute(self, attribute: str, path: str):
+        """This method creates or updates an attribute for the collection
+        to indexed on. If an attribute is updated, the existing index state for the
+        attribute is deleted and then rebuilt. The key to be indexed on is expressed
+        as a series of index operators:
+
+            ["key1"][1]["key2"]
+
+        Args:
+            attribute:
+                Name of the attribute.
+
+            path:
+                The object path to index on."""
         attributes = Document.list_attributes(self, self.coluuid)
         if (
                 (attribute in attributes.keys() and attributes[attribute] != path) or
@@ -372,10 +420,27 @@ class Collection(Document):
             Document.delete_attribute(self, attribute)
             Document.create_attribute(self, self.coluuid, attribute, path)
 
-    def delete_attribute(self, attribute):
+    def delete_attribute(self, attribute: str):
+        """This method deletes an attribute from the collection.
+
+        Args:
+            attribute:
+                Name of the attribute.
+        """
         Document.delete_attribute(self, self.coluuid, attribute)
 
-    def find(self, **kargs):
+    def find(self, **kargs: Dict[str, str]) -> List[Object]:
+        """This method finds and returns a list of collection objects by matching attribute
+        values to the key word arguments applied to this method. The key maps to the attribute
+        name and the value maps to the indexed attribute value.
+
+        Args:
+            **kargs:
+                Dictionary of attribute strings.
+
+        Returns:
+            A list of collection objects.
+        """
         objuuid_sets = []
 
         if len(kargs) == 0:
@@ -394,7 +459,18 @@ class Collection(Document):
 
         return objects
 
-    def find_objuuids(self, **kargs):
+    def find_objuuids(self, **kargs: Dict[str, str]) -> List[str]:
+        """This method finds and returns a list of collection object UUIDs by matching attribute
+        values to the key word arguments applied to this method. The key maps to the attribute
+        name and the value maps to the indexed attribute value.
+
+        Args:
+            **kargs:
+                Dictionary of attribute strings.
+
+        Returns:
+            A list of collection object UUIDs.
+        """
         objuuid_sets = []
 
         if len(kargs) == 0:
@@ -413,10 +489,27 @@ class Collection(Document):
 
         return objuuids
 
-    def get_object(self, objuuid = None):
-        if not objuuid:
-            objuuid = get_uuid_str()
-        return Object(self.coluuid, objuuid, connection_str=self.connection_str)
+    def get_object(self, objuuid: str = None) -> Object:
+        """This method returns a new or existing collection object. If an object UUID is
+        not specified, then a UUID is generated.
 
-    def list_objuuids(self):
+        Args:
+            objuuid:
+                A object UUID.
+
+        Returns:
+            A collection object.
+        """
+        return Object(
+            self.coluuid,
+            get_uuid_str() if objuuid is None else objuuid,
+            connection_str=self.connection_str
+        )
+
+    def list_objuuids(self) -> List[str]:
+        """This method returns a list of every object UUID in the collection.
+
+        Returns:
+            A list of object UUIDs.
+        """
         return Document.list_collection_objects(self, self.coluuid)
