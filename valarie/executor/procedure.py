@@ -13,15 +13,15 @@ from valarie.dao.document import Collection
 from valarie.dao.utils import get_uuid_str
 from valarie.controller import kvstore as kv
 from valarie.router.messaging import add_message
-from valarie.executor.timers import timers
+from valarie.executor.timers import TIMERS
 from valarie.executor.task import TaskError
 from valarie.controller.config import get_config
 from valarie.controller.results import create_result_link
 from valarie.controller.inventory import delete_node
 from valarie.controller.host import get_hosts
 
-jobs = {}
-job_lock = Lock()
+JOBS = {}
+JOB_LOCK = Lock()
 
 def update_job(jobuuid: str, key: str, value: Any):
     """This is a function used to update a key in a job.
@@ -38,9 +38,9 @@ def update_job(jobuuid: str, key: str, value: Any):
             The value to set the key to.
 
     """
-    job_lock.acquire()
-    jobs[jobuuid][key] = value
-    job_lock.release()
+    JOB_LOCK.acquire()
+    JOBS[jobuuid][key] = value
+    JOB_LOCK.release()
     kv.touch("queueState")
 
 def set_job(jobuuid: str, value: Dict):
@@ -54,9 +54,9 @@ def set_job(jobuuid: str, value: Dict):
         value:
             The dictionary of the job.
     """
-    job_lock.acquire()
-    jobs[jobuuid] = value
-    job_lock.release()
+    JOB_LOCK.acquire()
+    JOBS[jobuuid] = value
+    JOB_LOCK.release()
     kv.touch("queueState")
 
 def get_jobs_grid() -> List[Dict]:
@@ -67,9 +67,9 @@ def get_jobs_grid() -> List[Dict]:
         A list of dictionaries used for the queue list in the front end.
     """
     grid_data = []
-    job_lock.acquire()
+    JOB_LOCK.acquire()
 
-    for jobuuid, job in jobs.items(): # pylint: disable=unused-variable
+    for jobuuid, job in JOBS.items(): # pylint: disable=unused-variable
         row = {}
 
         if job["start time"] is None:
@@ -90,7 +90,7 @@ def get_jobs_grid() -> List[Dict]:
 
         grid_data.append(row)
 
-    job_lock.release()
+    JOB_LOCK.release()
 
     # sort list by progress
     # pylint: disable=consider-using-enumerate
@@ -112,13 +112,13 @@ def get_queued_hosts(prcuuid: str) -> List[str]:
     """
     hstuuids = []
 
-    job_lock.acquire()
+    JOB_LOCK.acquire()
 
-    for jobuuid, job in jobs.items(): # pylint: disable=unused-variable
+    for jobuuid, job in JOBS.items(): # pylint: disable=unused-variable
         if prcuuid == job["procedure"]["objuuid"] and job["process"] is None:
             hstuuids.append(job["host"]["objuuid"])
 
-    job_lock.release()
+    JOB_LOCK.release()
 
     return hstuuids
 
@@ -510,7 +510,7 @@ def worker():
     This function conditions and evaluates CRON strings. This function also
     conditions and obeys host and console level concurrency limits.
     """
-    global last_worker_time
+    global LAST_WORKER_TIME # pylint: disable=global-statement
     running_jobs_count = 0
 
     inventory = Collection("inventory")
@@ -547,7 +547,7 @@ def worker():
             procedure.set()
 
         if procedure.object["enabled"] in (True, "true"):
-            for epoch_time in range(int(last_worker_time), int(time())):
+            for epoch_time in range(int(LAST_WORKER_TIME), int(time())):
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
@@ -562,71 +562,71 @@ def worker():
                         queue_procedure(hstuuid, procedure.objuuid, {})
                     break
 
-    last_worker_time = time()
+    LAST_WORKER_TIME = time() # pylint: disable=used-before-assignment
 
-    job_lock.acquire()
+    JOB_LOCK.acquire()
 
     # Concurrency conditioning
-    for key in list(jobs.keys()):
+    for key in list(JOBS.keys()):
         try:
-            assert int(jobs[key]["host"]["concurrency"]) > 0
+            assert int(JOBS[key]["host"]["concurrency"]) > 0
         except (AssertionError, KeyError, ValueError):
             add_message(f"invalid host concurrency\n{traceback.format_exc()}")
-            jobs[key]["host"]["concurrency"] = "1"
+            JOBS[key]["host"]["concurrency"] = "1"
 
         try:
-            assert int(jobs[key]["console"]["concurrency"]) > 0
+            assert int(JOBS[key]["console"]["concurrency"]) > 0
         except (AssertionError, KeyError, ValueError):
             add_message(f"invalid console concurrency\n{traceback.format_exc()}")
-            jobs[key]["console"]["concurrency"] = "1"
+            JOBS[key]["console"]["concurrency"] = "1"
 
     running_jobs_counts = {}
-    for key in list(jobs.keys()):
-        running_jobs_counts[jobs[key]["host"]["objuuid"]] = 0
-        running_jobs_counts[jobs[key]["console"]["objuuid"]] = 0
+    for key in list(JOBS.keys()):
+        running_jobs_counts[JOBS[key]["host"]["objuuid"]] = 0
+        running_jobs_counts[JOBS[key]["console"]["objuuid"]] = 0
 
-    for key in list(jobs.keys()):
-        if jobs[key]["process"] is not None:
-            if jobs[key]["process"].is_alive():
+    for key in list(JOBS.keys()):
+        if JOBS[key]["process"] is not None:
+            if JOBS[key]["process"].is_alive():
                 running_jobs_count += 1
-                running_jobs_counts[jobs[key]["host"]["objuuid"]] += 1
-                running_jobs_counts[jobs[key]["console"]["objuuid"]] += 1
+                running_jobs_counts[JOBS[key]["host"]["objuuid"]] += 1
+                running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
             else:
-                del jobs[key]
+                del JOBS[key]
                 kv.touch("queueState")
 
-    for key in list(jobs.keys()):
+    for key in list(JOBS.keys()):
         if running_jobs_count < int(get_config()["concurrency"]):
-            if jobs[key]["process"] is None:
+            if JOBS[key]["process"] is None:
                 if (
-                        running_jobs_counts[jobs[key]["host"]["objuuid"]] < \
-                            int(jobs[key]["host"]["concurrency"]) and
-                        running_jobs_counts[jobs[key]["console"]["objuuid"]] < \
-                            int(jobs[key]["console"]["concurrency"])
+                        running_jobs_counts[JOBS[key]["host"]["objuuid"]] < \
+                            int(JOBS[key]["host"]["concurrency"]) and
+                        running_jobs_counts[JOBS[key]["console"]["objuuid"]] < \
+                            int(JOBS[key]["console"]["concurrency"])
                     ):
-                    jobs[key]["process"] = Thread(
+                    JOBS[key]["process"] = Thread(
                         target=run_procedure,
                         args=(
-                            jobs[key]["host"],
-                            jobs[key]["procedure"],
-                            jobs[key]["console"],
-                            jobs[key]["jobuuid"],
-                            jobs[key]["ctruuid"]
+                            JOBS[key]["host"],
+                            JOBS[key]["procedure"],
+                            JOBS[key]["console"],
+                            JOBS[key]["jobuuid"],
+                            JOBS[key]["ctruuid"]
                         )
                     )
-                    jobs[key]["start time"] = time()
-                    jobs[key]["process"].start()
+                    JOBS[key]["start time"] = time()
+                    JOBS[key]["process"].start()
                     running_jobs_count += 1
-                    running_jobs_counts[jobs[key]["host"]["objuuid"]] += 1
-                    running_jobs_counts[jobs[key]["console"]["objuuid"]] += 1
+                    running_jobs_counts[JOBS[key]["host"]["objuuid"]] += 1
+                    running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
                     kv.touch("queueState")
 
-    job_lock.release()
+    JOB_LOCK.release()
 
-    timers["procedure worker"] = Timer(1, worker)
-    timers["procedure worker"].start()
+    TIMERS["procedure worker"] = Timer(1, worker)
+    TIMERS["procedure worker"].start()
 
-last_worker_time = time()
+LAST_WORKER_TIME = time()
 
-timers["procedure worker"] = Timer(1, worker)
-timers["procedure worker"].start()
+TIMERS["procedure worker"] = Timer(1, worker)
+TIMERS["procedure worker"].start()

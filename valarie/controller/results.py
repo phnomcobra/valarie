@@ -6,7 +6,7 @@ from threading import Timer
 from time import time
 from typing import Dict, List
 
-from valarie.executor.timers import timers
+from valarie.executor.timers import TIMERS
 from valarie.dao.document import Collection, Object
 from valarie.controller.inventory import delete_node
 from valarie.controller import kvstore as kv
@@ -187,8 +187,8 @@ def get_result(resuuid: str) -> List[Dict]:
 def worker():
     """This is a worker function used to process expiration of results
     and result links."""
-    timers["results worker"] = Timer(60, worker)
-    timers["results worker"].start()
+    TIMERS["results worker"] = Timer(60, worker)
+    TIMERS["results worker"].start()
 
     results = Collection("results")
     inventory = Collection('inventory')
@@ -224,12 +224,5 @@ def worker():
     if refresh_inventory:
         kv.touch("inventoryState")
 
-collection = Collection("results")
-collection.create_attribute("start", "['start']")
-collection.create_attribute("stop", "['stop']")
-collection.create_attribute("tskuuid", "['task']['objuuid']")
-collection.create_attribute("prcuuid", "['procedure']['objuuid']")
-collection.create_attribute("hstuuid", "['host']['objuuid']")
-
-timers["results worker"] = Timer(60, worker)
-timers["results worker"].start()
+TIMERS["results worker"] = Timer(60, worker)
+TIMERS["results worker"].start()

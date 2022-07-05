@@ -352,6 +352,3 @@ class File: # pylint: disable=too-many-instance-attributes
                 self.seek(1 + self.__position)
 
         self.__following_write = True
-
-collection = Collection("datastore")
-collection.create_attribute("type", "['type']")

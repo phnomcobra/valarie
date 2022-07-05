@@ -76,6 +76,3 @@ def delete(name: str):
         key.destroy()
     except IndexError:
         pass
-
-kvstore = Collection("kvstore")
-kvstore.create_attribute("name", "['name']")

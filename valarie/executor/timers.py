@@ -4,15 +4,14 @@ timer cancellation."""
 
 from valarie.router.messaging import add_message
 
-timers = {}
+TIMERS = {}
 
 def cancel_timers():
     """This function enumerates the timers and attempts to cancel
     each timer."""
-    for key in timers.keys(): # pylint: disable=consider-iterating-dictionary
+    for key in TIMERS.keys(): # pylint: disable=consider-iterating-dictionary
         try:
-            timers[key].cancel()
+            TIMERS[key].cancel()
             add_message(f"CANCELLING {key}...OK")
-        except Exception as exception:
-            msg = str(exception)
-            add_message(f"CANCELLING {key}...{msg}")
+        except Exception as exception: # pylint: disable=broad-except
+            add_message(f"CANCELLING {key}...{str(exception)}")

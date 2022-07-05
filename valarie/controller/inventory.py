@@ -14,11 +14,7 @@ from valarie.controller.config import (
     CONFIG_OBJUUID,
     TASK_PROTO_OBJUUID,
     CONSOLE_PROTO_OBJUUID,
-    SETTINGS_CONTAINER_OBJUUID,
-    create_config,
-    create_console_template,
-    create_task_template,
-    create_settings_container
+    SETTINGS_CONTAINER_OBJUUID
 )
 
 FIXED_OBJUUIDS = (
@@ -169,6 +165,7 @@ def set_parent_objuuid(objuuid: str, parent_objuuid: str):
         lock()
 
         assert objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {objuuid}"
+        # pylint: disable=line-too-long
         assert parent_objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {parent_objuuid}"
 
         inventory = Collection("inventory")
@@ -495,19 +492,3 @@ def import_objects(objects: Dict[str, Object]):
         container.set()
     else:
         container.destroy()
-
-collection = Collection("inventory")
-collection.create_attribute("parent", "['parent']")
-collection.create_attribute("type", "['type']")
-collection.create_attribute("name", "['name']")
-
-if not collection.find(parent="#"):
-    create_container("#", "Root")
-
-if not collection.find(type="config"):
-    create_config()
-    create_console_template()
-    create_task_template()
-    create_settings_container()
-
-unlock()
