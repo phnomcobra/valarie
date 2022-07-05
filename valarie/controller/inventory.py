@@ -165,33 +165,34 @@ def set_parent_objuuid(objuuid: str, parent_objuuid: str):
         parent_objuuid:
             The UUID of the parent object in the inventory.
     """
-    lock()
+    try:
+        lock()
 
-    assert objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {objuuid}"
-    assert parent_objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {parent_objuuid}"
+        assert objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {objuuid}"
+        assert parent_objuuid not in FIXED_OBJUUIDS, f"Change parent not permitted for {parent_objuuid}"
 
-    inventory = Collection("inventory")
-    current = inventory.get_object(objuuid)
+        inventory = Collection("inventory")
+        current = inventory.get_object(objuuid)
 
-    # pylint: disable=line-too-long
-    assert current.object['type'] not in IMMOBILE_TYPES, f'''Change parent for {current.object['type']} not permitted'''
+        # pylint: disable=line-too-long
+        assert current.object['type'] not in IMMOBILE_TYPES, f'''Change parent for {current.object['type']} not permitted'''
 
-    if objuuid != parent_objuuid:
-        old_parent_objuuid = current.object["parent"]
-        current.object["parent"] = parent_objuuid
-        current.set()
+        if objuuid != parent_objuuid:
+            old_parent_objuuid = current.object["parent"]
+            current.object["parent"] = parent_objuuid
+            current.set()
 
-        if old_parent_objuuid != '#':
-            parent = inventory.get_object(old_parent_objuuid)
-            parent.object["children"] = inventory.find_objuuids(parent=old_parent_objuuid)
-            parent.set()
+            if old_parent_objuuid != '#':
+                parent = inventory.get_object(old_parent_objuuid)
+                parent.object["children"] = inventory.find_objuuids(parent=old_parent_objuuid)
+                parent.set()
 
-        if parent_objuuid != '#':
-            new_parent = inventory.get_object(parent_objuuid)
-            new_parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
-            new_parent.set()
-
-    unlock()
+            if parent_objuuid != '#':
+                new_parent = inventory.get_object(parent_objuuid)
+                new_parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
+                new_parent.set()
+    finally:
+        unlock()
 
 def delete_node(objuuid: str):
     """This function used to delete an inventory object and any child objects it may have.
@@ -202,41 +203,42 @@ def delete_node(objuuid: str):
         objuuid:
             The UUID of the inventory object being deleted.
     """
-    lock()
+    try:
+        lock()
 
-    assert objuuid not in FIXED_OBJUUIDS, f"Deletion is not permitted for {objuuid}"
-    # pylint: disable=line-too-long
-    assert no_fixed_objects(objuuid), f"Deletion is not permitted because {objuuid} contains fixed objects"
+        assert objuuid not in FIXED_OBJUUIDS, f"Deletion is not permitted for {objuuid}"
+        # pylint: disable=line-too-long
+        assert no_fixed_objects(objuuid), f"Deletion is not permitted because {objuuid} contains fixed objects"
 
-    inventory = Collection("inventory")
+        inventory = Collection("inventory")
 
-    parent_objuuid = inventory.get_object(objuuid).object["parent"]
+        parent_objuuid = inventory.get_object(objuuid).object["parent"]
 
-    for node in get_child_tree_nodes(objuuid):
-        current = inventory.get_object(node["id"])
+        for node in get_child_tree_nodes(objuuid):
+            current = inventory.get_object(node["id"])
+
+            if "type" in current.object and \
+            "sequuid" in current.object:
+                if current.object["type"] == "binary file":
+                    delete_sequence(current.object["sequuid"])
+
+            current.destroy()
+
+        current = inventory.get_object(objuuid)
 
         if "type" in current.object and \
-           "sequuid" in current.object:
+        "sequuid" in current.object:
             if current.object["type"] == "binary file":
                 delete_sequence(current.object["sequuid"])
 
         current.destroy()
 
-    current = inventory.get_object(objuuid)
-
-    if "type" in current.object and \
-       "sequuid" in current.object:
-        if current.object["type"] == "binary file":
-            delete_sequence(current.object["sequuid"])
-
-    current.destroy()
-
-    if parent_objuuid != "#":
-        parent = inventory.get_object(parent_objuuid)
-        parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
-        parent.set()
-
-    unlock()
+        if parent_objuuid != "#":
+            parent = inventory.get_object(parent_objuuid)
+            parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
+            parent.set()
+    finally:
+        unlock()
 
 def get_context_menu(objuuid: str) -> List[Dict]:
     """This function used to delete an inventory object and any child objects it may have.
@@ -357,64 +359,65 @@ def copy_object(objuuid: str) -> Object:
     Returns:
         The copied inventory object.
     """
-    lock()
+    try:
+        lock()
 
-    assert objuuid not in FIXED_OBJUUIDS, f"Copying is not permitted for {objuuid}"
-    # pylint: disable=line-too-long
-    assert no_fixed_objects(objuuid), f"Copying is not permitted because {objuuid} contains fixed objects"
+        assert objuuid not in FIXED_OBJUUIDS, f"Copying is not permitted for {objuuid}"
+        # pylint: disable=line-too-long
+        assert no_fixed_objects(objuuid), f"Copying is not permitted because {objuuid} contains fixed objects"
 
-    inventory = Collection("inventory")
+        inventory = Collection("inventory")
 
-    current = inventory.get_object(objuuid)
+        current = inventory.get_object(objuuid)
 
-    child_objuuids = inventory.find_objuuids(parent=objuuid)
+        child_objuuids = inventory.find_objuuids(parent=objuuid)
 
-    clone = inventory.get_object()
+        clone = inventory.get_object()
 
-    clone.object = current.object
-    clone.object["children"] = []
-    clone.object["name"] = clone.object["name"] + " (Copy)"
+        clone.object = current.object
+        clone.object["children"] = []
+        clone.object["name"] = clone.object["name"] + " (Copy)"
 
-    add_message(f'copied {clone.object["name"]}')
+        add_message(f'copied {clone.object["name"]}')
 
-    recstrrepl(clone.object, objuuid, clone.objuuid)
+        recstrrepl(clone.object, objuuid, clone.objuuid)
 
-    if clone.object["type"] == "binary file":
-        clone.object["sequuid"] = copy_sequence(clone.object["sequuid"])
+        if clone.object["type"] == "binary file":
+            clone.object["sequuid"] = copy_sequence(clone.object["sequuid"])
 
-    clone.set()
+        clone.set()
 
-    parent = inventory.get_object(clone.object["parent"])
-    parent.object["children"] = inventory.find_objuuids(parent=clone.object["parent"])
-    parent.set()
+        parent = inventory.get_object(clone.object["parent"])
+        parent.object["children"] = inventory.find_objuuids(parent=clone.object["parent"])
+        parent.set()
 
-    old_objuuids = [objuuid]
-    new_objuuids = [clone.objuuid]
+        old_objuuids = [objuuid]
+        new_objuuids = [clone.objuuid]
 
-    for child_objuuid in child_objuuids:
-        __copy_object(child_objuuid, clone.objuuid, inventory, old_objuuids, new_objuuids)
+        for child_objuuid in child_objuuids:
+            __copy_object(child_objuuid, clone.objuuid, inventory, old_objuuids, new_objuuids)
 
-    for uuid in new_objuuids:
-        new = inventory.get_object(uuid)
+        for uuid in new_objuuids:
+            new = inventory.get_object(uuid)
 
-        for i, new_objuuid in enumerate(new_objuuids):
-            old_objuuid = old_objuuids[i]
+            for i, new_objuuid in enumerate(new_objuuids):
+                old_objuuid = old_objuuids[i]
 
-            recstrrepl(new.object, old_objuuid, new_objuuid)
+                recstrrepl(new.object, old_objuuid, new_objuuid)
 
-        new.set()
+            new.set()
 
-        if "name" in new.object:
-            add_message(f'mutated {new.object["name"]}')
-        else:
-            add_message(f'mutated {new.objuuid}')
+            if "name" in new.object:
+                add_message(f'mutated {new.object["name"]}')
+            else:
+                add_message(f'mutated {new.objuuid}')
 
-    if len(child_objuuids) > 0:
-        kv.touch("inventoryState")
+        if len(child_objuuids) > 0:
+            kv.touch("inventoryState")
 
-    unlock()
-
-    return clone
+        return clone
+    finally:
+        unlock()
 
 # pylint: disable=too-many-branches
 def import_objects(objects: Dict[str, Object]):
