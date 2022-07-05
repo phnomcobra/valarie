@@ -7,6 +7,8 @@ import cherrypy
 from valarie.router.root import Root
 from valarie.router.messaging import add_message
 from valarie.executor.timers import cancel_timers
+from valarie.executor.procedure import start_timer as start_procedures_worker
+from valarie.executor.results import start_timer as start_results_worker
 from valarie.dao.document import Collection
 from valarie.controller.inventory import unlock, create_container
 from valarie.controller.config import (
@@ -57,6 +59,8 @@ def start():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     init_collections()
+    start_procedures_worker()
+    start_results_worker()
 
     config = {
         'log.screen': False,

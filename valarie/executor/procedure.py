@@ -22,6 +22,7 @@ from valarie.controller.host import get_hosts
 
 JOBS = {}
 JOB_LOCK = Lock()
+LAST_WORKER_TIME = time()
 
 def update_job(jobuuid: str, key: str, value: Any):
     """This is a function used to update a key in a job.
@@ -503,6 +504,11 @@ def eval_cron_field(cron_str: str, now_val: int) -> bool:
 
     return result
 
+def start_timer():
+    """This function creates and starts the procedures timer."""
+    TIMERS["procedure worker"] = Timer(1, worker)
+    TIMERS["procedure worker"].start()
+
 # pylint: disable=too-many-branches,too-many-statements
 def worker():
     """This function is the procedure worker that automatically queues
@@ -623,10 +629,4 @@ def worker():
 
     JOB_LOCK.release()
 
-    TIMERS["procedure worker"] = Timer(1, worker)
-    TIMERS["procedure worker"].start()
-
-LAST_WORKER_TIME = time()
-
-TIMERS["procedure worker"] = Timer(1, worker)
-TIMERS["procedure worker"].start()
+    start_timer()
