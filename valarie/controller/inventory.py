@@ -290,6 +290,7 @@ def __copy_object(
     """This is a recursion function used to copy and object in the inventory and
     any of the children it may have. Copied objects will have new UUIDs. As this
     function runs, a mapping is accumulated between the original and cloned UUIDs.
+    Inventory objects with an immoblized type will be excluded from the copy.
 
     Args:
         objuuid:
@@ -314,32 +315,33 @@ def __copy_object(
             "type" in current.object and
             "name" in current.object
         ):
-        child_objuuids = inventory.find_objuuids(parent=objuuid)
+        if current.object['type'] not in IMMOBILE_TYPES:
+            child_objuuids = inventory.find_objuuids(parent=objuuid)
 
-        clone = inventory.get_object()
+            clone = inventory.get_object()
 
-        clone.object = current.object
-        clone.object["children"] = []
-        clone.object["parent"] = parent_objuuid
+            clone.object = current.object
+            clone.object["children"] = []
+            clone.object["parent"] = parent_objuuid
 
-        add_message(f'copied {clone.object["name"]}')
+            add_message(f'copied {clone.object["name"]}')
 
-        recstrrepl(clone.object, objuuid, clone.objuuid)
+            recstrrepl(clone.object, objuuid, clone.objuuid)
 
-        if clone.object["type"] == "binary file":
-            clone.object["sequuid"] = copy_sequence(clone.object["sequuid"])
+            if clone.object["type"] == "binary file":
+                clone.object["sequuid"] = copy_sequence(clone.object["sequuid"])
 
-        clone.set()
+            clone.set()
 
-        parent = inventory.get_object(clone.object["parent"])
-        parent.object["children"] = inventory.find_objuuids(parent=clone.object["parent"])
-        parent.set()
+            parent = inventory.get_object(clone.object["parent"])
+            parent.object["children"] = inventory.find_objuuids(parent=clone.object["parent"])
+            parent.set()
 
-        old_objuuids.append(objuuid)
-        new_objuuids.append(clone.objuuid)
+            old_objuuids.append(objuuid)
+            new_objuuids.append(clone.objuuid)
 
-        for child_objuuid in child_objuuids:
-            __copy_object(child_objuuid, clone.objuuid, inventory, old_objuuids, new_objuuids)
+            for child_objuuid in child_objuuids:
+                __copy_object(child_objuuid, clone.objuuid, inventory, old_objuuids, new_objuuids)
     else:
         current.destroy()
 
@@ -366,6 +368,9 @@ def copy_object(objuuid: str) -> Object:
         inventory = Collection("inventory")
 
         current = inventory.get_object(objuuid)
+
+        # pylint: disable=line-too-long
+        assert current.object["type"] not in IMMOBILE_TYPES, f'Copying is not permitted for type "{current.object["type"]}"'
 
         child_objuuids = inventory.find_objuuids(parent=objuuid)
 
