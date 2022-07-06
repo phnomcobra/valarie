@@ -1,44 +1,40 @@
 #!/usr/bin/python3
-
-import cherrypy
-import json
-
-from threading import Lock
+"""This module implements functions for adding and getting messages."""
 from time import time, strftime, localtime
-from copy import deepcopy
+from typing import Dict, List
 
-message_lock = Lock()
-messages = {
-    "messages" : []
-}
+from valarie.controller import kvstore
 
-def add_message(message, timestamp = None):
+def add_message(message: str, timestamp: float = None):
+    """This is a function used to add a message to the messages key in
+    the key-value store collection. The message list is capped and
+    roles over at a length of 50.
+
+    Args:
+        message:
+            A message string.
+
+        timestamp:
+            10 digit epoch time stamp.
+    """
     if not timestamp:
         timestamp = time()
-    
-    cherrypy.log(strftime('%H:%M:%S', localtime(timestamp)), str(message))
-    
-    message_lock.acquire()
-    messages["messages"] = [{"message" : deepcopy(message), "timestamp" : strftime('%H:%M:%S', localtime(timestamp))}] + messages["messages"][:49]
-    message_lock.release()
 
-def get_messages():
-    message_lock.acquire()
-    temp = deepcopy(messages)
-    message_lock.release()
-    return temp
+    messages = kvstore.get("messages", [])
 
-class Messaging(object):
-    @cherrypy.expose
-    def add_message(self, message, timestamp):
-        add_message(message, timestamp)
-        return json.dumps({})
-    
-    @cherrypy.expose
-    def add_message(self, message):
-        add_message(message)
-        return json.dumps({})
-    
-    @cherrypy.expose
-    def get_messages(self):
-        return json.dumps(get_messages())
+    messages = [
+        {
+            "message": message,
+            "timestamp": strftime('%H:%M:%S', localtime(timestamp))
+        }
+    ] + messages[:49]
+
+    kvstore.set("messages", messages)
+
+def get_messages() -> List[Dict]:
+    """This is a function used to retrieve the messages from key value store.
+
+    Returns:
+        A list of message dictionaries.
+    """
+    return kvstore.get("messages", [])

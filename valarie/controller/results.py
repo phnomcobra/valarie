@@ -1,31 +1,180 @@
 #!/usr/bin/python3
+"""This module implements functions for result link objects; retrieving
+results by controller, procedure, and result UUID; and deleting results."""
+from time import time
+from typing import Dict, List
 
-import cherrypy
-import json
-import traceback
+from valarie.dao.document import Collection, Object
+from valarie.controller.host import get_hosts
 
-from valarie.controller.messaging import add_message
-from valarie.model.results import get_controller_results, get_procedure_result, get_result
+def create_result_link(
+        parent_objuuid: str,
+        name: str = "New Result Link",
+        objuuid: str = None
+    ) -> Object:
+    """This is a function used to create a result link object in the inventory.
 
-class Results(object):
-    @cherrypy.expose
-    def get_controller(self, objuuid):
+    Args:
+        parent_objuuid:
+            Parent object UUID.
+
+        name:
+            Name of the link object.
+
+        objuuid:
+            UUID of the link object.
+
+    Returns:
+        An inventory object.
+    """
+    inventory = Collection("inventory")
+
+    result = inventory.get_object(objuuid)
+
+    result.object = {
+        "type" : "result link",
+        "parent" : parent_objuuid,
+        "children" : [],
+        "name" : name,
+        "icon" : "/images/result_icon.png",
+        "context" : {
+            "open" : {
+                "label" : "Open",
+                "action" : {
+                    "method" : "open result",
+                    "route" : "inventory/get_object",
+                    "params" : {
+                        "objuuid" : result.objuuid
+                    }
+                }
+            }
+        }
+    }
+
+    result.set()
+
+    if parent_objuuid != "#":
+        parent = inventory.get_object(parent_objuuid)
+        parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
+        parent.set()
+
+    return result
+
+def get_controller_results(ctruuid: str) -> List[Dict]:
+    """This is a function used to retrieve the latest results for a
+    controller object.
+
+    Args:
+        ctruuid:
+            The controller object UUID.
+
+    Returns:
+        List of result dictionaries.
+    """
+    results = Collection("results")
+    inventory = Collection("inventory")
+
+    controller = inventory.get_object(ctruuid)
+
+    controller_results = []
+
+    hstuuids = []
+    grpuuids = []
+    for hstuuid in controller.object["hosts"]:
+        get_hosts(hstuuid, hstuuids, grpuuids, inventory)
+
+    for hstuuid in hstuuids:
+        for prcuuid in controller.object["procedures"]:
+            try:
+                result = None
+                for current in results.find(hstuuid=hstuuid, prcuuid=prcuuid):
+                    if result is None:
+                        result = current.object
+                    elif result['start'] < current.object['start']:
+                        result = current.object
+
+                if result["start"] is not None and result["stop"] is not None:
+                    result["duration"] = result["stop"] - result["start"]
+                elif result["start"] is not None:
+                    result["duration"] = time() - result["start"]
+                else:
+                    result["duration"] = 0
+
+                if result["stop"] is None:
+                    result["age"] = 0
+                else:
+                    result["age"] = time() - result["stop"]
+
+                controller_results.append(result)
+            except: # pylint: disable=bare-except
+                continue
+
+    return controller_results
+
+def get_procedure_result(prcuuid: str, hstuuid: str) -> List[Dict]:
+    """This is a function used to retrieve the latest results for a
+    particular host/procedure combination.
+
+    Args:
+        prcuuid:
+            The procedure object UUID.
+
+        hstuuid:
+            The host object UUID.
+
+    Returns:
+        List of result dictionaries.
+    """
+    inventory = Collection("inventory")
+    results = Collection("results")
+
+    result_objects = []
+
+    hstuuids = []
+    grpuuids = []
+    get_hosts(hstuuid, hstuuids, grpuuids, inventory)
+
+    for current_hstuuid in hstuuids:
         try:
-            return json.dumps(get_controller_results(objuuid))
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    def get_procedure(self, prcuuid, hstuuid):
-        try:
-            return json.dumps(get_procedure_result(prcuuid, hstuuid))
-        except:
-            add_message(traceback.format_exc())
-    
-    @cherrypy.expose
-    def get_result(self, resuuid):
-        try:
-            return json.dumps(get_result(resuuid))
-        except:
-            add_message(traceback.format_exc())
-    
+            result = None
+            # get the latest result for a host/procedure UUID pair.
+            for current in results.find(hstuuid=current_hstuuid, prcuuid=prcuuid):
+                if result is None:
+                    result = current.object
+                elif result['start'] < current.object['start']:
+                    result = current.object
+
+            if result["start"] is not None and result["stop"] is not None:
+                result["duration"] = result["stop"] - result["start"]
+            elif result["start"] is not None:
+                result["duration"] = time() - result["start"]
+            else:
+                result["duration"] = 0
+
+            result_objects.append(result)
+        except: # pylint: disable=bare-except
+            continue
+
+    return result_objects
+
+def get_result(resuuid: str) -> List[Dict]:
+    """This is a function used to retrieve a specific result.
+
+    Args:
+        resuuid:
+            The result object UUID.
+
+    Returns:
+        List of result dictionaries.
+    """
+    results = Collection("results")
+    result = results.get_object(resuuid)
+
+    if result.object["start"] is not None and result.object["stop"] is not None:
+        result.object["duration"] = result.object["stop"] - result.object["start"]
+    elif result.object["start"] is not None:
+        result.object["duration"] = time() - result.object["start"]
+    else:
+        result.object["duration"] = 0
+
+    return [result.object]
