@@ -633,6 +633,6 @@ def worker():
                         running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
     finally:
         JOB_LOCK.release()
+        start_timer()
 
     kv.touch("queueState")
-    start_timer()
