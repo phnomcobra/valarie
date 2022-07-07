@@ -3,8 +3,7 @@
 procedures."""
 import traceback
 
-from multiprocessing import Process
-from threading import Lock, Timer
+from threading import Lock, Timer, Thread
 from time import time
 from datetime import datetime
 from imp import new_module
@@ -44,9 +43,8 @@ def set_job(jobuuid: str, value: Dict):
 
 def cancel_job(jobuuid: str):
     """This is a function used to cancel a job in the job dictionary.
-    If a process is running for the job, it will be killed. If a job
-    is simply in queue, it will be removed from the jobs dictionary.
-    This function locks the job dictionary for the cancellation.
+    Due to deadlocking issues, cancellation only applies to jobs that
+    have not been issued a thread yet.
 
     Args:
         jobuuid:
@@ -54,10 +52,8 @@ def cancel_job(jobuuid: str):
     """
     try:
         JOB_LOCK.acquire()
-        if JOBS[jobuuid]['process'] is not None:
-            if JOBS[jobuuid]['process'].is_alive():
-                JOBS[jobuuid]['process'].kill()
-        del JOBS[jobuuid]
+        if JOBS[jobuuid]['process'] is None:
+            del JOBS[jobuuid]
     finally:
         JOB_LOCK.release()
 
@@ -603,7 +599,7 @@ def worker():
                             running_jobs_counts[JOBS[key]["console"]["objuuid"]] < \
                                 int(JOBS[key]["console"]["concurrency"])
                         ):
-                        JOBS[key]["process"] = Process(
+                        JOBS[key]["process"] = Thread(
                             target=run_procedure,
                             args=(
                                 JOBS[key]["host"],
