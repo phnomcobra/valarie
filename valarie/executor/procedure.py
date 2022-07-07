@@ -3,11 +3,12 @@
 procedures."""
 import traceback
 
-from threading import Lock, Thread, Timer
+from multiprocessing import Process
+from threading import Lock, Timer
 from time import time
 from datetime import datetime
 from imp import new_module
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from valarie.dao.document import Collection
 from valarie.dao.utils import get_uuid_str
@@ -23,27 +24,6 @@ from valarie.controller.host import get_hosts
 JOBS = {}
 JOB_LOCK = Lock()
 LAST_WORKER_TIME = time()
-
-def update_job(jobuuid: str, key: str, value: Any):
-    """This is a function used to update a key in a job.
-    This function locks the job dictionary for the update.
-
-    Args:
-        jobuuid:
-            UUID of the job.
-
-        key:
-            The key to update.
-
-        value:
-            The value to set the key to.
-
-    """
-    try:
-        JOB_LOCK.acquire()
-        JOBS[jobuuid][key] = value
-    finally:
-        JOB_LOCK.release()
 
 def set_job(jobuuid: str, value: Dict):
     """This is a function used to insert a job in the job dictionary.
@@ -62,9 +42,28 @@ def set_job(jobuuid: str, value: Dict):
     finally:
         JOB_LOCK.release()
 
+def cancel_job(jobuuid: str):
+    """This is a function used to cancel a job in the job dictionary.
+    If a process is running for the job, it will be killed. If a job
+    is simply in queue, it will be removed from the jobs dictionary.
+    This function locks the job dictionary for the cancellation.
+
+    Args:
+        jobuuid:
+            UUID of the job.
+    """
+    try:
+        JOB_LOCK.acquire()
+        if JOBS[jobuuid]['process'] is not None:
+            if JOBS[jobuuid]['process'].is_alive():
+                JOBS[jobuuid]['process'].kill()
+        del JOBS[jobuuid]
+    finally:
+        JOB_LOCK.release()
+
 def get_jobs_grid() -> List[Dict]:
     """This is a function used to get a list queued jobs. Each item contains
-    a name, host, hostname, progress indicator status, and runtime.
+    a name, runtime, runtime string, and job UUID.
 
     Returns:
         A list of dictionaries used for the queue list in the front end.
@@ -74,7 +73,7 @@ def get_jobs_grid() -> List[Dict]:
     try:
         JOB_LOCK.acquire()
 
-        for _jobuuid, job in JOBS.items():
+        for jobuuid, job in JOBS.items():
             row = {}
 
             if job["start time"] is None:
@@ -82,13 +81,10 @@ def get_jobs_grid() -> List[Dict]:
             else:
                 run_time = time() - job["start time"]
 
+            row["jobuuid"] = jobuuid
             row["name"] = job["procedure"]["name"]
-            row["hostname"] = job["host"]["name"]
-            row["host"] = job["host"]["host"]
-            row["progress"] = job["progress"]
-            row["status"] = "Queued" if job["start time"] is None else "Running"
-            row["runtime seconds"] = run_time
-            row["runtime"] = "{2}:{1}:{0}".format(
+            row["runtime"] = run_time
+            row["runtimestring"] = "{2}:{1}:{0}".format(
                 str(int(run_time % 60)).zfill(2),
                 str(int(run_time / 60) % 60).zfill(2),
                 str(int(run_time / 3600)).zfill(2)
@@ -98,11 +94,11 @@ def get_jobs_grid() -> List[Dict]:
     finally:
         JOB_LOCK.release()
 
-    # sort list by progress
+    # sort list by something
     # pylint: disable=consider-using-enumerate
     for i in range(0, len(grid_data)):
         for j in range(i, len(grid_data)):
-            if grid_data[i]["runtime seconds"] < grid_data[j]["runtime seconds"]:
+            if grid_data[i]["runtime"] < grid_data[j]["runtime"]:
                 grid_data[i], grid_data[j] = grid_data[j], grid_data[i]
 
     return grid_data
@@ -230,15 +226,12 @@ def run_procedure(
         host_object: Dict,
         procedure_object: Dict,
         console_object: Dict,
-        jobuuid: str = None,
         ctruuid: str = None
     ):
     """This is a function runs a procedure using the combination of a host, procedure,
     and console object. Optionally, a controller and job UUID can be specified as well.
     A controller UUID is specified when an executing procedure needs to set controller
-    flags in addition to procedure flags to trigger updates in the front end UI. A job
-    UUID is specified when a procedure is being run from a job and needs to update a
-    job's progress key.
+    flags in addition to procedure flags to trigger updates in the front end UI.
 
     Args:
         host_object:
@@ -249,9 +242,6 @@ def run_procedure(
 
         console_object:
             The console object.
-
-        jobuuid:
-            The UUID of the job object.
 
         ctruuid:
             The UUID of the controller object.
@@ -428,9 +418,6 @@ def run_procedure(
         elif task.status < winning_status:
             winning_status = task.status
             procedure_status = task_result['status']
-
-        if jobuuid:
-            update_job(jobuuid, "progress", float(seq_num + 1) / float(len(tskuuids)))
 
         result.object['stop'] = time()
         result.set()
@@ -616,13 +603,12 @@ def worker():
                             running_jobs_counts[JOBS[key]["console"]["objuuid"]] < \
                                 int(JOBS[key]["console"]["concurrency"])
                         ):
-                        JOBS[key]["process"] = Thread(
+                        JOBS[key]["process"] = Process(
                             target=run_procedure,
                             args=(
                                 JOBS[key]["host"],
                                 JOBS[key]["procedure"],
                                 JOBS[key]["console"],
-                                JOBS[key]["jobuuid"],
                                 JOBS[key]["ctruuid"]
                             )
                         )

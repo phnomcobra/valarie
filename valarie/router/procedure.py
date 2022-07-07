@@ -8,7 +8,11 @@ from typing import Dict, List
 import cherrypy
 
 from valarie.controller.procedure import get_task_grid, get_host_grid
-from valarie.executor.procedure import get_jobs_grid, queue_procedure
+from valarie.executor.procedure import (
+    get_jobs_grid,
+    queue_procedure,
+    cancel_job
+)
 
 class Procedure():
     """This class registers methods as routes for getting a procedure's
@@ -62,6 +66,18 @@ class Procedure():
         """
         queue_procedure(hstuuid, prcuuid)
         return {}
+
+    @classmethod
+    @cherrypy.expose
+    def cancel_job(cls, jobuuid: str):
+        """This function registers the endpoint that cancels a procedure's
+        job in the queue..
+
+        Args:
+            jobuuid:
+                A job UUID.
+        """
+        cancel_job(jobuuid)
 
     @classmethod
     @cherrypy.expose
