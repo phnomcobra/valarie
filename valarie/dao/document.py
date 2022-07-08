@@ -171,7 +171,7 @@ class Document:
         )
         self.connection.commit()
         objuuids = []
-        for row in self.cursor:
+        for row in self.cursor.fetchall():
             objuuids.append(row[0])
         return objuuids
 
@@ -213,7 +213,7 @@ class Document:
             "select OBJUUID, VALUE from TBL_JSON_OBJ where COLUUID = ?;", (coluuid,)
         )
 
-        for row in self.cursor:
+        for row in self.cursor.fetchall():
             try:
                 self.cursor.execute(
                     "insert into TBL_JSON_IDX (OBJUUID, COLUUID, ATTRIBUTE, VALUE)"\

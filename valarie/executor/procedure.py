@@ -3,11 +3,11 @@
 procedures."""
 import traceback
 
-from threading import Lock, Thread, Timer
+from threading import Lock, Timer, Thread
 from time import time
 from datetime import datetime
 from imp import new_module
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from valarie.dao.document import Collection
 from valarie.dao.utils import get_uuid_str
@@ -24,26 +24,6 @@ JOBS = {}
 JOB_LOCK = Lock()
 LAST_WORKER_TIME = time()
 
-def update_job(jobuuid: str, key: str, value: Any):
-    """This is a function used to update a key in a job.
-    This function locks the job dictionary for the update.
-
-    Args:
-        jobuuid:
-            UUID of the job.
-
-        key:
-            The key to update.
-
-        value:
-            The value to set the key to.
-
-    """
-    JOB_LOCK.acquire()
-    JOBS[jobuuid][key] = value
-    JOB_LOCK.release()
-    kv.touch("queueState")
-
 def set_job(jobuuid: str, value: Dict):
     """This is a function used to insert a job in the job dictionary.
     This function locks the job dictionary for the insert.
@@ -55,49 +35,66 @@ def set_job(jobuuid: str, value: Dict):
         value:
             The dictionary of the job.
     """
-    JOB_LOCK.acquire()
-    JOBS[jobuuid] = value
-    JOB_LOCK.release()
-    kv.touch("queueState")
+    try:
+        JOB_LOCK.acquire()
+        JOBS[jobuuid] = value
+    finally:
+        JOB_LOCK.release()
+
+def cancel_job(jobuuid: str):
+    """This is a function used to cancel a job in the job dictionary.
+    Due to deadlocking issues, cancellation only applies to jobs that
+    have not been issued a thread yet.
+
+    Args:
+        jobuuid:
+            UUID of the job.
+    """
+    try:
+        JOB_LOCK.acquire()
+        if JOBS[jobuuid]['process'] is None:
+            del JOBS[jobuuid]
+    finally:
+        JOB_LOCK.release()
 
 def get_jobs_grid() -> List[Dict]:
     """This is a function used to get a list queued jobs. Each item contains
-    a name, host, hostname, progress indicator status, and runtime.
+    a name, runtime, runtime string, and job UUID.
 
     Returns:
         A list of dictionaries used for the queue list in the front end.
     """
     grid_data = []
-    JOB_LOCK.acquire()
 
-    for jobuuid, job in JOBS.items(): # pylint: disable=unused-variable
-        row = {}
+    try:
+        JOB_LOCK.acquire()
 
-        if job["start time"] is None:
-            run_time = 0
-        else:
-            run_time = time() - job["start time"]
+        for jobuuid, job in JOBS.items():
+            row = {}
 
-        row["name"] = job["procedure"]["name"]
-        row["hostname"] = job["host"]["name"]
-        row["host"] = job["host"]["host"]
-        row["progress"] = job["progress"]
-        row["status"] = "Queued" if job["start time"] is None else "Running"
-        row["runtime"] = "{2}:{1}:{0}".format(
-            str(int(run_time % 60)).zfill(2),
-            str(int(run_time / 60) % 60).zfill(2),
-            str(int(run_time / 3600)).zfill(2)
-        )
+            if job["start time"] is None:
+                run_time = 0
+            else:
+                run_time = time() - job["start time"]
 
-        grid_data.append(row)
+            row["jobuuid"] = jobuuid
+            row["name"] = job["procedure"]["name"]
+            row["runtime"] = run_time
+            row["runtimestring"] = "{2}:{1}:{0}".format(
+                str(int(run_time % 60)).zfill(2),
+                str(int(run_time / 60) % 60).zfill(2),
+                str(int(run_time / 3600)).zfill(2)
+            )
 
-    JOB_LOCK.release()
+            grid_data.append(row)
+    finally:
+        JOB_LOCK.release()
 
-    # sort list by progress
+    # sort list by something
     # pylint: disable=consider-using-enumerate
     for i in range(0, len(grid_data)):
         for j in range(i, len(grid_data)):
-            if grid_data[i]["progress"] < grid_data[j]["progress"]:
+            if grid_data[i]["runtime"] < grid_data[j]["runtime"]:
                 grid_data[i], grid_data[j] = grid_data[j], grid_data[i]
 
     return grid_data
@@ -113,13 +110,14 @@ def get_queued_hosts(prcuuid: str) -> List[str]:
     """
     hstuuids = []
 
-    JOB_LOCK.acquire()
+    try:
+        JOB_LOCK.acquire()
 
-    for jobuuid, job in JOBS.items(): # pylint: disable=unused-variable
-        if prcuuid == job["procedure"]["objuuid"] and job["process"] is None:
-            hstuuids.append(job["host"]["objuuid"])
-
-    JOB_LOCK.release()
+        for jobuuid, job in JOBS.items(): # pylint: disable=unused-variable
+            if prcuuid == job["procedure"]["objuuid"] and job["process"] is None:
+                hstuuids.append(job["host"]["objuuid"])
+    finally:
+        JOB_LOCK.release()
 
     return hstuuids
 
@@ -224,15 +222,12 @@ def run_procedure(
         host_object: Dict,
         procedure_object: Dict,
         console_object: Dict,
-        jobuuid: str = None,
         ctruuid: str = None
     ):
     """This is a function runs a procedure using the combination of a host, procedure,
     and console object. Optionally, a controller and job UUID can be specified as well.
     A controller UUID is specified when an executing procedure needs to set controller
-    flags in addition to procedure flags to trigger updates in the front end UI. A job
-    UUID is specified when a procedure is being run from a job and needs to update a
-    job's progress key.
+    flags in addition to procedure flags to trigger updates in the front end UI.
 
     Args:
         host_object:
@@ -243,9 +238,6 @@ def run_procedure(
 
         console_object:
             The console object.
-
-        jobuuid:
-            The UUID of the job object.
 
         ctruuid:
             The UUID of the controller object.
@@ -423,9 +415,6 @@ def run_procedure(
             winning_status = task.status
             procedure_status = task_result['status']
 
-        if jobuuid:
-            update_job(jobuuid, "progress", float(seq_num + 1) / float(len(tskuuids)))
-
         result.object['stop'] = time()
         result.set()
 
@@ -565,68 +554,67 @@ def worker():
                         eval_cron_field(procedure.object["year"], now.year)
                     ):
                     for hstuuid in procedure.object["hosts"]:
-                        queue_procedure(hstuuid, procedure.objuuid, {})
+                        queue_procedure(hstuuid, procedure.objuuid, None)
                     break
 
     LAST_WORKER_TIME = time() # pylint: disable=used-before-assignment
 
-    JOB_LOCK.acquire()
+    try:
+        JOB_LOCK.acquire()
 
-    # Concurrency conditioning
-    for key in list(JOBS.keys()):
-        try:
-            assert int(JOBS[key]["host"]["concurrency"]) > 0
-        except (AssertionError, KeyError, ValueError):
-            add_message(f"invalid host concurrency\n{traceback.format_exc()}")
-            JOBS[key]["host"]["concurrency"] = "1"
+        # Concurrency conditioning
+        for key in list(JOBS.keys()):
+            try:
+                assert int(JOBS[key]["host"]["concurrency"]) > 0
+            except (AssertionError, KeyError, ValueError):
+                add_message(f"invalid host concurrency\n{traceback.format_exc()}")
+                JOBS[key]["host"]["concurrency"] = "1"
 
-        try:
-            assert int(JOBS[key]["console"]["concurrency"]) > 0
-        except (AssertionError, KeyError, ValueError):
-            add_message(f"invalid console concurrency\n{traceback.format_exc()}")
-            JOBS[key]["console"]["concurrency"] = "1"
+            try:
+                assert int(JOBS[key]["console"]["concurrency"]) > 0
+            except (AssertionError, KeyError, ValueError):
+                add_message(f"invalid console concurrency\n{traceback.format_exc()}")
+                JOBS[key]["console"]["concurrency"] = "1"
 
-    running_jobs_counts = {}
-    for key in list(JOBS.keys()):
-        running_jobs_counts[JOBS[key]["host"]["objuuid"]] = 0
-        running_jobs_counts[JOBS[key]["console"]["objuuid"]] = 0
+        running_jobs_counts = {}
+        for key in list(JOBS.keys()):
+            running_jobs_counts[JOBS[key]["host"]["objuuid"]] = 0
+            running_jobs_counts[JOBS[key]["console"]["objuuid"]] = 0
 
-    for key in list(JOBS.keys()):
-        if JOBS[key]["process"] is not None:
-            if JOBS[key]["process"].is_alive():
-                running_jobs_count += 1
-                running_jobs_counts[JOBS[key]["host"]["objuuid"]] += 1
-                running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
-            else:
-                del JOBS[key]
-                kv.touch("queueState")
-
-    for key in list(JOBS.keys()):
-        if running_jobs_count < int(get_config()["concurrency"]):
-            if JOBS[key]["process"] is None:
-                if (
-                        running_jobs_counts[JOBS[key]["host"]["objuuid"]] < \
-                            int(JOBS[key]["host"]["concurrency"]) and
-                        running_jobs_counts[JOBS[key]["console"]["objuuid"]] < \
-                            int(JOBS[key]["console"]["concurrency"])
-                    ):
-                    JOBS[key]["process"] = Thread(
-                        target=run_procedure,
-                        args=(
-                            JOBS[key]["host"],
-                            JOBS[key]["procedure"],
-                            JOBS[key]["console"],
-                            JOBS[key]["jobuuid"],
-                            JOBS[key]["ctruuid"]
-                        )
-                    )
-                    JOBS[key]["start time"] = time()
-                    JOBS[key]["process"].start()
+        for key in list(JOBS.keys()):
+            if JOBS[key]["process"] is not None:
+                if JOBS[key]["process"].is_alive():
                     running_jobs_count += 1
                     running_jobs_counts[JOBS[key]["host"]["objuuid"]] += 1
                     running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
-                    kv.touch("queueState")
+                else:
+                    del JOBS[key]
 
-    JOB_LOCK.release()
+        for key in list(JOBS.keys()):
+            if running_jobs_count < int(get_config()["concurrency"]):
+                if JOBS[key]["process"] is None:
+                    if (
+                            running_jobs_counts[JOBS[key]["host"]["objuuid"]] < \
+                                int(JOBS[key]["host"]["concurrency"]) and
+                            running_jobs_counts[JOBS[key]["console"]["objuuid"]] < \
+                                int(JOBS[key]["console"]["concurrency"])
+                        ):
+                        JOBS[key]["process"] = Thread(
+                            target=run_procedure,
+                            args=(
+                                JOBS[key]["host"],
+                                JOBS[key]["procedure"],
+                                JOBS[key]["console"],
+                                JOBS[key]["ctruuid"]
+                            )
+                        )
+                        JOBS[key]["start time"] = time()
+                        JOBS[key]["process"].start()
+                        running_jobs_count += 1
+                        running_jobs_counts[JOBS[key]["host"]["objuuid"]] += 1
+                        running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
+    finally:
+        JOB_LOCK.release()
+        start_timer()
 
-    start_timer()
+    kv.touch("queueState")
