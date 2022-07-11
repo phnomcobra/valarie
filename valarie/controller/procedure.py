@@ -43,6 +43,7 @@ def create_procedure(
         "resultoverwrite": True,
         "resultlinkenable": False,
         "enabled": False,
+        "runasprocess": False,
         "seconds": "0",
         "minutes": "*",
         "hours": "*",

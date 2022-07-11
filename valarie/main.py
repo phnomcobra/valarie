@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """This module configures and starts the web server."""
 import os
+from multiprocessing import set_start_method
 
 import cherrypy
 
@@ -58,6 +59,7 @@ def start():
     """This function configures and starts the web server."""
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
+    set_start_method('spawn')
     init_collections()
     start_procedures_worker()
     start_results_worker()

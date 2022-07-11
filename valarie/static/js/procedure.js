@@ -8,6 +8,7 @@ var populateProcedureAttributes = function() {
     addAttributeTextBox('Procedure Title', 'title');
     addAttributeTextArea('Description', 'description');
     addAttributeCheckBox('Enabled', 'enabled');
+    addAttributeCheckBox('Run as Process', 'runasprocess');
     addAttributeTextBox('Seconds', 'seconds');
     addAttributeTextBox('Minutes', 'minutes');
     addAttributeTextBox('Hours', 'hours');

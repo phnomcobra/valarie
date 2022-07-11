@@ -3,13 +3,28 @@ var drawQueue = function(resp) {
     queue.innerHTML = '<table id="queueTable"></table>';
 
     var table = document.getElementById('queueTable');
-    var row;
+    var numRows = 0;
+
+    for (var i in resp)
+        if (resp[i].displayrow + 1 > numRows)
+            numRows = resp[i].displayrow + 1;
+
+    for (var i=0; i<numRows; i++)
+        table.insertRow(-1);
+
+    for (var i=0; i<numRows; i++)
+        table.rows[i].setAttribute('style', 'height: 20px');
 
     for (var i in resp) {
-        row = table.insertRow(-1);
-        row.insertCell(-1).innerHTML = `<button type="button" onclick="cancelJob('${resp[i].jobuuid}')">cancel</button>`;
-        row.insertCell(-1).innerHTML = resp[i].runtimestring;
-        row.insertCell(-1).innerHTML = resp[i].name;
+        table.rows[resp[i].displayrow].insertCell(-1).innerHTML = resp[i].runmode;
+        table.rows[resp[i].displayrow].insertCell(-1).innerHTML = resp[i].runtimestring;
+        table.rows[resp[i].displayrow].insertCell(-1).innerHTML = resp[i].name;
+
+        if(resp[i].cancellable) {
+            var cell = table.rows[resp[i].displayrow].insertCell(-1);
+            cell.innerHTML = '<font color="red">cancel</font>';
+            cell.setAttribute('onclick', `cancelJob('${resp[i].jobuuid}')`);
+        }
     }
 }
 

@@ -3,6 +3,7 @@
 procedures."""
 import traceback
 
+from multiprocessing import Process
 from threading import Lock, Timer, Thread
 from time import time
 from datetime import datetime
@@ -23,6 +24,39 @@ from valarie.controller.host import get_hosts
 JOBS = {}
 JOB_LOCK = Lock()
 LAST_WORKER_TIME = time()
+DISPLAY_ROW_LOCK = Lock()
+OCCUPIED_DISPLAY_ROWS = []
+
+def reserve_display_row() -> int:
+    """This function looks for the lowest free display row number and
+    adds it to the list of occupied display rows.
+
+    Returns:
+        The display row number as an integer.
+    """
+    try:
+        DISPLAY_ROW_LOCK.acquire()
+        row_num = 0
+        while row_num in OCCUPIED_DISPLAY_ROWS:
+            row_num += 1
+        OCCUPIED_DISPLAY_ROWS.append(row_num)
+    finally:
+        DISPLAY_ROW_LOCK.release()
+    return row_num
+
+def release_display_row(row_num: int):
+    """This function releases display row number by removing it from
+    the list of occupied display rows.
+
+    Args:
+        row_num:
+            The display row number as an integer.
+    """
+    try:
+        DISPLAY_ROW_LOCK.acquire()
+        OCCUPIED_DISPLAY_ROWS.remove(row_num)
+    finally:
+        DISPLAY_ROW_LOCK.release()
 
 def set_job(jobuuid: str, value: Dict):
     """This is a function used to insert a job in the job dictionary.
@@ -53,6 +87,11 @@ def cancel_job(jobuuid: str):
     try:
         JOB_LOCK.acquire()
         if JOBS[jobuuid]['process'] is None:
+            release_display_row(JOBS[jobuuid]["display row"])
+            del JOBS[jobuuid]
+        elif JOBS[jobuuid]['process'].is_alive():
+            JOBS[jobuuid]['process'].terminate()
+            release_display_row(JOBS[jobuuid]["display row"])
             del JOBS[jobuuid]
     finally:
         JOB_LOCK.release()
@@ -72,30 +111,35 @@ def get_jobs_grid() -> List[Dict]:
         for jobuuid, job in JOBS.items():
             row = {}
 
-            if job["start time"] is None:
-                run_time = 0
-            else:
-                run_time = time() - job["start time"]
+            row["cancellable"] = not isinstance(job["process"], Thread)
 
-            row["jobuuid"] = jobuuid
-            row["name"] = job["procedure"]["name"]
-            row["runtime"] = run_time
+            if job["start time"] is not None:
+                run_time = time() - job["start time"]
+            else:
+                run_time = 0
+
             row["runtimestring"] = "{2}:{1}:{0}".format(
                 str(int(run_time % 60)).zfill(2),
                 str(int(run_time / 60) % 60).zfill(2),
                 str(int(run_time / 3600)).zfill(2)
             )
 
+            row["jobuuid"] = jobuuid
+            row["name"] = f'{job["procedure"]["name"]}'
+            row["runtime"] = run_time
+
+            if isinstance(job["process"], Process):
+                row["runmode"] = "process"
+            elif isinstance(job["process"], Thread):
+                row["runmode"] = "thread"
+            else:
+                row["runmode"] = "queued"
+
+            row["displayrow"] = job["display row"]
+
             grid_data.append(row)
     finally:
         JOB_LOCK.release()
-
-    # sort list by something
-    # pylint: disable=consider-using-enumerate
-    for i in range(0, len(grid_data)):
-        for j in range(i, len(grid_data)):
-            if grid_data[i]["runtime"] < grid_data[j]["runtime"]:
-                grid_data[i], grid_data[j] = grid_data[j], grid_data[i]
 
     return grid_data
 
@@ -176,7 +220,8 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
                         "queue time" : time(),
                         "start time" : None,
                         "progress" : 0,
-                        "ctruuid" : ctruuid
+                        "ctruuid" : ctruuid,
+                        "display row": reserve_display_row()
                     }
 
                     set_job(jobuuid, job)
@@ -210,7 +255,8 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
                         "queue time" : time(),
                         "start time" : None,
                         "progress" : 0,
-                        "ctruuid" : ctruuid
+                        "ctruuid" : ctruuid,
+                        "display row": reserve_display_row()
                     }
 
                     set_job(jobuuid, job)
@@ -588,6 +634,7 @@ def worker():
                     running_jobs_counts[JOBS[key]["host"]["objuuid"]] += 1
                     running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
                 else:
+                    release_display_row(JOBS[key]["display row"])
                     del JOBS[key]
 
         for key in list(JOBS.keys()):
@@ -599,22 +646,41 @@ def worker():
                             running_jobs_counts[JOBS[key]["console"]["objuuid"]] < \
                                 int(JOBS[key]["console"]["concurrency"])
                         ):
-                        JOBS[key]["process"] = Thread(
-                            target=run_procedure,
-                            args=(
-                                JOBS[key]["host"],
-                                JOBS[key]["procedure"],
-                                JOBS[key]["console"],
-                                JOBS[key]["ctruuid"]
+
+                        try:
+                            # pylint: disable=line-too-long
+                            run_as_process = ('true' in str(JOBS[key]["procedure"]['runasprocess']).lower())
+                        except (KeyError, ValueError):
+                            run_as_process = False
+                        if run_as_process:
+                            JOBS[key]["process"] = Process(
+                                target=run_procedure,
+                                args=(
+                                    JOBS[key]["host"],
+                                    JOBS[key]["procedure"],
+                                    JOBS[key]["console"],
+                                    JOBS[key]["ctruuid"]
+                                )
                             )
-                        )
+                        else:
+                            JOBS[key]["process"] = Thread(
+                                target=run_procedure,
+                                args=(
+                                    JOBS[key]["host"],
+                                    JOBS[key]["procedure"],
+                                    JOBS[key]["console"],
+                                    JOBS[key]["ctruuid"]
+                                )
+                            )
+
                         JOBS[key]["start time"] = time()
                         JOBS[key]["process"].start()
+
                         running_jobs_count += 1
                         running_jobs_counts[JOBS[key]["host"]["objuuid"]] += 1
                         running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
+
+        kv.touch("queueState")
     finally:
         JOB_LOCK.release()
         start_timer()
-
-    kv.touch("queueState")

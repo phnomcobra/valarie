@@ -1,3 +1,4 @@
-from valarie.main import start                                                     
-                                                                                
-start()
+from valarie.main import start
+
+if __name__ == '__main__':
+    start()
