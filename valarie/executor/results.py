@@ -6,7 +6,7 @@ from time import time
 from valarie.executor.timers import TIMERS
 from valarie.dao.document import Collection
 from valarie.controller.inventory import delete_node
-from valarie.controller import kvstore as kv
+from valarie.controller import kvstore
 
 def start_timer():
     """This function creates and starts the results timer."""
@@ -50,4 +50,4 @@ def worker():
             result.destroy()
 
     if refresh_inventory:
-        kv.touch("inventoryState")
+        kvstore.touch("inventoryState")
