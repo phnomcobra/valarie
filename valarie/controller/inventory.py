@@ -9,7 +9,7 @@ from valarie.dao.document import Collection, Object
 from valarie.dao.datastore import delete_sequence, copy_sequence
 from valarie.controller.container import create_container
 from valarie.router.messaging import add_message
-from valarie.controller import kvstore as kv
+from valarie.controller import kvstore
 from valarie.controller.config import (
     CONFIG_OBJUUID,
     TASK_PROTO_OBJUUID,
@@ -31,13 +31,13 @@ def lock():
     the key value store is set to false. Upon sensing false, set the lock
     key to true and return.
     """
-    while kv.get('inventory lock', default=False) is True:
+    while kvstore.get('inventory lock', default=False) is True:
         sleep(1)
-    kv.set('inventory lock', True)
+    kvstore.set('inventory lock', True)
 
 def unlock():
     """This function sets the inventory lock key ro false in the key value store."""
-    kv.set('inventory lock', False)
+    kvstore.set('inventory lock', False)
 
 def __get_child_tree_nodes(nodes: List[Dict], current: Object, inventory: Collection):
     """This is a recursion function used to accumulate nodes used for jstree. This function
@@ -415,7 +415,7 @@ def copy_object(objuuid: str) -> Object:
                 add_message(f'mutated {new.objuuid}')
 
         if len(child_objuuids) > 0:
-            kv.touch("inventoryState")
+            kvstore.touch("inventoryState")
 
         return clone
     finally:

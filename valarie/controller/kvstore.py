@@ -5,6 +5,7 @@ from random import random
 from typing import Any
 
 from valarie.dao.document import Collection
+from valarie.dao.utils import get_uuid_str_from_str
 
 def get(name: str, default: Any = None) -> Any:
     """This function gets the value at the key specified.
@@ -18,18 +19,13 @@ def get(name: str, default: Any = None) -> Any:
     """
     kvstore = Collection("kvstore")
 
-    try:
-        key = kvstore.find(name=name)[0]
-    except IndexError:
-        key = kvstore.get_object()
-        key.object["name"] = name
-        key.object["value"] = default
-        key.set()
+    key = kvstore.get_object(get_uuid_str_from_str(name))
 
     try:
         return key.object["value"]
     except KeyError:
         key.object["value"] = default
+        key.object["name"] = name
         key.set()
         return default
 
@@ -45,13 +41,9 @@ def set(name: str, value: Any):
     """
     kvstore = Collection("kvstore")
 
-    try:
-        key = kvstore.find(name=name)[0]
-    except IndexError:
-        key = kvstore.get_object()
-
-    key.object["name"] = name
+    key = kvstore.get_object(get_uuid_str_from_str(name))
     key.object["value"] = value
+    key.object["name"] = name
     key.set()
 
 def touch(key: str) -> float:
@@ -61,8 +53,13 @@ def touch(key: str) -> float:
     Args:
         name:
             The name of the key being set.
+
+    Returns:
+        Touched value as a float.
     """
-    return set(key, random())
+    value = random()
+    set(key, value)
+    return value
 
 def delete(name: str):
     """This function deletes the key specified.
@@ -71,8 +68,5 @@ def delete(name: str):
         name:
             The name of the key being deleted.
     """
-    try:
-        key = Collection("kvstore").find(name=name)[0]
-        key.destroy()
-    except IndexError:
-        pass
+    key = Collection("kvstore").get_object(get_uuid_str_from_str(name))
+    key.destroy()

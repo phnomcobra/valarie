@@ -12,7 +12,7 @@ from typing import Dict, List
 
 from valarie.dao.document import Collection
 from valarie.dao.utils import get_uuid_str
-from valarie.controller import kvstore as kv
+from valarie.controller import kvstore
 from valarie.router.messaging import add_message
 from valarie.executor.timers import TIMERS
 from valarie.executor.task import TaskError
@@ -385,9 +385,9 @@ def run_procedure(
         result.set()
 
         if host_object["objuuid"] in procedure_object["hosts"]:
-            kv.touch(f'procedure-{procedure_object["objuuid"]}')
+            kvstore.touch(f'procedure-{procedure_object["objuuid"]}')
         if ctruuid:
-            kv.touch(f'controller-{ctruuid}')
+            kvstore.touch(f'controller-{ctruuid}')
 
 
     procedure_status = None
@@ -465,18 +465,18 @@ def run_procedure(
         result.set()
 
         if host_object["objuuid"] in procedure_object["hosts"]:
-            kv.touch(f'procedure-{procedure_object["objuuid"]}')
+            kvstore.touch(f'procedure-{procedure_object["objuuid"]}')
         if ctruuid:
-            kv.touch(f'controller-{ctruuid}')
+            kvstore.touch(f'controller-{ctruuid}')
 
     if procedure_status is not None:
         result.object['status'] = procedure_status
         result.set()
 
         if host_object["objuuid"] in procedure_object["hosts"]:
-            kv.touch(f'procedure-{procedure_object["objuuid"]}')
+            kvstore.touch(f'procedure-{procedure_object["objuuid"]}')
         if ctruuid:
-            kv.touch(f'controller-{ctruuid}')
+            kvstore.touch(f'controller-{ctruuid}')
 
     try:
         result_link_enabled = ('true' in str(procedure_object['resultlinkenable']).lower())
@@ -502,7 +502,7 @@ def run_procedure(
     except (KeyError, ValueError):
         update_inventory = False
     if update_inventory:
-        kv.touch('inventoryState')
+        kvstore.touch('inventoryState')
 
     return result.object
 
@@ -680,7 +680,7 @@ def worker():
                         running_jobs_counts[JOBS[key]["host"]["objuuid"]] += 1
                         running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
 
-        kv.touch("queueState")
+        kvstore.touch("queueState")
     finally:
         JOB_LOCK.release()
         start_timer()

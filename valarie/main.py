@@ -31,9 +31,6 @@ def init_collections():
     datastore = Collection("datastore")
     datastore.create_attribute("type", "['type']")
 
-    kvstore = Collection("kvstore")
-    kvstore.create_attribute("name", "['name']")
-
     results = Collection("results")
     results.create_attribute("tskuuid", "['task']['objuuid']")
     results.create_attribute("prcuuid", "['procedure']['objuuid']")
