@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 """This module implements functions for manipulating the inventory."""
-
+import io
+import json
+import hashlib
 import traceback
 from time import sleep
-from typing import Any, Dict, List
-
+from typing import Any, Dict, List, BinaryIO
+from zipfile import ZIP_DEFLATED, ZipFile
 from valarie.dao.document import Collection, Object
-from valarie.dao.datastore import delete_sequence, copy_sequence
+from valarie.dao.datastore import delete_sequence, copy_sequence, File
 from valarie.controller.container import create_container
 from valarie.router.messaging import add_message
 from valarie.controller import kvstore
@@ -497,3 +499,105 @@ def import_objects(objects: Dict[str, Object]):
         container.set()
     else:
         container.destroy()
+
+def import_objects_zip(archive: ZipFile):
+    """This function registers the endpoint that imports inventory
+    objects from a ZIP archive.
+
+    Args:
+        archive:
+             A ZIP archive.
+    """
+    objects = json.loads(archive.read("inventory.json"))
+
+    for _id, inventory_object in objects.items():
+        if inventory_object["type"] == "binary file":
+            datastore_file = File(inventory_object["sequuid"])
+
+            zipped_file = archive.open("{0}.bin".format(inventory_object["sequuid"]), "r")
+
+            sha1hash = hashlib.sha1()
+
+            # pylint: disable=cell-var-from-loop
+            for chunk in iter(lambda: zipped_file.read(65536), b''):
+                datastore_file.write(chunk)
+                sha1hash.update(chunk)
+
+            datastore_file.close()
+
+            inventory_object["size"] = datastore_file.size()
+            inventory_object["sha1sum"] = sha1hash.hexdigest()
+
+    import_objects(objects)
+
+def export_files_zip(objuuids: str) -> BinaryIO:
+    """This function registers the endpoint that exports certain inventory
+    objects to a ZIP archive. This mode of export deals exclusively with text files,
+    binary files, and result objects.
+
+    Args:
+        objuuids:
+            A comma delivered list of UUIDs of the inventory objects to export.
+
+    Returns:
+        A static file response.
+    """
+    inventory = Collection("inventory")
+    results = Collection("results")
+    mem_file = io.BytesIO()
+
+    with ZipFile(mem_file, mode='w', compression=ZIP_DEFLATED) as archive:
+        for objuuid in objuuids.split(","):
+            current = inventory.get_object(objuuid)
+
+            # zip archive can't take a leading slash or names containing colons
+            filename = get_fq_name(objuuid)[1:].replace(':', '')
+            if current.object["type"] == "binary file":
+                archive.writestr(filename, File(current.object["sequuid"]).read())
+            elif current.object["type"] == "text file":
+                archive.writestr(filename, current.object["body"].encode())
+            elif current.object["type"] == "result link":
+                result = results.get_object(current.object['resuuid'])
+                archive.writestr(
+                    f'{filename}.json',
+                    json.dumps(result.object, indent=4).encode()
+                )
+
+        return mem_file
+
+def export_objects_zip(objuuids: str) -> BinaryIO:
+    """This function exports inventory objects to a ZIP archive.
+
+    Args:
+        objuuids:
+            A comma delivered list of UUIDs of the inventory objects to export.
+
+    Returns:
+        A static file response.
+    """
+    inventory = Collection("inventory")
+
+    output = {}
+
+    dstuuids = []
+
+    for objuuid in objuuids.split(","):
+        current = inventory.get_object(objuuid)
+
+        if current.object["type"] in ["result link"]:
+            continue
+
+        output[objuuid] = current.object
+
+        if current.object["type"] == "binary file":
+            dstuuids.append(current.object["sequuid"])
+
+    mem_file = io.BytesIO()
+
+    with ZipFile(mem_file, mode='w', compression=ZIP_DEFLATED) as archive:
+        archive.writestr('inventory.json', json.dumps(output, indent=4, sort_keys=True))
+
+        for dstuuid in dstuuids:
+            archive.writestr('{0}.bin'.format(dstuuid), File(dstuuid).read())
+
+    return mem_file
