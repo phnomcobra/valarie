@@ -576,7 +576,7 @@ inventoryApp.controller('inventoryCtrl', function($scope, $interval, $http, $sce
                 var messageData = '<table>';
                 var responseJSON = angular.fromJson(response)['data'];
                 for(item in responseJSON) {
-                    messageData += '<tr><td>' + responseJSON[item]['timestamp'] + '</td><td>' + responseJSON[item]['message'] + '</td></tr>';
+                    messageData += '<tr><td>' + responseJSON[item] + '</td></tr>';
                 }
                 messageData += '</table>'
 
