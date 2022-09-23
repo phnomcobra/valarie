@@ -18,24 +18,74 @@ class LogLevel(Enum):
     NOTSET = 0
 
 def critical(item: Any = ''):
+    """This function logs a critical item in the application log.
+
+    Args:
+        item:
+            Anything that has __str__.
+    """
     _log(item, LogLevel.CRITICAL)
 
 def error(item: Any = ''):
+    """This function logs a error item in the application log.
+
+    Args:
+        item:
+            Anything that has __str__.
+    """
     _log(item, LogLevel.ERROR)
 
 def warning(item: Any = ''):
+    """This function logs a warning item in the application log.
+
+    Args:
+        item:
+            Anything that has __str__.
+    """
     _log(item, LogLevel.WARNING)
 
 def info(item: Any = ''):
+    """This function logs a information item in the application log.
+
+    Args:
+        item:
+            Anything that has __str__.
+    """
     _log(item, LogLevel.INFO)
 
 def debug(item: Any = ''):
+    """This function logs a debugging item in the application log.
+
+    Args:
+        item:
+            Anything that has __str__.
+    """
     _log(item, LogLevel.DEBUG)
 
 def log(item: Any = ''):
+    """This function logs an item in the application log.
+
+    Args:
+        item:
+            Anything that has __str__.
+    """
     _log(item)
 
 def _log(item: Any, level: LogLevel = LogLevel.NOTSET):
+    """This is a dunder method for handling all the application log events. It has a
+    dual functionality. It formats and logs lines via the builtin logger and it
+    formats and logs lines via `add_message` which is registered in the front end
+    consoles. Inspect is use to read the caller's stack frame to indicate a file and
+    function that's generating the log entry. This function is not called directly so that
+    that stack frame 2 is caller's frame.
+
+    Args:
+        item:
+            Anything that has __str__.
+
+        level:
+            A `LogLevel` enum indicating what log level to use.
+    """
     logger = logging.getLogger('app')
     lines = str(item).split("\n")
 
