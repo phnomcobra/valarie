@@ -2,6 +2,7 @@
 from datetime import datetime
 from enum import Enum
 import logging
+import logging.handlers
 from inspect import stack
 from typing import Any
 
@@ -17,21 +18,25 @@ class LogLevel(Enum):
     NOTSET = 0
 
 def critical(item: Any):
-    log(item, LogLevel.CRITICAL)
+    _log(item, LogLevel.CRITICAL)
 
 def error(item: Any):
-    log(item, LogLevel.ERROR)
+    _log(item, LogLevel.ERROR)
 
 def warning(item: Any):
-    log(item, LogLevel.WARNING)
+    _log(item, LogLevel.WARNING)
 
 def info(item: Any):
-    log(item, LogLevel.INFO)
+    _log(item, LogLevel.INFO)
 
 def debug(item: Any):
-    log(item, LogLevel.DEBUG)
+    _log(item, LogLevel.DEBUG)
 
-def log(item: Any, level: LogLevel = LogLevel.NOTSET):
+def log(item: Any):
+    _log(item)
+
+def _log(item: Any, level: LogLevel = LogLevel.NOTSET):
+    logger = logging.getLogger('app')
     lines = str(item).split("\n")
 
     frame = stack()[2]
@@ -41,26 +46,27 @@ def log(item: Any, level: LogLevel = LogLevel.NOTSET):
     datetime_str = datetime.now().strftime('%Y-%m-%d|%H:%M:%S')
 
     for line in lines:
-        formatted_line = f'{level.name}|{datetime_str}|{short_filename}|{function}|{line}'
+        log_line = f'{level.name}|{datetime_str}|{short_filename}|{function}|{line}'
 
         if level is LogLevel.CRITICAL:
-            logging.critical(formatted_line)
+            logger.critical(log_line)
         elif level is LogLevel.ERROR:
-            logging.error(formatted_line)
+            logger.error(log_line)
         elif level is LogLevel.WARNING:
-            logging.warning(formatted_line)
+            logger.warning(log_line)
         elif level is LogLevel.INFO:
-            logging.info(formatted_line)
+            logger.info(log_line)
         elif level is LogLevel.DEBUG:
-            logging.debug(formatted_line)
+            logger.debug(log_line)
 
+        message_line = f'{short_filename}|{function}|{line}'
         if level in (LogLevel.CRITICAL, LogLevel.ERROR):
-            add_message(f'<font color="red">{formatted_line}</font>')
+            add_message(f'<font color="red">{message_line}</font>')
         elif level is LogLevel.WARNING:
-            add_message(f'<font color="yellow">{formatted_line}</font>')
+            add_message(f'<font color="yellow">{message_line}</font>')
         elif level is LogLevel.INFO:
-            add_message(f'<font color="green">{formatted_line}</font>')
+            add_message(f'<font color="green">{message_line}</font>')
         elif level is LogLevel.DEBUG:
-            add_message(f'<font color="blue">{formatted_line}</font>')
+            add_message(f'<font color="blue">{message_line}</font>')
         else:
-            add_message(formatted_line)
+            add_message(message_line)
