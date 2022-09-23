@@ -200,6 +200,7 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
             hstuuids.append(discovered_hstuuid)
 
     temp = inventory.get_object(prcuuid)
+    logging.info(temp.object['name'])
 
     if "type" in temp.object:
         if temp.object["type"] == "procedure":
@@ -288,6 +289,8 @@ def run_procedure(
         ctruuid:
             The UUID of the controller object.
     """
+    logging.debug(f"{procedure_object['name']} on {host_object['name']}")
+
     inventory = Collection("inventory")
     results = Collection("results")
 

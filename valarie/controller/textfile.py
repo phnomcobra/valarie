@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 """This module implements functions for creating text file inventory objects."""
+from valarie.controller import logging
 from valarie.dao.document import Collection, Object
 
 def create_text_file(
@@ -22,6 +23,8 @@ def create_text_file(
     Returns:
         An inventory object.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     text_file = inventory.get_object(objuuid)

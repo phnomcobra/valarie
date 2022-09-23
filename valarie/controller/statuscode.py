@@ -3,6 +3,7 @@
 code objects."""
 from typing import Dict, List
 
+from valarie.controller import logging
 from valarie.dao.document import Collection, Object
 
 def get_status_objects() -> List[Dict]:
@@ -39,6 +40,8 @@ def create_status_code(
     Returns:
         An inventory object.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     status = inventory.get_object(objuuid)

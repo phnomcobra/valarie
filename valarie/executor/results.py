@@ -5,13 +5,16 @@ from time import time
 
 from valarie.executor.timers import TIMERS
 from valarie.dao.document import Collection
+from valarie.controller import logging
 from valarie.controller.inventory import delete_node
 from valarie.controller import kvstore
+
 
 def start_timer():
     """This function creates and starts the results timer."""
     TIMERS["results worker"] = Timer(60, worker)
     TIMERS["results worker"].start()
+
 
 def worker():
     """This is a worker function used to process expiration of results
@@ -22,19 +25,26 @@ def worker():
     inventory = Collection('inventory')
     refresh_inventory = False
 
-    for objuuid in results.list_objuuids():
+    objuuids = results.list_objuuids()
+
+    logging.debug(f'checking {len(objuuids)} results')
+
+    for objuuid in objuuids:
         result = results.get_object(objuuid)
         try:
-            procedure = inventory.get_object(result.object['procedure']['objuuid'])
+            procedure = inventory.get_object(
+                result.object['procedure']['objuuid'])
 
             try:
-                expiration_period = int(procedure.object['resultexpirationperiod'])
+                expiration_period = int(
+                    procedure.object['resultexpirationperiod'])
             except (KeyError, ValueError):
                 expiration_period = 3600
 
             try:
                 update_inventory = (
-                    'true' in str(procedure.object['resultinventoryupdate']).lower()
+                    'true' in str(
+                        procedure.object['resultinventoryupdate']).lower()
                 )
             except (KeyError, ValueError):
                 update_inventory = False

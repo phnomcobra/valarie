@@ -17,22 +17,22 @@ class LogLevel(Enum):
     DEBUG = 10
     NOTSET = 0
 
-def critical(item: Any):
+def critical(item: Any = ''):
     _log(item, LogLevel.CRITICAL)
 
-def error(item: Any):
+def error(item: Any = ''):
     _log(item, LogLevel.ERROR)
 
-def warning(item: Any):
+def warning(item: Any = ''):
     _log(item, LogLevel.WARNING)
 
-def info(item: Any):
+def info(item: Any = ''):
     _log(item, LogLevel.INFO)
 
-def debug(item: Any):
+def debug(item: Any = ''):
     _log(item, LogLevel.DEBUG)
 
-def log(item: Any):
+def log(item: Any = ''):
     _log(item)
 
 def _log(item: Any, level: LogLevel = LogLevel.NOTSET):

@@ -2,6 +2,7 @@
 """This module implements code for creating hosts."""
 from typing import List
 
+from valarie.controller import logging
 from valarie.dao.document import Collection, Object
 
 def create_host(
@@ -24,6 +25,8 @@ def create_host(
     Returns:
         The document object for this host.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     host = inventory.get_object(objuuid)

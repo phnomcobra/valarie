@@ -25,6 +25,8 @@ def create_host_group(
     Returns:
         The document object for this host group.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     group = inventory.get_object(objuuid)

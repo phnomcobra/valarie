@@ -27,6 +27,7 @@ def create_controller(
     Returns:
         The document object for this controller.
     """
+    logging.info(name)
 
     inventory = Collection("inventory")
 

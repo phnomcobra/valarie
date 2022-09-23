@@ -26,6 +26,8 @@ def create_procedure(
     Returns:
         An inventory object.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     procedure = inventory.get_object(objuuid)

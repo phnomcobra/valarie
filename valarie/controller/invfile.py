@@ -6,6 +6,7 @@ from typing import Dict, IO
 from zipfile import ZipFile
 from valarie.dao.utils import get_uuid_str
 from valarie.dao.datastore import File, create_binary_file
+from valarie.controller import logging
 from valarie.controller.textfile import create_text_file
 from valarie.controller.container import create_container
 

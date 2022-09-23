@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 """This module implements code for creating containers."""
+from valarie.controller import logging
 from valarie.dao.document import Collection, Object
 
 def create_container(
@@ -22,6 +23,8 @@ def create_container(
     Returns:
         The document object for this container.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     container = inventory.get_object(objuuid)

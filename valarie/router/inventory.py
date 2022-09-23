@@ -7,6 +7,7 @@ import cherrypy
 from cherrypy.lib.static import serve_fileobj
 
 from valarie.dao.document import Collection, Object
+from valarie.controller import logging
 from valarie.controller.container import create_container
 from valarie.controller.task import create_task
 from valarie.controller.procedure import create_procedure
@@ -295,12 +296,18 @@ class Inventory(): # pylint: disable=too-many-public-methods
         Returns:
             JSON string of the inventory object.
         """
-        posted_object = cherrypy.request.json
+        try:
+            posted_object = cherrypy.request.json
 
-        inventory = Collection("inventory")
-        current = inventory.get_object(posted_object["objuuid"])
-        current.object = posted_object
-        current.set()
+            logging.info(posted_object['name'])
+
+            inventory = Collection("inventory")
+            current = inventory.get_object(posted_object["objuuid"])
+            current.object = posted_object
+            current.set()
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
         return current.object
 
@@ -317,10 +324,15 @@ class Inventory(): # pylint: disable=too-many-public-methods
         Returns:
             A static file response.
         """
-        mem_file = export_objects_zip(objuuids)
-        cherrypy.response.headers['Content-Type'] = "application/x-download"
-        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
-        return serve_fileobj(mem_file.getvalue())
+        try:
+            logging.info(f"{len(objuuids.split(','))} objects")
+            mem_file = export_objects_zip(objuuids)
+            cherrypy.response.headers['Content-Type'] = "application/x-download"
+            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
+            return serve_fileobj(mem_file.getvalue())
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
     @classmethod
     @cherrypy.expose
@@ -336,10 +348,15 @@ class Inventory(): # pylint: disable=too-many-public-methods
         Returns:
             A static file response.
         """
-        mem_file = export_files_zip(objuuids)
-        cherrypy.response.headers['Content-Type'] = "application/x-download"
-        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.files.zip'
-        return serve_fileobj(mem_file.getvalue())
+        try:
+            logging.info(f"{len(objuuids.split(','))} objects")
+            mem_file = export_files_zip(objuuids)
+            cherrypy.response.headers['Content-Type'] = "application/x-download"
+            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.files.zip'
+            return serve_fileobj(mem_file.getvalue())
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
     @classmethod
     @cherrypy.expose
@@ -352,8 +369,13 @@ class Inventory(): # pylint: disable=too-many-public-methods
             file:
                 A file handle.
         """
-        import_objects_zip(ZipFile(file.file, 'r'))
-        return {}
+        try:
+            logging.info(file.filename)
+            import_objects_zip(ZipFile(file.file, 'r'))
+            return {}
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
     @classmethod
     @cherrypy.expose
@@ -366,8 +388,13 @@ class Inventory(): # pylint: disable=too-many-public-methods
             file:
                 A file handle.
         """
-        load_zip(ZipFile(file.file, 'r'))
-        return {}
+        try:
+            logging.info(file.filename)
+            load_zip(ZipFile(file.file, 'r'))
+            return {}
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
     @classmethod
     @cherrypy.expose
@@ -380,5 +407,10 @@ class Inventory(): # pylint: disable=too-many-public-methods
             file:
                 A file handle.
         """
-        load_file_from_io(file.file, file.filename)
-        return {}
+        try:
+            logging.info(file.filename)
+            load_file_from_io(file.file, file.filename)
+            return {}
+        except Exception as exception:
+            logging.error(exception)
+            raise exception

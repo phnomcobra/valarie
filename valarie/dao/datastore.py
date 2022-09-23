@@ -3,6 +3,7 @@
 linking them to the inventory."""
 from typing import Any, Dict
 
+from valarie.controller import logging
 from valarie.dao.document import Collection, Object
 
 CHUNK_SIZE = 65536
@@ -27,6 +28,8 @@ def create_binary_file(
     Returns:
         The document object for this binary file.
     """
+    logging.debug(name)
+
     inventory = Collection("inventory")
 
     binary_file = inventory.get_object(objuuid)

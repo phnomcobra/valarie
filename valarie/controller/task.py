@@ -27,6 +27,8 @@ def create_task(
     Returns:
         An inventory object.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     task = inventory.get_object(objuuid)

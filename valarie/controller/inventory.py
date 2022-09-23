@@ -33,13 +33,16 @@ def lock():
     the key value store is set to false. Upon sensing false, set the lock
     key to true and return.
     """
+    logging.debug('locking')
     while kvstore.get('inventory lock', default=False) is True:
         sleep(1)
     kvstore.set('inventory lock', True)
+    logging.debug('locked')
 
 def unlock():
     """This function sets the inventory lock key ro false in the key value store."""
     kvstore.set('inventory lock', False)
+    logging.debug('unlocked')
 
 def __get_child_tree_nodes(nodes: List[Dict], current: Object, inventory: Collection):
     """This is a recursion function used to accumulate nodes used for jstree. This function
@@ -163,6 +166,8 @@ def set_parent_objuuid(objuuid: str, parent_objuuid: str):
         parent_objuuid:
             The UUID of the parent object in the inventory.
     """
+    logging.info(f'moving {objuuid} to {parent_objuuid}')
+
     try:
         lock()
 
@@ -190,6 +195,8 @@ def set_parent_objuuid(objuuid: str, parent_objuuid: str):
                 new_parent = inventory.get_object(parent_objuuid)
                 new_parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
                 new_parent.set()
+    except AssertionError as assertion_error:
+        logging.error(assertion_error)
     finally:
         unlock()
 
@@ -202,6 +209,8 @@ def delete_node(objuuid: str):
         objuuid:
             The UUID of the inventory object being deleted.
     """
+    logging.info(objuuid)
+
     try:
         lock()
 
@@ -216,8 +225,13 @@ def delete_node(objuuid: str):
         for node in get_child_tree_nodes(objuuid):
             current = inventory.get_object(node["id"])
 
-            if "type" in current.object and \
-            "sequuid" in current.object:
+            if "name" in current.object:
+                logging.debug(current.object['name'])
+
+            if (
+                    "type" in current.object and
+                    "sequuid" in current.object
+                ):
                 if current.object["type"] == "binary file":
                     delete_sequence(current.object["sequuid"])
 
@@ -225,8 +239,10 @@ def delete_node(objuuid: str):
 
         current = inventory.get_object(objuuid)
 
-        if "type" in current.object and \
-        "sequuid" in current.object:
+        if (
+                "type" in current.object and
+                "sequuid" in current.object
+            ):
             if current.object["type"] == "binary file":
                 delete_sequence(current.object["sequuid"])
 
@@ -236,6 +252,8 @@ def delete_node(objuuid: str):
             parent = inventory.get_object(parent_objuuid)
             parent.object["children"] = inventory.find_objuuids(parent=parent_objuuid)
             parent.set()
+    except AssertionError as assertion_error:
+        logging.error(assertion_error)
     finally:
         unlock()
 
@@ -360,6 +378,8 @@ def copy_object(objuuid: str) -> Object:
     Returns:
         The copied inventory object.
     """
+    logging.info(objuuid)
+
     try:
         lock()
 
@@ -420,6 +440,8 @@ def copy_object(objuuid: str) -> Object:
             kvstore.touch("inventoryState")
 
         return clone
+    except AssertionError as assertion_error:
+        logging.error(assertion_error)
     finally:
         unlock()
 
@@ -436,9 +458,7 @@ def import_objects(objects: Dict[str, Object]):
     container = create_container("#", "Imported Objects")
 
     objuuids = inventory.list_objuuids()
-
-    obj_ttl = len(objects)
-    obj_cnt = 1
+    logging.info(f'{len(objects)} objects')
 
     # pylint: disable=too-many-nested-blocks
     for objuuid, imported_object in objects.items():
@@ -474,9 +494,7 @@ def import_objects(objects: Dict[str, Object]):
 
             current.set()
 
-            logging.debug(f'imported ({obj_cnt} of {obj_ttl}): {objuuid},'\
-                        f'type: {imported_object["type"]}, name: {imported_object["name"]}')
-            obj_cnt += 1
+            logging.debug(imported_object["name"])
         except: # pylint: disable=bare-except
             logging.error(traceback.format_exc())
 
@@ -553,10 +571,13 @@ def export_files_zip(objuuids: str) -> BinaryIO:
             # zip archive can't take a leading slash or names containing colons
             filename = get_fq_name(objuuid)[1:].replace(':', '')
             if current.object["type"] == "binary file":
+                logging.debug(current.object['name'])
                 archive.writestr(filename, File(current.object["sequuid"]).read())
             elif current.object["type"] == "text file":
+                logging.debug(current.object['name'])
                 archive.writestr(filename, current.object["body"].encode())
             elif current.object["type"] == "result link":
+                logging.debug(current.object['name'])
                 result = results.get_object(current.object['resuuid'])
                 archive.writestr(
                     f'{filename}.json',
@@ -591,6 +612,8 @@ def export_objects_zip(objuuids: str) -> BinaryIO:
 
         if current.object["type"] == "binary file":
             dstuuids.append(current.object["sequuid"])
+
+        logging.debug(current.object['name'])
 
     mem_file = io.BytesIO()
 
