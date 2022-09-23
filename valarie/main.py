@@ -12,7 +12,8 @@ from valarie.executor.timers import cancel_timers
 from valarie.executor.procedure import start_timer as start_procedures_worker
 from valarie.executor.results import start_timer as start_results_worker
 from valarie.dao.document import Collection
-from valarie.controller.inventory import unlock, create_container
+from valarie.controller.inventory import unlock as unlock_inventory, create_container
+from valarie.controller.messaging import unlock as unlock_messaging
 from valarie.controller import logging as app_logger
 from valarie.controller.config import (
     get_host,
@@ -55,7 +56,8 @@ def init_collections():
         create_task_template()
         create_settings_container()
 
-    unlock()
+    unlock_inventory()
+    unlock_messaging()
 
 def start():
     """This function configures and starts the web server."""
