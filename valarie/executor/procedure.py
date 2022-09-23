@@ -13,9 +13,9 @@ from typing import Dict, List
 from valarie.dao.document import Collection
 from valarie.dao.utils import get_uuid_str
 from valarie.controller import kvstore
-from valarie.router.messaging import add_message
 from valarie.executor.timers import TIMERS
 from valarie.executor.task import TaskError
+from valarie.controller import logging
 from valarie.controller.config import get_config
 from valarie.controller.results import create_result_link
 from valarie.controller.inventory import delete_node
@@ -535,7 +535,7 @@ def eval_cron_field(cron_str: str, now_val: int) -> bool:
             elif int(field) == now_val:
                 result = True
     except ValueError as value_error:
-        add_message(str(value_error))
+        logging.error(value_error)
 
     return result
 
@@ -613,13 +613,13 @@ def worker():
             try:
                 assert int(JOBS[key]["host"]["concurrency"]) > 0
             except (AssertionError, KeyError, ValueError):
-                add_message(f"invalid host concurrency\n{traceback.format_exc()}")
+                logging.error('invalid host concurrency')
                 JOBS[key]["host"]["concurrency"] = "1"
 
             try:
                 assert int(JOBS[key]["console"]["concurrency"]) > 0
             except (AssertionError, KeyError, ValueError):
-                add_message(f"invalid console concurrency\n{traceback.format_exc()}")
+                logging.error('invalid host concurrency')
                 JOBS[key]["console"]["concurrency"] = "1"
 
         running_jobs_counts = {}

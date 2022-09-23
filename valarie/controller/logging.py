@@ -63,7 +63,7 @@ def _log(item: Any, level: LogLevel = LogLevel.NOTSET):
         if level in (LogLevel.CRITICAL, LogLevel.ERROR):
             add_message(f'<font color="red">{message_line}</font>')
         elif level is LogLevel.WARNING:
-            add_message(f'<font color="yellow">{message_line}</font>')
+            add_message(f'<font color="orange">{message_line}</font>')
         elif level is LogLevel.INFO:
             add_message(f'<font color="green">{message_line}</font>')
         elif level is LogLevel.DEBUG:

@@ -24,7 +24,7 @@ from valarie.controller.config import (
 )
 
 def on_cherrypy_log(msg, level):
-    """This function subscribes the add_message function to the log
+    """This function subscribes the logger functions to the log
     channel on cherrypy's bus."""
     if level == 20:
         app_logger.info(msg)

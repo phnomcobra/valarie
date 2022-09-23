@@ -10,7 +10,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from valarie.dao.document import Collection, Object
 from valarie.dao.datastore import delete_sequence, copy_sequence, File
 from valarie.controller.container import create_container
-from valarie.router.messaging import add_message
+from valarie.controller import logging
 from valarie.controller import kvstore
 from valarie.controller.config import (
     CONFIG_OBJUUID,
@@ -71,9 +71,9 @@ def __get_child_tree_nodes(nodes: List[Dict], current: Object, inventory: Collec
 
         for objuuid in inventory.find_objuuids(parent=current.objuuid):
             nodes = __get_child_tree_nodes(nodes, inventory.get_object(objuuid), inventory)
-    except KeyError:
-        add_message(traceback.format_exc())
-        add_message(str(current.object))
+    except KeyError as key_error:
+        logging.error(key_error)
+        logging.error(current.object)
 
     return nodes
 
@@ -326,7 +326,7 @@ def __copy_object(
             clone.object["children"] = []
             clone.object["parent"] = parent_objuuid
 
-            add_message(f'copied {clone.object["name"]}')
+            logging.debug(f'copied {clone.object["name"]}')
 
             recstrrepl(clone.object, objuuid, clone.objuuid)
 
@@ -382,7 +382,7 @@ def copy_object(objuuid: str) -> Object:
         clone.object["children"] = []
         clone.object["name"] = clone.object["name"] + " (Copy)"
 
-        add_message(f'copied {clone.object["name"]}')
+        logging.debug(f'copied {clone.object["name"]}')
 
         recstrrepl(clone.object, objuuid, clone.objuuid)
 
@@ -412,9 +412,9 @@ def copy_object(objuuid: str) -> Object:
             new.set()
 
             if "name" in new.object:
-                add_message(f'mutated {new.object["name"]}')
+                logging.debug(f'mutated {new.object["name"]}')
             else:
-                add_message(f'mutated {new.objuuid}')
+                logging.debug(f'mutated {new.objuuid}')
 
         if len(child_objuuids) > 0:
             kvstore.touch("inventoryState")
@@ -474,11 +474,11 @@ def import_objects(objects: Dict[str, Object]):
 
             current.set()
 
-            add_message(f'imported ({obj_cnt} of {obj_ttl}): {objuuid},'\
+            logging.debug(f'imported ({obj_cnt} of {obj_ttl}): {objuuid},'\
                         f'type: {imported_object["type"]}, name: {imported_object["name"]}')
             obj_cnt += 1
         except: # pylint: disable=bare-except
-            add_message(traceback.format_exc())
+            logging.error(traceback.format_exc())
 
     objuuids = inventory.list_objuuids()
     for objuuid in objuuids:

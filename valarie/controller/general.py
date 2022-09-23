@@ -2,8 +2,8 @@
 """This module implements the restart function used for restarting valarie."""
 
 from valarie.controller.config import get_config
+from valarie.controller import logging
 from valarie.executor.system import system
-from valarie.router.messaging import add_message
 
 def restart() -> int:
     """This function restarts valarie.
@@ -11,5 +11,5 @@ def restart() -> int:
     Returns:
         The restart commands return code as an integer.
     """
-    add_message("Restarting...")
+    logging.info("restarting...")
     return system(get_config()["restartcmd"])

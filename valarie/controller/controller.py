@@ -4,8 +4,8 @@ lists of hosts and procedure objects used by the frontend for rendering."""
 from typing import Dict, List
 
 from valarie.dao.document import Collection, Object
-from valarie.router.messaging import add_message
 from valarie.controller.host import get_hosts
+from valarie.controller import logging
 
 def create_controller(
         parent_objuuid: str,
@@ -121,7 +121,7 @@ def get_procedure_grid(ctruuid: str) -> List[Dict]:
                 "type" : procedure.object["type"]
             })
         else:
-            add_message("procedure {0} is missing!".format(prcuuid))
+            logging.error("procedure {0} is missing!".format(prcuuid))
             grid_data.append({
                 "name" : "MISSING!",
                 "objuuid" : prcuuid,
@@ -183,7 +183,7 @@ def get_host_grid(ctruuid: str) -> List[Dict]:
                     }
                 )
         else:
-            add_message("host {0} is missing!".format(hstuuid))
+            logging.error("host {0} is missing!".format(hstuuid))
             host.destroy()
             controller.object["hosts"].remove(hstuuid)
             controller.set()

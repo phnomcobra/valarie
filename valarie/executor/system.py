@@ -3,11 +3,11 @@
 
 from subprocess import Popen, PIPE
 
-from valarie.controller.messaging import add_message
+from valarie.controller import logging
 
 def system(command: str) -> int:
     """This function executes a command on the system.
-    Standard out and standard error emit into the add_message route.
+    Standard out and standard error emit into the logger.
 
         Args:
             command:
@@ -16,18 +16,18 @@ def system(command: str) -> int:
         Returns:
             Returns the return code as an integer.
         """
-    add_message(f'system: {command}')
+    logging.info(command)
 
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
     output_buffer, stderr_buffer = process.communicate()
     stdout, stderr = str(output_buffer.decode()).strip(), str(stderr_buffer.decode()).strip()
 
     if len(stdout) > 0:
-        add_message(stdout)
+        logging.debug(stdout)
 
     if len(stderr) > 0:
-        add_message(f'<font color="red">{stderr}</font>')
+        logging.error(stderr)
 
-    add_message(f'returned {process.returncode}')
+    logging.info(f'returned {process.returncode}')
 
     return process.returncode
