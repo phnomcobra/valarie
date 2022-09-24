@@ -9,12 +9,10 @@ from valarie.controller import logging
 from valarie.controller.inventory import delete_node
 from valarie.controller import kvstore
 
-
 def start_timer():
     """This function creates and starts the results timer."""
     TIMERS["results worker"] = Timer(60, worker)
     TIMERS["results worker"].start()
-
 
 def worker():
     """This is a worker function used to process expiration of results

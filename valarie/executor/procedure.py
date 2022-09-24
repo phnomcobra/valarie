@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """This module implements functions for scheduling, queuing, and executing
 procedures."""
+import json
 import traceback
 
 from multiprocessing import Process
@@ -289,7 +290,10 @@ def run_procedure(
         ctruuid:
             The UUID of the controller object.
     """
-    logging.debug(f"{procedure_object['name']} on {host_object['name']}")
+    logging.debug(f"executing procedure: {procedure_object['name']}")
+    logging.debug(f'host: {host_object["name"]}')
+    logging.trace(json.dumps(host_object, indent=4))
+
 
     inventory = Collection("inventory")
     results = Collection("results")
@@ -350,6 +354,9 @@ def run_procedure(
         task_result["tskuuid"] = tskuuid
 
         try:
+            logging.debug(f'executing task: {task_result["name"]}')
+            logging.trace(
+                f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}')
             # pylint: disable=exec-used
             exec(
                 f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
@@ -396,10 +403,13 @@ def run_procedure(
     procedure_status = None
 
     try:
+        logging.debug(f'executing console: {console_object["name"]}')
+        logging.trace(console_object["body"])
         # pylint: disable=exec-used
         exec(console_object["body"], tempmodule.__dict__)
         cli = tempmodule.Console(host=host_object)
-    except: # pylint: disable=bare-except
+    except Exception as exception:
+        logging.error(exception)
         result.object["output"] += traceback.format_exc().split("\n")
 
     for seq_num, tskuuid in enumerate(tskuuids):
@@ -409,6 +419,9 @@ def run_procedure(
         task_result["stop"] = None
 
         try:
+            logging.debug(f'executing task: {task_result["name"]}')
+            logging.trace(
+                f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}')
             # pylint: disable=exec-used
             exec(
                 f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
@@ -421,11 +434,13 @@ def run_procedure(
 
                 try:
                     task.execute(cli)
-                except: # pylint: disable=bare-except
+                except Exception as exception:
+                    logging.error(exception)
                     task = TaskError(tskuuid)
 
                 task_result["stop"] = time()
-        except: # pylint: disable=bare-except
+        except Exception as exception:
+            logging.error(exception)
             task = TaskError(tskuuid)
             result.object["output"] += traceback.format_exc().split("\n")
 
@@ -472,6 +487,9 @@ def run_procedure(
         if ctruuid:
             kvstore.touch(f'controller-{ctruuid}')
 
+    logging.debug('saved result object')
+    logging.trace(json.dumps(result.object, indent=4))
+
     if procedure_status is not None:
         result.object['status'] = procedure_status
         result.set()
@@ -504,6 +522,7 @@ def run_procedure(
         update_inventory = ('true' in str(procedure_object['resultinventoryupdate']).lower())
     except (KeyError, ValueError):
         update_inventory = False
+        logging.warning('invalid value for resultinventory update')
     if update_inventory:
         kvstore.touch('inventoryState')
 
@@ -616,13 +635,13 @@ def worker():
             try:
                 assert int(JOBS[key]["host"]["concurrency"]) > 0
             except (AssertionError, KeyError, ValueError):
-                logging.error('invalid host concurrency')
+                logging.warning('invalid host concurrency')
                 JOBS[key]["host"]["concurrency"] = "1"
 
             try:
                 assert int(JOBS[key]["console"]["concurrency"]) > 0
             except (AssertionError, KeyError, ValueError):
-                logging.error('invalid host concurrency')
+                logging.warning('invalid host concurrency')
                 JOBS[key]["console"]["concurrency"] = "1"
 
         running_jobs_counts = {}
@@ -655,6 +674,7 @@ def worker():
                             run_as_process = ('true' in str(JOBS[key]["procedure"]['runasprocess']).lower())
                         except (KeyError, ValueError):
                             run_as_process = False
+                            logging.warning('invalid run_as_process value')
                         if run_as_process:
                             JOBS[key]["process"] = Process(
                                 target=run_procedure,
@@ -684,6 +704,8 @@ def worker():
                         running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
 
         kvstore.touch("queueState")
+    except Exception as exception:
+        logging.error(exception)
     finally:
         JOB_LOCK.release()
         start_timer()
