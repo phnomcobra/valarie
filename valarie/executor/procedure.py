@@ -3,7 +3,6 @@
 procedures."""
 import logging as builtin_logging
 from logging.handlers import TimedRotatingFileHandler
-import json
 import os
 import traceback
 
@@ -307,10 +306,7 @@ def run_procedure(
         logger.addHandler(app_handler)
         logger.setLevel(builtin_logging.DEBUG)
 
-    logging.info(f"executing procedure: {procedure_object['name']}")
-    logging.debug(f'host: {host_object["name"]}')
-    logging.trace(json.dumps(host_object, indent=4))
-
+    logging.info(f'running "{procedure_object["name"]}" on "{host_object["name"]}"')
 
     inventory = Collection("inventory")
     results = Collection("results")
@@ -371,16 +367,13 @@ def run_procedure(
         task_result["tskuuid"] = tskuuid
 
         try:
-            logging.debug(f'executing task: {task_result["name"]}')
-            logging.trace(
-                f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}')
             # pylint: disable=exec-used
             exec(
                 f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
                 tempmodule.__dict__
             )
-            task = tempmodule.Task()
-        except Exception as exception:
+            task = tempmodule.Task() # pylint: disable=no-member
+        except Exception as exception: # pylint: disable=broad-except
             logging.error(exception)
             task = TaskError(tskuuid)
 
@@ -421,12 +414,10 @@ def run_procedure(
     procedure_status = None
 
     try:
-        logging.debug(f'executing console: {console_object["name"]}')
-        logging.trace(console_object["body"])
         # pylint: disable=exec-used
         exec(console_object["body"], tempmodule.__dict__)
-        cli = tempmodule.Console(host=host_object)
-    except Exception as exception:
+        cli = tempmodule.Console(host=host_object) # pylint: disable=no-member
+    except Exception as exception: # pylint: disable=broad-except
         logging.error(exception)
         result.object["output"] += traceback.format_exc().split("\n")
 
@@ -442,19 +433,19 @@ def run_procedure(
                 f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
                 tempmodule.__dict__
             )
-            task = tempmodule.Task()
+            task = tempmodule.Task() # pylint: disable=no-member
 
             if continue_procedure:
                 task_result["start"] = time()
 
                 try:
                     task.execute(cli)
-                except Exception as exception:
+                except Exception as exception: # pylint: disable=broad-except
                     logging.error(exception)
                     task = TaskError(tskuuid)
 
                 task_result["stop"] = time()
-        except Exception as exception:
+        except Exception as exception: # pylint: disable=broad-except
             logging.error(exception)
             task = TaskError(tskuuid)
             result.object["output"] += traceback.format_exc().split("\n")
@@ -511,8 +502,7 @@ def run_procedure(
         if ctruuid:
             kvstore.touch(f'controller-{ctruuid}')
 
-    logging.debug('saved result object')
-    logging.trace(json.dumps(result.object, indent=4))
+    logging.info(f'exited with status {winning_status}')
 
     try:
         result_link_enabled = ('true' in str(procedure_object['resultlinkenable']).lower())
@@ -699,7 +689,7 @@ def worker():
                         running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
 
         kvstore.touch("queueState")
-    except Exception as exception:
+    except Exception as exception: # pylint: disable=broad-except
         logging.error(exception)
     finally:
         JOB_LOCK.release()

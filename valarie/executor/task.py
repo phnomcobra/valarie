@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 """This module implements functions and classes for synchronously executing tasks."""
-import json
 import traceback
 from typing import Any, Dict
 from imp import new_module
@@ -71,14 +70,11 @@ def execute(tskuuid: str, hstuuid: str) -> Dict:
     result.object['host']['host'] = host.object['host']
     result.object['host']['name'] = host.object['name']
     result.object['host']['objuuid'] = hstuuid
-    logging.debug(f'host: {host.object["name"]}')
-    logging.trace(json.dumps(host.object, indent=4))
 
     tempmodule = new_module("tempmodule")
 
     try:
         console_object = inventory.get_object(host.object["console"]).object
-        logging.debug(f'executing console: {console_object["name"]}')
         # pylint: disable=exec-used
         exec(console_object["body"], tempmodule.__dict__)
         cli = tempmodule.Console(host=host.object)
@@ -86,14 +82,14 @@ def execute(tskuuid: str, hstuuid: str) -> Dict:
         try:
             inv_task = inventory.get_object(tskuuid)
 
+            logging.info(f'running "{inv_task.object["name"]}" on "{host.object["name"]}"')
+
             result.object['task'] = {}
             result.object['task']["name"] = inv_task.object["name"]
             result.object['task']["start"] = None
             result.object['task']["stop"] = None
             result.object['task']["tskuuid"] = tskuuid
 
-            logging.debug(f'executing task: {inv_task.object["name"]}')
-            logging.trace(f'{inv_task.object["body"]}\n{status_code_body}')
             # pylint: disable=exec-used
             exec(f'{inv_task.object["body"]}\n{status_code_body}', tempmodule.__dict__)
             task = tempmodule.Task()
@@ -121,7 +117,6 @@ def execute(tskuuid: str, hstuuid: str) -> Dict:
     result.object['stop'] = time()
     result.set()
 
-    logging.debug('saved result object')
-    logging.trace(json.dumps(result.object, indent=4))
+    logging.info(f'exited with status {task.status}')
 
     return result.object

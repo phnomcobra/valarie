@@ -15,7 +15,6 @@ class LogLevel(Enum):
     WARNING = 30
     INFO = 20
     DEBUG = 10
-    TRACE = 0
 
 def critical(item: Any = ''):
     """This function logs a critical item in the application log.
@@ -62,15 +61,6 @@ def debug(item: Any = ''):
     """
     _log(item, LogLevel.DEBUG)
 
-def trace(item: Any = ''):
-    """This function logs a trace item in the application log.
-
-    Args:
-        item:
-            Anything that has __str__.
-    """
-    _log(item, LogLevel.TRACE)
-
 def _log(item: Any, level: LogLevel):
     """This is a dunder method for handling all the application log events. It has a
     dual functionality. It formats and logs lines via the builtin logger and it
@@ -106,7 +96,7 @@ def _log(item: Any, level: LogLevel):
             logger.warning(log_line)
         elif level is LogLevel.INFO:
             logger.info(log_line)
-        elif level in (LogLevel.DEBUG, LogLevel.TRACE):
+        elif level is LogLevel.DEBUG:
             logger.debug(log_line)
 
         message_line = f'{short_filename}|{function}|{line}'
