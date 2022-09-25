@@ -90,7 +90,7 @@ def start():
     cherrypy.log.access_log.addHandler(access_handler)
 
     app_handler = TimedRotatingFileHandler(
-        os.path.join(logfile_path, 'app.log'),
+        os.path.join(logfile_path, 'application.log'),
         when="D",
         backupCount=7
     )
