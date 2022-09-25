@@ -199,12 +199,12 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
             hstuuids.append(discovered_hstuuid)
 
     temp = inventory.get_object(prcuuid)
-    logging.info(temp.object['name'])
 
     if "type" in temp.object:
         if temp.object["type"] == "procedure":
             for current_hstuuid in hstuuids:
                 host = inventory.get_object(current_hstuuid)
+                logging.info(f'queued "{temp.object["name"]}" for "{host.object["name"]}"')
 
                 if host.object["type"] == "host":
                     jobuuid = get_uuid_str()
@@ -228,6 +228,8 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
         elif temp.object["type"] == "task":
             for current_hstuuid in hstuuids:
                 host = inventory.get_object(current_hstuuid)
+                logging.info(f'queued "{temp.object["name"]}" for "{host.object["name"]}"')
+
                 if host.object["type"] == "host":
                     jobuuid = get_uuid_str()
 
