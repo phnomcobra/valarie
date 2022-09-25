@@ -361,15 +361,21 @@ def run_procedure(
 
     for seq_num, tskuuid in enumerate(tskuuids):
         task_result = {}
-        task_result["name"] = inventory.get_object(tskuuid).object["name"]
-        task_result["start"] = None
-        task_result["stop"] = None
-        task_result["tskuuid"] = tskuuid
 
         try:
+            task_object = inventory.get_object(tskuuid).object
+
+            assert 'name' in task_object.keys(), 'no name key in task object'
+            assert 'body' in task_object.keys(), 'no body key in task object'
+
+            task_result["name"] = task_object["name"]
+            task_result["start"] = None
+            task_result["stop"] = None
+            task_result["tskuuid"] = tskuuid
+
             # pylint: disable=exec-used
             exec(
-                f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
+                f'{task_object["body"]}\n{status_code_body}',
                 tempmodule.__dict__
             )
             task = tempmodule.Task() # pylint: disable=no-member
@@ -423,14 +429,20 @@ def run_procedure(
 
     for seq_num, tskuuid in enumerate(tskuuids):
         task_result = {}
-        task_result["name"] = inventory.get_object(tskuuid).object["name"]
-        task_result["start"] = None
-        task_result["stop"] = None
 
         try:
+            task_object = inventory.get_object(tskuuid).object
+
+            assert 'name' in task_object.keys(), 'no name key in task object'
+            assert 'body' in task_object.keys(), 'no body key in task object'
+
+            task_result["name"] = task_object['name']
+            task_result["start"] = None
+            task_result["stop"] = None
+
             # pylint: disable=exec-used
             exec(
-                f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
+                f'{task_object["body"]}\n{status_code_body}',
                 tempmodule.__dict__
             )
             task = tempmodule.Task() # pylint: disable=no-member
@@ -508,6 +520,7 @@ def run_procedure(
         result_link_enabled = ('true' in str(procedure_object['resultlinkenable']).lower())
     except (KeyError, ValueError):
         result_link_enabled = False
+        logging.warning('defaulting result linking to false')
     if result_link_enabled:
         stop_time_str = datetime.fromtimestamp(int(result.object['stop']))
 
@@ -527,7 +540,7 @@ def run_procedure(
         update_inventory = ('true' in str(procedure_object['resultinventoryupdate']).lower())
     except (KeyError, ValueError):
         update_inventory = False
-        logging.warning('invalid value for resultinventory update')
+        logging.warning('defaulting inventory updating to false')
     if update_inventory:
         kvstore.touch('inventoryState')
 
@@ -587,26 +600,37 @@ def worker():
         procedure = inventory.get_object(prcuuid)
 
         if "enabled" not in procedure.object:
+            logging.warning('setting "enabled" to false')
             procedure.object["enabled"] = False
             procedure.set()
 
+        if "seconds" not in procedure.object:
+            logging.warning('setting "seconds" to "0"')
+            procedure.object["seconds"] = "0"
+            procedure.set()
+
         if "minutes" not in procedure.object:
+            logging.warning('setting "minutes" to "*"')
             procedure.object["minutes"] = "*"
             procedure.set()
 
         if "hours" not in procedure.object:
+            logging.warning('setting "hours" to "*"')
             procedure.object["hours"] = "*"
             procedure.set()
 
         if "dayofmonth" not in procedure.object:
+            logging.warning('setting "dayofmonth" to "*"')
             procedure.object["dayofmonth"] = "*"
             procedure.set()
 
         if "dayofweek" not in procedure.object:
+            logging.warning('setting "dayofweek" to "*"')
             procedure.object["dayofweek"] = "*"
             procedure.set()
 
         if "year" not in procedure.object:
+            logging.warning('setting "year" to "*"')
             procedure.object["year"] = "*"
             procedure.set()
 
@@ -615,7 +639,7 @@ def worker():
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
-                        eval_cron_field('0', now.second) and
+                        eval_cron_field(procedure.object["seconds"], now.minute) and
                         eval_cron_field(procedure.object["minutes"], now.minute) and
                         eval_cron_field(procedure.object["hours"], now.hour) and
                         eval_cron_field(procedure.object["dayofmonth"], now.day) and
@@ -636,13 +660,13 @@ def worker():
             try:
                 assert int(JOBS[key]["host"]["concurrency"]) > 0
             except (AssertionError, KeyError, ValueError):
-                logging.warning('invalid host concurrency')
+                logging.warning('host concurrency defaulting to 1')
                 JOBS[key]["host"]["concurrency"] = "1"
 
             try:
                 assert int(JOBS[key]["console"]["concurrency"]) > 0
             except (AssertionError, KeyError, ValueError):
-                logging.warning('invalid host concurrency')
+                logging.warning('console concurrency defaulting to 1')
                 JOBS[key]["console"]["concurrency"] = "1"
 
         running_jobs_counts = {}
