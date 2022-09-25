@@ -307,7 +307,7 @@ def run_procedure(
         logger.addHandler(app_handler)
         logger.setLevel(builtin_logging.DEBUG)
 
-    logging.debug(f"executing procedure: {procedure_object['name']}")
+    logging.info(f"executing procedure: {procedure_object['name']}")
     logging.debug(f'host: {host_object["name"]}')
     logging.trace(json.dumps(host_object, indent=4))
 
@@ -437,9 +437,6 @@ def run_procedure(
         task_result["stop"] = None
 
         try:
-            logging.debug(f'executing task: {task_result["name"]}')
-            logging.trace(
-                f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}')
             # pylint: disable=exec-used
             exec(
                 f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
@@ -505,9 +502,6 @@ def run_procedure(
         if ctruuid:
             kvstore.touch(f'controller-{ctruuid}')
 
-    logging.debug('saved result object')
-    logging.trace(json.dumps(result.object, indent=4))
-
     if procedure_status is not None:
         result.object['status'] = procedure_status
         result.set()
@@ -516,6 +510,9 @@ def run_procedure(
             kvstore.touch(f'procedure-{procedure_object["objuuid"]}')
         if ctruuid:
             kvstore.touch(f'controller-{ctruuid}')
+
+    logging.debug('saved result object')
+    logging.trace(json.dumps(result.object, indent=4))
 
     try:
         result_link_enabled = ('true' in str(procedure_object['resultlinkenable']).lower())
