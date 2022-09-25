@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 """This module implements functions for scheduling, queuing, and executing
 procedures."""
+import logging as builtin_logging
+from logging.handlers import TimedRotatingFileHandler
 import json
+import os
 import traceback
 
 from multiprocessing import Process
-from threading import Lock, Timer, Thread
+from threading import Lock, Timer
 from time import time
 from datetime import datetime
 from imp import new_module
@@ -112,8 +115,6 @@ def get_jobs_grid() -> List[Dict]:
         for jobuuid, job in JOBS.items():
             row = {}
 
-            row["cancellable"] = not isinstance(job["process"], Thread)
-
             if job["start time"] is not None:
                 run_time = time() - job["start time"]
             else:
@@ -131,8 +132,6 @@ def get_jobs_grid() -> List[Dict]:
 
             if isinstance(job["process"], Process):
                 row["runmode"] = "process"
-            elif isinstance(job["process"], Thread):
-                row["runmode"] = "thread"
             else:
                 row["runmode"] = "queued"
 
@@ -270,7 +269,8 @@ def run_procedure(
         host_object: Dict,
         procedure_object: Dict,
         console_object: Dict,
-        ctruuid: str = None
+        ctruuid: str = None,
+        log_id: int = None
     ):
     """This is a function runs a procedure using the combination of a host, procedure,
     and console object. Optionally, a controller and job UUID can be specified as well.
@@ -289,7 +289,24 @@ def run_procedure(
 
         ctruuid:
             The UUID of the controller object.
+
+        log_id:
+            Integer representing the id for the logger to use.
     """
+    if log_id is not None:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        logfile_path = os.path.join(current_dir, '../log')
+        os.makedirs(logfile_path, exist_ok=True)
+
+        app_handler = TimedRotatingFileHandler(
+            os.path.join(logfile_path, f'procedure-{log_id}.log'),
+            when="D",
+            backupCount=7
+        )
+        logger = builtin_logging.getLogger('app')
+        logger.addHandler(app_handler)
+        logger.setLevel(builtin_logging.DEBUG)
+
     logging.debug(f"executing procedure: {procedure_object['name']}")
     logging.debug(f'host: {host_object["name"]}')
     logging.trace(json.dumps(host_object, indent=4))
@@ -363,7 +380,8 @@ def run_procedure(
                 tempmodule.__dict__
             )
             task = tempmodule.Task()
-        except: # pylint: disable=bare-except
+        except Exception as exception:
+            logging.error(exception)
             task = TaskError(tskuuid)
 
         task_result["output"] = task.output
@@ -585,10 +603,6 @@ def worker():
             procedure.object["enabled"] = False
             procedure.set()
 
-        if "seconds" not in procedure.object:
-            procedure.object["seconds"] = "0"
-            procedure.set()
-
         if "minutes" not in procedure.object:
             procedure.object["minutes"] = "*"
             procedure.set()
@@ -614,7 +628,7 @@ def worker():
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
-                        eval_cron_field(procedure.object["seconds"], now.second) and
+                        eval_cron_field('0', now.second) and
                         eval_cron_field(procedure.object["minutes"], now.minute) and
                         eval_cron_field(procedure.object["hours"], now.hour) and
                         eval_cron_field(procedure.object["dayofmonth"], now.day) and
@@ -669,32 +683,16 @@ def worker():
                                 int(JOBS[key]["console"]["concurrency"])
                         ):
 
-                        try:
-                            # pylint: disable=line-too-long
-                            run_as_process = ('true' in str(JOBS[key]["procedure"]['runasprocess']).lower())
-                        except (KeyError, ValueError):
-                            run_as_process = False
-                            logging.warning('invalid run_as_process value')
-                        if run_as_process:
-                            JOBS[key]["process"] = Process(
-                                target=run_procedure,
-                                args=(
-                                    JOBS[key]["host"],
-                                    JOBS[key]["procedure"],
-                                    JOBS[key]["console"],
-                                    JOBS[key]["ctruuid"]
-                                )
+                        JOBS[key]["process"] = Process(
+                            target=run_procedure,
+                            args=(
+                                JOBS[key]["host"],
+                                JOBS[key]["procedure"],
+                                JOBS[key]["console"],
+                                JOBS[key]["ctruuid"],
+                                JOBS[key]["display row"]
                             )
-                        else:
-                            JOBS[key]["process"] = Thread(
-                                target=run_procedure,
-                                args=(
-                                    JOBS[key]["host"],
-                                    JOBS[key]["procedure"],
-                                    JOBS[key]["console"],
-                                    JOBS[key]["ctruuid"]
-                                )
-                            )
+                        )
 
                         JOBS[key]["start time"] = time()
                         JOBS[key]["process"].start()
