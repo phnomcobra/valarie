@@ -2,8 +2,8 @@
 """This module implements functions for creating and enumerating host groups."""
 from typing import Dict, List
 
+from valarie.controller import logging
 from valarie.dao.document import Collection, Object
-from valarie.router.messaging import add_message
 
 def create_host_group(
         parent_objuuid: str,
@@ -25,6 +25,8 @@ def create_host_group(
     Returns:
         The document object for this host group.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     group = inventory.get_object(objuuid)
@@ -137,7 +139,7 @@ def get_host_grid(grpuuid: str) -> List[Dict]:
                     }
                 )
         else:
-            add_message(f"host {hstuuid} is missing!")
+            logging.error(f"host {hstuuid} is missing!")
             host.destroy()
             group.object["hosts"].remove(hstuuid)
             group.set()

@@ -5,8 +5,8 @@ from typing import Any, Dict
 from imp import new_module
 from time import time
 
+from valarie.controller import logging
 from valarie.dao.document import Collection
-from valarie.router.messaging import add_message
 
 class TaskError: # pylint: disable=too-few-public-methods
     """The class is used to encapsulate errors as Task objects."""
@@ -63,7 +63,7 @@ def execute(tskuuid: str, hstuuid: str) -> Dict:
             status_code_body += f"""{status.object["alias"]}=int('{status.object["code"]}')\n"""
             status_data[int(status.object["code"])] = status.object
         except (KeyError, ValueError) as exception:
-            add_message(str(exception))
+            logging.error(exception)
 
     host = inventory.get_object(hstuuid)
     result.object['host'] = {}
@@ -74,12 +74,15 @@ def execute(tskuuid: str, hstuuid: str) -> Dict:
     tempmodule = new_module("tempmodule")
 
     try:
+        console_object = inventory.get_object(host.object["console"]).object
         # pylint: disable=exec-used
-        exec(inventory.get_object(host.object["console"]).object["body"], tempmodule.__dict__)
+        exec(console_object["body"], tempmodule.__dict__)
         cli = tempmodule.Console(host=host.object)
 
         try:
             inv_task = inventory.get_object(tskuuid)
+
+            logging.info(f'running "{inv_task.object["name"]}" on "{host.object["name"]}"')
 
             result.object['task'] = {}
             result.object['task']["name"] = inv_task.object["name"]
@@ -93,25 +96,27 @@ def execute(tskuuid: str, hstuuid: str) -> Dict:
 
             try:
                 task.execute(cli)
-            except: # pylint: disable=bare-except
+            except Exception as exception: # pylint: disable=broad-except
                 task = TaskError(tskuuid)
-                add_message(traceback.format_exc())
-        except: # pylint: disable=bare-except
+                logging.error(exception)
+        except Exception as exception: # pylint: disable=broad-except
             task = TaskError(tskuuid)
-            add_message(traceback.format_exc())
-    except: # pylint: disable=bare-except
+            logging.error(exception)
+    except Exception as exception: # pylint: disable=broad-except
         task = TaskError(tskuuid)
-        add_message(traceback.format_exc())
+        logging.error(exception)
 
     result.object['output'] = task.output
 
     try:
         result.object['status'] = status_data[task.status]
     except KeyError as exception:
-        add_message(str(exception))
+        logging.error(exception)
         result.object['status'] = {"code": task.status}
 
     result.object['stop'] = time()
     result.set()
+
+    logging.info(f'exited with status {task.status}')
 
     return result.object

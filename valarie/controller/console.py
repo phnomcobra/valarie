@@ -4,8 +4,9 @@ lists of console objects used by the frontend for rendering."""
 
 from typing import List
 
-from valarie.dao.document import Collection, Object
+from valarie.controller import logging
 from valarie.controller.config import get_console_template
+from valarie.dao.document import Collection, Object
 
 def create_console(
         parent_objuuid: str,
@@ -27,6 +28,7 @@ def create_console(
     Returns:
         The document object for this console.
     """
+    logging.info(name)
     inventory = Collection("inventory")
     console = inventory.get_object(objuuid)
     console.object = {

@@ -3,8 +3,8 @@
 host and task grid data for the jsgrid controls in the frontend."""
 from typing import Dict, List
 
+from valarie.controller import logging
 from valarie.dao.document import Collection, Object
-from valarie.router.messaging import add_message
 
 def create_procedure(
         parent_objuuid: str,
@@ -26,6 +26,8 @@ def create_procedure(
     Returns:
         An inventory object.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     procedure = inventory.get_object(objuuid)
@@ -133,7 +135,7 @@ def get_task_grid(prcuuid: str) -> List[Dict]:
 
             grid_data.append(item)
         else:
-            add_message("task {0} is missing!".format(tskuuid))
+            logging.error("task {0} is missing!".format(tskuuid))
 
             item = {
                 "name": "MISSING!",
@@ -195,7 +197,7 @@ def get_host_grid(prcuuid: str) -> List[Dict]:
 
                 grid_data.append(item)
         else:
-            add_message(f"host {hstuuid} is missing!")
+            logging.error(f"host {hstuuid} is missing!")
             host.destroy()
             procedure.object["hosts"].remove(hstuuid)
             procedure.set()

@@ -1,27 +1,22 @@
 #!/usr/bin/python3
 """This module implements the inventory routes."""
-import json
-import zipfile
-import io
-import hashlib
 from typing import Any, Dict, List
+from zipfile import ZipFile
 
 import cherrypy
 from cherrypy.lib.static import serve_fileobj
 
-from valarie.controller.messaging import add_message
 from valarie.dao.document import Collection, Object
-from valarie.dao.datastore import File as DatastoreFile
+from valarie.controller import logging
 from valarie.controller.container import create_container
 from valarie.controller.task import create_task
 from valarie.controller.procedure import create_procedure
 from valarie.controller.controller import create_controller
 from valarie.controller.textfile import create_text_file
-from valarie.dao.datastore import create_binary_file
 from valarie.controller.host import create_host
 from valarie.controller.hostgroup import create_host_group
 from valarie.controller.console import create_console
-from valarie.controller.invfile import load_zip, is_binary
+from valarie.controller.invfile import load_zip, load_file_from_io
 from valarie.controller.statuscode import create_status_code, get_status_objects
 from valarie.controller.inventory import (
     get_child_tree_nodes,
@@ -29,8 +24,9 @@ from valarie.controller.inventory import (
     get_context_menu,
     delete_node,
     copy_object,
-    import_objects,
-    get_fq_name
+    import_objects_zip,
+    export_objects_zip,
+    export_files_zip
 )
 
 class Inventory(): # pylint: disable=too-many-public-methods
@@ -300,12 +296,18 @@ class Inventory(): # pylint: disable=too-many-public-methods
         Returns:
             JSON string of the inventory object.
         """
-        posted_object = cherrypy.request.json
+        try:
+            posted_object = cherrypy.request.json
 
-        inventory = Collection("inventory")
-        current = inventory.get_object(posted_object["objuuid"])
-        current.object = posted_object
-        current.set()
+            logging.info(posted_object['name'])
+
+            inventory = Collection("inventory")
+            current = inventory.get_object(posted_object["objuuid"])
+            current.object = posted_object
+            current.set()
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
         return current.object
 
@@ -322,42 +324,15 @@ class Inventory(): # pylint: disable=too-many-public-methods
         Returns:
             A static file response.
         """
-        add_message("inventory controller: exporting inventory objects...")
-
-        inventory = Collection("inventory")
-
-        output = {}
-
-        dstuuids = []
-
-        for objuuid in objuuids.split(","):
-            current = inventory.get_object(objuuid)
-
-            if current.object["type"] in ["result link"]:
-                continue
-
-            output[objuuid] = current.object
-
-            if current.object["type"] == "binary file":
-                dstuuids.append(current.object["sequuid"])
-
-            add_message(f"inventory controller: exported: {objuuid}, "\
-                        f"type: {current.object['type']}, name: {current.object['name']}")
-
-        cherrypy.response.headers['Content-Type'] = "application/x-download"
-        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
-
-        mem_file = io.BytesIO()
-
-        with zipfile.ZipFile(mem_file, mode='w', compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr('inventory.json', json.dumps(output, indent=4, sort_keys=True))
-
-            for dstuuid in dstuuids:
-                archive.writestr('{0}.bin'.format(dstuuid), DatastoreFile(dstuuid).read())
-
-        add_message("INVENTORY EXPORT COMPLETE")
-
-        return serve_fileobj(mem_file.getvalue())
+        try:
+            logging.info(f"{len(objuuids.split(','))} objects")
+            mem_file = export_objects_zip(objuuids)
+            cherrypy.response.headers['Content-Type'] = "application/x-download"
+            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.objects.zip'
+            return serve_fileobj(mem_file.getvalue())
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
     @classmethod
     @cherrypy.expose
@@ -373,42 +348,15 @@ class Inventory(): # pylint: disable=too-many-public-methods
         Returns:
             A static file response.
         """
-        add_message("inventory controller: exporting inventory files...")
-
-        inventory = Collection("inventory")
-        results = Collection("results")
-
-        mem_file = io.BytesIO()
-
-        with zipfile.ZipFile(mem_file, mode='w', compression=zipfile.ZIP_DEFLATED) as archive:
-            for objuuid in objuuids.split(","):
-                current = inventory.get_object(objuuid)
-
-                # zip archive can't take a leading slash or names containing colons
-                filename = get_fq_name(objuuid)[1:].replace(':', '')
-                add_message(filename)
-
-                if current.object["type"] == "binary file":
-                    add_message("inventory controller: exported: " + filename)
-                    archive.writestr(filename, DatastoreFile(current.object["sequuid"]).read())
-                elif current.object["type"] == "text file":
-                    add_message("inventory controller: exported: " + filename)
-                    archive.writestr(filename, current.object["body"].encode())
-                elif current.object["type"] == "result link":
-                    add_message("inventory controller: exported: " + filename)
-                    result = results.get_object(current.object['resuuid'])
-                    archive.writestr(
-                        f'{filename}.json',
-                        json.dumps(result.object, indent=4).encode()
-                    )
-
-        cherrypy.response.headers['Content-Type'] = "application/x-download"
-        cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.files.zip'
-
-        add_message("INVENTORY EXPORT COMPLETE")
-
-        return serve_fileobj(mem_file.getvalue())
-
+        try:
+            logging.info(f"{len(objuuids.split(','))} objects")
+            mem_file = export_files_zip(objuuids)
+            cherrypy.response.headers['Content-Type'] = "application/x-download"
+            cherrypy.response.headers['Content-Disposition'] = 'attachment; filename=export.files.zip'
+            return serve_fileobj(mem_file.getvalue())
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
     @classmethod
     @cherrypy.expose
@@ -421,35 +369,13 @@ class Inventory(): # pylint: disable=too-many-public-methods
             file:
                 A file handle.
         """
-        add_message("inventory controller: importing inventory objects...")
-
-        archive = zipfile.ZipFile(file.file, 'r')
-
-        objects = json.loads(archive.read("inventory.json"))
-
-        for _id, inventory_object in objects.items():
-            if inventory_object["type"] == "binary file":
-                datastore_file = DatastoreFile(inventory_object["sequuid"])
-
-                zipped_file = archive.open("{0}.bin".format(inventory_object["sequuid"]), "r")
-
-                sha1hash = hashlib.sha1()
-
-                # pylint: disable=cell-var-from-loop
-                for chunk in iter(lambda: zipped_file.read(65536), b''):
-                    datastore_file.write(chunk)
-                    sha1hash.update(chunk)
-
-                datastore_file.close()
-
-                inventory_object["size"] = datastore_file.size()
-                inventory_object["sha1sum"] = sha1hash.hexdigest()
-
-        import_objects(objects)
-
-        add_message("INVENTORY IMPORT COMPLETE")
-
-        return {}
+        try:
+            logging.info(file.filename)
+            import_objects_zip(ZipFile(file.file, 'r'))
+            return {}
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
     @classmethod
     @cherrypy.expose
@@ -462,10 +388,13 @@ class Inventory(): # pylint: disable=too-many-public-methods
             file:
                 A file handle.
         """
-        add_message("inventory controller: importing inventory files...")
-        load_zip(zipfile.ZipFile(file.file, 'r'))
-        add_message("INVENTORY IMPORT COMPLETE")
-        return {}
+        try:
+            logging.info(file.filename)
+            load_zip(ZipFile(file.file, 'r'))
+            return {}
+        except Exception as exception:
+            logging.error(exception)
+            raise exception
 
     @classmethod
     @cherrypy.expose
@@ -478,28 +407,10 @@ class Inventory(): # pylint: disable=too-many-public-methods
             file:
                 A file handle.
         """
-        add_message("inventory controller: importing inventory file...")
-
-        fdata = file.file.read()
-
-        if is_binary(fdata):
-            binary_file_inv = create_binary_file("#", file.filename)
-
-            binary_file_dst = DatastoreFile(binary_file_inv.object["sequuid"])
-
-            sha1hash = hashlib.sha1()
-
-            binary_file_dst.write(fdata)
-            sha1hash.update(fdata)
-
-            binary_file_inv.object["size"] = binary_file_dst.size()
-            binary_file_inv.object["sha1sum"] = sha1hash.hexdigest()
-            binary_file_inv.set()
-        else:
-            text_file = create_text_file("#", file.filename)
-            text_file.object["body"] = fdata.decode()
-            text_file.set()
-
-        add_message("INVENTORY IMPORT COMPLETE")
-
-        return {}
+        try:
+            logging.info(file.filename)
+            load_file_from_io(file.file, file.filename)
+            return {}
+        except Exception as exception:
+            logging.error(exception)
+            raise exception

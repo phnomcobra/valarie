@@ -125,7 +125,7 @@ class Document:
                         eval(f"str(self.get_object(objuuid){attribute})")
                     )
                 )
-            except (KeyError, ValueError):
+            except (KeyError, IndexError, ValueError):
                 continue
         self.connection.commit()
 

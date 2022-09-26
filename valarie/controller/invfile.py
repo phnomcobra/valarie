@@ -2,9 +2,8 @@
 """This module implements functions for storing files and managing files and
 links in the inventory and datastore."""
 import hashlib
-from typing import Dict
+from typing import Dict, IO
 from zipfile import ZipFile
-
 from valarie.dao.utils import get_uuid_str
 from valarie.dao.datastore import File, create_binary_file
 from valarie.controller.textfile import create_text_file
@@ -37,7 +36,7 @@ def is_binary(file_data: bytes) -> bool:
 
     return float(binary_length) / data_length >= CHAR_THRESHOLD
 
-def load_zip(archive: ZipFile, root_objuuid: str = "#"):
+def load_zip(archive: ZipFile, parent_objuuid: str = "#"):
     """This function reads all the files in and archive and places
     the byte arrays into a dictionary that is keyed with their archive
     names.
@@ -46,7 +45,7 @@ def load_zip(archive: ZipFile, root_objuuid: str = "#"):
         archive:
             The ZipFile object being read.
 
-        root_objuuid:
+        parent_objuuid:
             The UUID of the inventory object that will be the parent
             for any files or containers that may be created during the
             load.
@@ -56,10 +55,10 @@ def load_zip(archive: ZipFile, root_objuuid: str = "#"):
     for filename in archive.namelist():
         files[filename] = archive.read(filename)
 
-    load_files(files, root_objuuid)
+    load_files(files, parent_objuuid)
 
 # pylint: disable=too-many-locals
-def load_files(files: Dict[str, bytes], root_objuuid: str = "#"):
+def load_files(files: Dict[str, bytes], parent_objuuid: str = "#"):
     """This function reads a dictionary of byte arrays and loads them
     into the inventory and datastore. Archive names are tokenized and
     used to create a directory tree under the parent inventory object.
@@ -71,14 +70,14 @@ def load_files(files: Dict[str, bytes], root_objuuid: str = "#"):
         files:
             Dictionary of byte arrays keyed with their archive names.
 
-        root_objuuid:
+        parent_objuuid:
             The UUID of the inventory object that will be the parent
             for any files or containers that may be created during the
             load.
     """
     containers = {
         "containers" : {},
-        "objuuid" : root_objuuid
+        "objuuid" : parent_objuuid
     }
 
     directories = []
@@ -146,3 +145,37 @@ def load_files(files: Dict[str, bytes], root_objuuid: str = "#"):
                 parent_objuuid = current_container["containers"][sfname]["objuuid"]
 
                 current_container = current_container["containers"][sfname]
+
+def load_file_from_io(file: IO, file_name: str, parent_objuuid: str = "#"):
+    """This function imports an individual text
+    or binary file into the inventory.
+
+    Args:
+        file:
+            A file handle.
+
+        filename:
+            A string of the name of the file.
+
+        root_objuuid:
+            A string of the parent inventory object's UUID.
+    """
+    fdata = file.read()
+
+    if is_binary(fdata):
+        binary_file_inv = create_binary_file(parent_objuuid, file_name)
+
+        binary_file_dst = File(binary_file_inv.object["sequuid"])
+
+        sha1hash = hashlib.sha1()
+
+        binary_file_dst.write(fdata)
+        sha1hash.update(fdata)
+
+        binary_file_inv.object["size"] = binary_file_dst.size()
+        binary_file_inv.object["sha1sum"] = sha1hash.hexdigest()
+        binary_file_inv.set()
+    else:
+        text_file = create_text_file(parent_objuuid, file_name)
+        text_file.object["body"] = fdata.decode()
+        text_file.set()

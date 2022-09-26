@@ -1,10 +1,13 @@
 #!/usr/bin/python3
 """This module implements functions for scheduling, queuing, and executing
 procedures."""
+import logging as builtin_logging
+from logging.handlers import TimedRotatingFileHandler
+import os
 import traceback
 
 from multiprocessing import Process
-from threading import Lock, Timer, Thread
+from threading import Lock, Timer
 from time import time
 from datetime import datetime
 from imp import new_module
@@ -13,9 +16,9 @@ from typing import Dict, List
 from valarie.dao.document import Collection
 from valarie.dao.utils import get_uuid_str
 from valarie.controller import kvstore
-from valarie.router.messaging import add_message
 from valarie.executor.timers import TIMERS
 from valarie.executor.task import TaskError
+from valarie.controller import logging
 from valarie.controller.config import get_config
 from valarie.controller.results import create_result_link
 from valarie.controller.inventory import delete_node
@@ -111,8 +114,6 @@ def get_jobs_grid() -> List[Dict]:
         for jobuuid, job in JOBS.items():
             row = {}
 
-            row["cancellable"] = not isinstance(job["process"], Thread)
-
             if job["start time"] is not None:
                 run_time = time() - job["start time"]
             else:
@@ -130,8 +131,6 @@ def get_jobs_grid() -> List[Dict]:
 
             if isinstance(job["process"], Process):
                 row["runmode"] = "process"
-            elif isinstance(job["process"], Thread):
-                row["runmode"] = "thread"
             else:
                 row["runmode"] = "queued"
 
@@ -205,6 +204,7 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
         if temp.object["type"] == "procedure":
             for current_hstuuid in hstuuids:
                 host = inventory.get_object(current_hstuuid)
+                logging.info(f'queued "{temp.object["name"]}" for "{host.object["name"]}"')
 
                 if host.object["type"] == "host":
                     jobuuid = get_uuid_str()
@@ -228,6 +228,8 @@ def queue_procedure(hstuuid: str, prcuuid: str, ctruuid: str = None):
         elif temp.object["type"] == "task":
             for current_hstuuid in hstuuids:
                 host = inventory.get_object(current_hstuuid)
+                logging.info(f'queued "{temp.object["name"]}" for "{host.object["name"]}"')
+
                 if host.object["type"] == "host":
                     jobuuid = get_uuid_str()
 
@@ -268,7 +270,8 @@ def run_procedure(
         host_object: Dict,
         procedure_object: Dict,
         console_object: Dict,
-        ctruuid: str = None
+        ctruuid: str = None,
+        log_id: int = None
     ):
     """This is a function runs a procedure using the combination of a host, procedure,
     and console object. Optionally, a controller and job UUID can be specified as well.
@@ -287,7 +290,26 @@ def run_procedure(
 
         ctruuid:
             The UUID of the controller object.
+
+        log_id:
+            Integer representing the id for the logger to use.
     """
+    if log_id is not None:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        logfile_path = os.path.join(current_dir, '../log')
+        os.makedirs(logfile_path, exist_ok=True)
+
+        app_handler = TimedRotatingFileHandler(
+            os.path.join(logfile_path, f'procedure-{log_id}.log'),
+            when="D",
+            backupCount=7
+        )
+        logger = builtin_logging.getLogger('app')
+        logger.addHandler(app_handler)
+        logger.setLevel(builtin_logging.DEBUG)
+
+    logging.info(f'running "{procedure_object["name"]}" on "{host_object["name"]}"')
+
     inventory = Collection("inventory")
     results = Collection("results")
 
@@ -295,6 +317,7 @@ def run_procedure(
         result_overwrite = ('true' in str(procedure_object['resultoverwrite']).lower())
     except (KeyError, ValueError):
         result_overwrite = True
+        logging.warning('defaulting to result overwrite')
     if result_overwrite:
         for result in results.find(
                 hstuuid=host_object["objuuid"],
@@ -318,6 +341,7 @@ def run_procedure(
             status_data[int(status.object["code"])] = status.object
         except (KeyError, ValueError):
             result.object["output"] += traceback.format_exc().split("\n")
+            logging.warning('invalid status object detected')
 
     result.object['host'] = {}
     result.object['host']['host'] = host_object['host']
@@ -341,19 +365,26 @@ def run_procedure(
 
     for seq_num, tskuuid in enumerate(tskuuids):
         task_result = {}
-        task_result["name"] = inventory.get_object(tskuuid).object["name"]
-        task_result["start"] = None
-        task_result["stop"] = None
-        task_result["tskuuid"] = tskuuid
 
         try:
+            task_object = inventory.get_object(tskuuid).object
+
+            assert 'name' in task_object.keys(), 'no name key in task object'
+            assert 'body' in task_object.keys(), 'no body key in task object'
+
+            task_result["name"] = task_object["name"]
+            task_result["start"] = None
+            task_result["stop"] = None
+            task_result["tskuuid"] = tskuuid
+
             # pylint: disable=exec-used
             exec(
-                f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
+                f'{task_object["body"]}\n{status_code_body}',
                 tempmodule.__dict__
             )
-            task = tempmodule.Task()
-        except: # pylint: disable=bare-except
+            task = tempmodule.Task() # pylint: disable=no-member
+        except Exception as exception: # pylint: disable=broad-except
+            logging.error(exception)
             task = TaskError(tskuuid)
 
         task_result["output"] = task.output
@@ -395,34 +426,45 @@ def run_procedure(
     try:
         # pylint: disable=exec-used
         exec(console_object["body"], tempmodule.__dict__)
-        cli = tempmodule.Console(host=host_object)
-    except: # pylint: disable=bare-except
+        cli = tempmodule.Console(host=host_object) # pylint: disable=no-member
+    except Exception as exception: # pylint: disable=broad-except
+        logging.error(exception)
         result.object["output"] += traceback.format_exc().split("\n")
 
     for seq_num, tskuuid in enumerate(tskuuids):
         task_result = {}
-        task_result["name"] = inventory.get_object(tskuuid).object["name"]
-        task_result["start"] = None
-        task_result["stop"] = None
 
         try:
+            task_object = inventory.get_object(tskuuid).object
+
+            assert 'name' in task_object.keys(), 'no name key in task object'
+            assert 'body' in task_object.keys(), 'no body key in task object'
+
+            logging.info(f'running task {seq_num + 1} of {len(tskuuids)}: "{task_object["name"]}"')
+
+            task_result["name"] = task_object['name']
+            task_result["start"] = None
+            task_result["stop"] = None
+
             # pylint: disable=exec-used
             exec(
-                f'{inventory.get_object(tskuuid).object["body"]}\n{status_code_body}',
+                f'{task_object["body"]}\n{status_code_body}',
                 tempmodule.__dict__
             )
-            task = tempmodule.Task()
+            task = tempmodule.Task() # pylint: disable=no-member
 
             if continue_procedure:
                 task_result["start"] = time()
 
                 try:
                     task.execute(cli)
-                except: # pylint: disable=bare-except
+                except Exception as exception: # pylint: disable=broad-except
+                    logging.error(exception)
                     task = TaskError(tskuuid)
 
                 task_result["stop"] = time()
-        except: # pylint: disable=bare-except
+        except Exception as exception: # pylint: disable=broad-except
+            logging.error(exception)
             task = TaskError(tskuuid)
             result.object["output"] += traceback.format_exc().split("\n")
 
@@ -478,10 +520,13 @@ def run_procedure(
         if ctruuid:
             kvstore.touch(f'controller-{ctruuid}')
 
+    logging.info(f'exited with status {winning_status}')
+
     try:
         result_link_enabled = ('true' in str(procedure_object['resultlinkenable']).lower())
     except (KeyError, ValueError):
         result_link_enabled = False
+        logging.warning('defaulting result linking to false')
     if result_link_enabled:
         stop_time_str = datetime.fromtimestamp(int(result.object['stop']))
 
@@ -501,6 +546,7 @@ def run_procedure(
         update_inventory = ('true' in str(procedure_object['resultinventoryupdate']).lower())
     except (KeyError, ValueError):
         update_inventory = False
+        logging.warning('defaulting inventory updating to false')
     if update_inventory:
         kvstore.touch('inventoryState')
 
@@ -535,7 +581,7 @@ def eval_cron_field(cron_str: str, now_val: int) -> bool:
             elif int(field) == now_val:
                 result = True
     except ValueError as value_error:
-        add_message(str(value_error))
+        logging.error(value_error)
 
     return result
 
@@ -560,30 +606,37 @@ def worker():
         procedure = inventory.get_object(prcuuid)
 
         if "enabled" not in procedure.object:
+            logging.warning('setting "enabled" to false')
             procedure.object["enabled"] = False
             procedure.set()
 
         if "seconds" not in procedure.object:
+            logging.warning('setting "seconds" to "0"')
             procedure.object["seconds"] = "0"
             procedure.set()
 
         if "minutes" not in procedure.object:
+            logging.warning('setting "minutes" to "*"')
             procedure.object["minutes"] = "*"
             procedure.set()
 
         if "hours" not in procedure.object:
+            logging.warning('setting "hours" to "*"')
             procedure.object["hours"] = "*"
             procedure.set()
 
         if "dayofmonth" not in procedure.object:
+            logging.warning('setting "dayofmonth" to "*"')
             procedure.object["dayofmonth"] = "*"
             procedure.set()
 
         if "dayofweek" not in procedure.object:
+            logging.warning('setting "dayofweek" to "*"')
             procedure.object["dayofweek"] = "*"
             procedure.set()
 
         if "year" not in procedure.object:
+            logging.warning('setting "year" to "*"')
             procedure.object["year"] = "*"
             procedure.set()
 
@@ -592,7 +645,7 @@ def worker():
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
-                        eval_cron_field(procedure.object["seconds"], now.second) and
+                        eval_cron_field(procedure.object["seconds"], now.minute) and
                         eval_cron_field(procedure.object["minutes"], now.minute) and
                         eval_cron_field(procedure.object["hours"], now.hour) and
                         eval_cron_field(procedure.object["dayofmonth"], now.day) and
@@ -613,13 +666,13 @@ def worker():
             try:
                 assert int(JOBS[key]["host"]["concurrency"]) > 0
             except (AssertionError, KeyError, ValueError):
-                add_message(f"invalid host concurrency\n{traceback.format_exc()}")
+                logging.warning('host concurrency defaulting to 1')
                 JOBS[key]["host"]["concurrency"] = "1"
 
             try:
                 assert int(JOBS[key]["console"]["concurrency"]) > 0
             except (AssertionError, KeyError, ValueError):
-                add_message(f"invalid console concurrency\n{traceback.format_exc()}")
+                logging.warning('console concurrency defaulting to 1')
                 JOBS[key]["console"]["concurrency"] = "1"
 
         running_jobs_counts = {}
@@ -647,31 +700,16 @@ def worker():
                                 int(JOBS[key]["console"]["concurrency"])
                         ):
 
-                        try:
-                            # pylint: disable=line-too-long
-                            run_as_process = ('true' in str(JOBS[key]["procedure"]['runasprocess']).lower())
-                        except (KeyError, ValueError):
-                            run_as_process = False
-                        if run_as_process:
-                            JOBS[key]["process"] = Process(
-                                target=run_procedure,
-                                args=(
-                                    JOBS[key]["host"],
-                                    JOBS[key]["procedure"],
-                                    JOBS[key]["console"],
-                                    JOBS[key]["ctruuid"]
-                                )
+                        JOBS[key]["process"] = Process(
+                            target=run_procedure,
+                            args=(
+                                JOBS[key]["host"],
+                                JOBS[key]["procedure"],
+                                JOBS[key]["console"],
+                                JOBS[key]["ctruuid"],
+                                JOBS[key]["display row"]
                             )
-                        else:
-                            JOBS[key]["process"] = Thread(
-                                target=run_procedure,
-                                args=(
-                                    JOBS[key]["host"],
-                                    JOBS[key]["procedure"],
-                                    JOBS[key]["console"],
-                                    JOBS[key]["ctruuid"]
-                                )
-                            )
+                        )
 
                         JOBS[key]["start time"] = time()
                         JOBS[key]["process"].start()
@@ -681,6 +719,8 @@ def worker():
                         running_jobs_counts[JOBS[key]["console"]["objuuid"]] += 1
 
         kvstore.touch("queueState")
+    except Exception as exception: # pylint: disable=broad-except
+        logging.error(exception)
     finally:
         JOB_LOCK.release()
         start_timer()

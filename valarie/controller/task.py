@@ -3,9 +3,9 @@
 host grid data for the jsgrid controls in the frontend."""
 from typing import Dict, List
 
-from valarie.dao.document import Collection, Object
-from valarie.router.messaging import add_message
+from valarie.controller import logging
 from valarie.controller.config import get_task_template
+from valarie.dao.document import Collection, Object
 
 def create_task(
         parent_objuuid: str,
@@ -27,6 +27,8 @@ def create_task(
     Returns:
         An inventory object.
     """
+    logging.info(name)
+
     inventory = Collection("inventory")
 
     task = inventory.get_object(objuuid)
@@ -152,7 +154,7 @@ def get_host_grid(tskuuid: str) -> List[Dict]:
                     }
                 )
         else:
-            add_message(f"host {hstuuid} is missing!")
+            logging.error(f"host {hstuuid} is missing!")
             host.destroy()
             task.object["hosts"].remove(hstuuid)
             task.set()

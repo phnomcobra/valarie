@@ -20,11 +20,9 @@ var drawQueue = function(resp) {
         table.rows[resp[i].displayrow].insertCell(-1).innerHTML = resp[i].runtimestring;
         table.rows[resp[i].displayrow].insertCell(-1).innerHTML = resp[i].name;
 
-        if(resp[i].cancellable) {
-            var cell = table.rows[resp[i].displayrow].insertCell(-1);
-            cell.innerHTML = '<font color="red">cancel</font>';
-            cell.setAttribute('onclick', `cancelJob('${resp[i].jobuuid}')`);
-        }
+        var cell = table.rows[resp[i].displayrow].insertCell(-1);
+        cell.innerHTML = '<font color="red">cancel</font>';
+        cell.setAttribute('onclick', `cancelJob('${resp[i].jobuuid}')`);
     }
 }
 

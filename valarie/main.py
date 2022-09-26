@@ -1,17 +1,20 @@
 #!/usr/bin/python3
 """This module configures and starts the web server."""
+import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 from multiprocessing import set_start_method
 
 import cherrypy
 
 from valarie.router.root import Root
-from valarie.router.messaging import add_message
 from valarie.executor.timers import cancel_timers
 from valarie.executor.procedure import start_timer as start_procedures_worker
 from valarie.executor.results import start_timer as start_results_worker
 from valarie.dao.document import Collection
-from valarie.controller.inventory import unlock, create_container
+from valarie.controller.inventory import unlock as unlock_inventory, create_container
+from valarie.controller.messaging import unlock as unlock_messaging
+from valarie.controller import logging as app_logger
 from valarie.controller.config import (
     get_host,
     get_port,
@@ -21,10 +24,13 @@ from valarie.controller.config import (
     create_settings_container
 )
 
-def on_cherrypy_log(msg, level): # pylint: disable=unused-argument
-    """This function subscribes the add_message function to the log
+def on_cherrypy_log(msg, level):
+    """This function subscribes the logger functions to the log
     channel on cherrypy's bus."""
-    add_message(f'<font color="red">{msg}</font>')
+    if level == 20:
+        app_logger.info(msg)
+    else:
+        app_logger.error(msg)
 
 def init_collections():
     """Initialize the collections and default inventory objects."""
@@ -50,7 +56,8 @@ def init_collections():
         create_task_template()
         create_settings_container()
 
-    unlock()
+    unlock_inventory()
+    unlock_messaging()
 
 def start():
     """This function configures and starts the web server."""
@@ -71,6 +78,25 @@ def start():
         'server.socket_host': get_host(),
         'server.socket_port': get_port()
     }
+
+    logfile_path = os.path.join(current_dir, './log')
+    os.makedirs(logfile_path, exist_ok=True)
+
+    access_handler = TimedRotatingFileHandler(
+        os.path.join(logfile_path, 'access.log'),
+        when="D",
+        backupCount=7
+    )
+    cherrypy.log.access_log.addHandler(access_handler)
+
+    app_handler = TimedRotatingFileHandler(
+        os.path.join(logfile_path, 'application.log'),
+        when="D",
+        backupCount=7
+    )
+    logger = logging.getLogger('app')
+    logger.addHandler(app_handler)
+    logger.setLevel(logging.DEBUG)
 
     cherrypy.config.update(config)
     cherrypy.engine.subscribe('stop', cancel_timers)
