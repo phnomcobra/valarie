@@ -645,7 +645,7 @@ def worker():
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
-                        eval_cron_field(procedure.object["seconds"], now.minute) and
+                        eval_cron_field(procedure.object["seconds"], now.second) and
                         eval_cron_field(procedure.object["minutes"], now.minute) and
                         eval_cron_field(procedure.object["hours"], now.hour) and
                         eval_cron_field(procedure.object["dayofmonth"], now.day) and
