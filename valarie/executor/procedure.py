@@ -317,6 +317,7 @@ def run_procedure(
         result_overwrite = ('true' in str(procedure_object['resultoverwrite']).lower())
     except (KeyError, ValueError):
         result_overwrite = True
+        logging.warning('defaulting to result overwrite')
     if result_overwrite:
         for result in results.find(
                 hstuuid=host_object["objuuid"],
@@ -340,6 +341,7 @@ def run_procedure(
             status_data[int(status.object["code"])] = status.object
         except (KeyError, ValueError):
             result.object["output"] += traceback.format_exc().split("\n")
+            logging.warning('invalid status object detected')
 
     result.object['host'] = {}
     result.object['host']['host'] = host_object['host']

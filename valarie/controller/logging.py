@@ -82,11 +82,10 @@ def _log(item: Any, level: LogLevel):
     frame = stack()[2]
 
     short_filename = '/'.join(frame.filename.strip().split('/')[-2:])
-    function = frame.function
     datetime_str = datetime.now().strftime('%Y-%m-%d|%H:%M:%S')
 
     for line in lines:
-        log_line = f'{level.name}|{datetime_str}|{short_filename}|{function}|{line}'
+        log_line = f'{level.name}|{datetime_str}|{short_filename}:L{frame.lineno}|{frame.function}|{line}'
 
         if level is LogLevel.CRITICAL:
             logger.critical(log_line)
@@ -99,7 +98,7 @@ def _log(item: Any, level: LogLevel):
         elif level is LogLevel.DEBUG:
             logger.debug(log_line)
 
-        message_line = f'{short_filename}|{function}|{line}'
+        message_line = f'{short_filename}:L{frame.lineno}|{frame.function}|{line}'
         if level in (LogLevel.CRITICAL, LogLevel.ERROR):
             add_message(f'<font color="red">{message_line}</font>')
         elif level is LogLevel.WARNING:

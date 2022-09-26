@@ -96,15 +96,15 @@ def execute(tskuuid: str, hstuuid: str) -> Dict:
 
             try:
                 task.execute(cli)
-            except: # pylint: disable=bare-except
+            except Exception as exception: # pylint: disable=broad-except
                 task = TaskError(tskuuid)
-                logging.error(traceback.format_exc())
-        except: # pylint: disable=bare-except
+                logging.error(exception)
+        except Exception as exception: # pylint: disable=broad-except
             task = TaskError(tskuuid)
-            logging.error(traceback.format_exc())
-    except: # pylint: disable=bare-except
+            logging.error(exception)
+    except Exception as exception: # pylint: disable=broad-except
         task = TaskError(tskuuid)
-        logging.error(traceback.format_exc())
+        logging.error(exception)
 
     result.object['output'] = task.output
 
