@@ -440,6 +440,8 @@ def run_procedure(
             assert 'name' in task_object.keys(), 'no name key in task object'
             assert 'body' in task_object.keys(), 'no body key in task object'
 
+            logging.info(f'running task {seq_num + 1} of {len(tskuuids)}: "{task_object["name"]}"')
+
             task_result["name"] = task_object['name']
             task_result["start"] = None
             task_result["stop"] = None
