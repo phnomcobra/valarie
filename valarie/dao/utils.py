@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 """This module implements a wrapper around a UUID generator."""
+from copy import deepcopy
 from hashlib import sha256
+from typing import Any
 from uuid import uuid4
 
 def get_uuid_str() -> str:
@@ -25,3 +27,39 @@ def get_uuid_str_from_str(seed: str) -> str:
     _hash.update(seed.encode())
     digest = _hash.hexdigest()
     return f'{digest[0:8]}-{digest[8:12]}-{digest[12:16]}-{digest[16:20]}-{digest[20:32]}'
+
+def read_key_at_path(path: str, object_to_inspect: Any) -> Any:
+    """This function reads a key at a specified path string. The first character
+    of the path string indicates the delimiter being used.
+
+    Path strings are typically formated as "/keyA/1/keyB" where "keyA" and "keyB"
+    are passed through directly as tokens while "1" is coerced to an integer. The
+    leading character "/" is the delimiter in use for this path.
+
+    Args:
+        path:
+            The string of the path to tokenize and travel on.
+
+        object_to_inspect:
+            The list or dictionary being travelled.
+
+    Returns:
+        value of the key or index being arrived at.
+
+    Raises:
+        IndexError, KeyError, TypeError
+    """
+    delimeter = path[0]
+    tokens = path[1:].split(delimeter)
+
+    # Coerce tokens to integers
+    for token_id in range(len(tokens)): # pylint: disable=consider-using-enumerate
+        try:
+            tokens[token_id] = int(tokens[token_id])
+        except ValueError:
+            continue
+
+    current_object = deepcopy(object_to_inspect)
+    for token in tokens:
+        current_object = current_object[token]
+    return current_object

@@ -3,11 +3,12 @@
 from typing import Dict
 
 from valarie.dao.document import Collection, Object
+from valarie.dao.utils import get_uuid_str_from_str
 
-CONFIG_OBJUUID = "bec8aa75-575e-4014-961c-d2df363c66bf"
-TASK_PROTO_OBJUUID = "4d22259a-8000-49c7-bb6b-cf8526dbff70"
-CONSOLE_PROTO_OBJUUID = "d64e5c18-2fe8-495b-ace1-a3f0321b1629"
-SETTINGS_CONTAINER_OBJUUID = "bcde4d54-9456-4b09-9bff-51022e799b30"
+CONFIG_OBJUUID = get_uuid_str_from_str('configuration')
+TASK_PROTO_OBJUUID = get_uuid_str_from_str('task template')
+CONSOLE_PROTO_OBJUUID = get_uuid_str_from_str('console template')
+SETTINGS_CONTAINER_OBJUUID = get_uuid_str_from_str('settings container')
 
 CONSOLE_PROTO_BODY = '''#!/usr/bin/python3
 
@@ -63,22 +64,6 @@ def get_config() -> Dict:
     """
     return Collection("inventory").get_object(CONFIG_OBJUUID).object
 
-def get_host() -> str:
-    """This function gets the host the web server will serve on.
-
-    Returns:
-        A host string.
-    """
-    return Collection("inventory").get_object(CONFIG_OBJUUID).object["host"]
-
-def get_port() -> int:
-    """This function gets the port the web server will serve on.
-
-    Returns:
-        A port number as an int.
-    """
-    return int(Collection("inventory").get_object(CONFIG_OBJUUID).object["port"])
-
 def create_config() -> Object:
     """This function creates and returns the configuration object
     in the inventory.
@@ -94,10 +79,7 @@ def create_config() -> Object:
         "type" : "config",
         "parent" : SETTINGS_CONTAINER_OBJUUID,
         "concurrency" : 20,
-        "host" : "0.0.0.0",
-        "port" : 8080,
         "brand" : "valarie",
-        "restartcmd" : "service valarie restart",
         "children" : [],
         "name" : "Configuration",
         "icon" : "/images/config_icon.png",
@@ -110,14 +92,6 @@ def create_config() -> Object:
                     "params" : {
                         "objuuid" : CONFIG_OBJUUID
                     }
-                }
-            },
-            "restart" : {
-                "label" : "Restart",
-                "action" : {
-                    "method" : "restart valarie",
-                    "route" : "general/restart",
-                    "params" : {}
                 }
             }
         }

@@ -16,13 +16,12 @@ from valarie.controller.inventory import unlock as unlock_inventory, create_cont
 from valarie.controller.messaging import unlock as unlock_messaging
 from valarie.controller import logging as app_logger
 from valarie.controller.config import (
-    get_host,
-    get_port,
     create_config,
     create_console_template,
     create_task_template,
     create_settings_container
 )
+
 
 def on_cherrypy_log(msg, level):
     """This function subscribes the logger functions to the log
@@ -32,20 +31,21 @@ def on_cherrypy_log(msg, level):
     else:
         app_logger.error(msg)
 
+
 def init_collections():
     """Initialize the collections and default inventory objects."""
     datastore = Collection("datastore")
-    datastore.create_attribute("type", "['type']")
+    datastore.create_attribute("type", "/type")
 
     results = Collection("results")
-    results.create_attribute("tskuuid", "['task']['objuuid']")
-    results.create_attribute("prcuuid", "['procedure']['objuuid']")
-    results.create_attribute("hstuuid", "['host']['objuuid']")
+    results.create_attribute("tskuuid", "/task/objuuid")
+    results.create_attribute("prcuuid", "/procedure/objuuid")
+    results.create_attribute("hstuuid", "/host/objuuid")
 
     inventory = Collection("inventory")
-    inventory.create_attribute("parent", "['parent']")
-    inventory.create_attribute("type", "['type']")
-    inventory.create_attribute("name", "['name']")
+    inventory.create_attribute("parent", "/parent")
+    inventory.create_attribute("type", "/type")
+    inventory.create_attribute("name", "/name")
 
     if not inventory.find(parent="#"):
         create_container("#", "Root")
@@ -58,6 +58,7 @@ def init_collections():
 
     unlock_inventory()
     unlock_messaging()
+
 
 def start():
     """This function configures and starts the web server."""
@@ -75,8 +76,8 @@ def start():
         'tools.sessions.locking': 'explicit',
         'tools.staticdir.dir': os.path.join(current_dir, './static'),
         'server.thread_pool': 100,
-        'server.socket_host': get_host(),
-        'server.socket_port': get_port()
+        'server.socket_host': '0.0.0.0',
+        'server.socket_port': 8080
     }
 
     logfile_path = os.path.join(current_dir, './log')
