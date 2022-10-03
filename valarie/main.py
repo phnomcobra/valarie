@@ -16,8 +16,6 @@ from valarie.controller.inventory import unlock as unlock_inventory, create_cont
 from valarie.controller.messaging import unlock as unlock_messaging
 from valarie.controller import logging as app_logger
 from valarie.controller.config import (
-    get_host,
-    get_port,
     create_config,
     create_console_template,
     create_task_template,
@@ -78,8 +76,8 @@ def start():
         'tools.sessions.locking': 'explicit',
         'tools.staticdir.dir': os.path.join(current_dir, './static'),
         'server.thread_pool': 100,
-        'server.socket_host': get_host(),
-        'server.socket_port': get_port()
+        'server.socket_host': '0.0.0.0',
+        'server.socket_port': 8080
     }
 
     logfile_path = os.path.join(current_dir, './log')

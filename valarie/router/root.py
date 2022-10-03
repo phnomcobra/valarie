@@ -14,7 +14,6 @@ from valarie.router.console import Console
 from valarie.router.results import Results
 from valarie.router.flags import Flags
 from valarie.router.task import Task
-from valarie.router.general import General
 
 class Root(): # pylint: disable=too-few-public-methods
     """This class mounts the static index endpoint and registers the
@@ -28,7 +27,6 @@ class Root(): # pylint: disable=too-few-public-methods
     flags = Flags()
     task = Task()
     hostgroup = HostGroup()
-    general = General()
 
     @classmethod
     @cherrypy.expose

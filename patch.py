@@ -21,3 +21,7 @@ for current in inventory.find():
         )
 
     current.set()
+
+    if 'type' in current.object.keys():
+        if current.object['type'] == 'config':
+            current.destroy()
