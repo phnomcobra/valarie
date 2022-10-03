@@ -7,7 +7,7 @@ import sqlite3
 import pickle
 from typing import Dict, List
 
-from valarie.dao.utils import get_uuid_str
+from valarie.dao.utils import get_uuid_str, read_key_at_path
 
 DEFAULT_CONNECTION_STR = "default.sqlite"
 
@@ -114,18 +114,19 @@ class Document:
 
         self.cursor.execute("delete from TBL_JSON_IDX where OBJUUID = ?;", (objuuid,))
 
-        for attribute_name, attribute in self.list_attributes(coluuid).items():
+        for attribute, path in self.list_attributes(coluuid).items():
             try:
                 self.cursor.execute(
                     "insert into TBL_JSON_IDX (OBJUUID, COLUUID, ATTRIBUTE, VALUE)"\
                     "values (?, ?, ?, ?);",
                     (
-                        objuuid, coluuid, attribute_name,
-                        # pylint: disable=eval-used
-                        eval(f"str(self.get_object(objuuid){attribute})")
+                        objuuid,
+                        coluuid,
+                        attribute,
+                        str(read_key_at_path(path, self.get_object(objuuid)))
                     )
                 )
-            except (KeyError, IndexError, ValueError):
+            except (KeyError, IndexError, ValueError, TypeError):
                 continue
         self.connection.commit()
 
@@ -192,7 +193,7 @@ class Document:
         The attribute path is one or multiple index operators used to select a key or
         index out of a dictionary.
 
-            ["inner"]["outer"]
+            /inner/outer
 
         Args:
             coluuid:
@@ -218,10 +219,14 @@ class Document:
                 self.cursor.execute(
                     "insert into TBL_JSON_IDX (OBJUUID, COLUUID, ATTRIBUTE, VALUE)"\
                     "values (?, ?, ?, ?);",
-                    # pylint: disable=eval-used
-                    (row[0], coluuid, attribute, eval(f"str(pickle.loads(row[1]){path})"))
+                    (
+                        row[0],
+                        coluuid,
+                        attribute,
+                        str(read_key_at_path(path, pickle.loads(row[1])))
+                    )
                 )
-            except (KeyError, ValueError):
+            except (KeyError, ValueError, TypeError, IndexError):
                 continue
 
         self.connection.commit()
@@ -411,7 +416,7 @@ class Collection(Document):
         attribute is deleted and then rebuilt. The key to be indexed on is expressed
         as a series of index operators:
 
-            ["key1"][1]["key2"]
+            /key1/1/key2
 
         Args:
             attribute:

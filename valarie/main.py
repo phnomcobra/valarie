@@ -24,6 +24,7 @@ from valarie.controller.config import (
     create_settings_container
 )
 
+
 def on_cherrypy_log(msg, level):
     """This function subscribes the logger functions to the log
     channel on cherrypy's bus."""
@@ -32,20 +33,21 @@ def on_cherrypy_log(msg, level):
     else:
         app_logger.error(msg)
 
+
 def init_collections():
     """Initialize the collections and default inventory objects."""
     datastore = Collection("datastore")
-    datastore.create_attribute("type", "['type']")
+    datastore.create_attribute("type", "/type")
 
     results = Collection("results")
-    results.create_attribute("tskuuid", "['task']['objuuid']")
-    results.create_attribute("prcuuid", "['procedure']['objuuid']")
-    results.create_attribute("hstuuid", "['host']['objuuid']")
+    results.create_attribute("tskuuid", "/task/objuuid")
+    results.create_attribute("prcuuid", "/procedure/objuuid")
+    results.create_attribute("hstuuid", "/host/objuuid")
 
     inventory = Collection("inventory")
-    inventory.create_attribute("parent", "['parent']")
-    inventory.create_attribute("type", "['type']")
-    inventory.create_attribute("name", "['name']")
+    inventory.create_attribute("parent", "/parent")
+    inventory.create_attribute("type", "/type")
+    inventory.create_attribute("name", "/name")
 
     if not inventory.find(parent="#"):
         create_container("#", "Root")
@@ -58,6 +60,7 @@ def init_collections():
 
     unlock_inventory()
     unlock_messaging()
+
 
 def start():
     """This function configures and starts the web server."""
