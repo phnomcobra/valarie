@@ -22,10 +22,6 @@ for current in inventory.find():
 
     current.set()
 
-    if 'type' in current.object.keys():
-        if current.object['type'] == 'config':
-            current.destroy()
-
 # Remove the old templating and config objects
 CONFIG_OBJUUID = "bec8aa75-575e-4014-961c-d2df363c66bf"
 TASK_PROTO_OBJUUID = "4d22259a-8000-49c7-bb6b-cf8526dbff70"
