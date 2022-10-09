@@ -302,7 +302,7 @@ def run_procedure(
         app_handler = TimedRotatingFileHandler(
             os.path.join(logfile_path, f'procedure-{log_id}.log'),
             when="D",
-            backupCount=7
+            backupCount=30
         )
         logger = builtin_logging.getLogger('app')
         logger.addHandler(app_handler)
@@ -598,6 +598,9 @@ def worker():
     conditions and obeys host and console level concurrency limits.
     """
     global LAST_WORKER_TIME # pylint: disable=global-statement
+    last_worker_time = LAST_WORKER_TIME # pylint: disable=used-before-assignment
+    LAST_WORKER_TIME = time()
+
     running_jobs_count = 0
 
     inventory = Collection("inventory")
@@ -641,7 +644,7 @@ def worker():
             procedure.set()
 
         if procedure.object["enabled"] in (True, "true"):
-            for epoch_time in range(int(LAST_WORKER_TIME), int(time())):
+            for epoch_time in range(int(last_worker_time), int(time())):
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
@@ -655,8 +658,6 @@ def worker():
                     for hstuuid in procedure.object["hosts"]:
                         queue_procedure(hstuuid, procedure.objuuid, None)
                     break
-
-    LAST_WORKER_TIME = time() # pylint: disable=used-before-assignment
 
     try:
         JOB_LOCK.acquire()
