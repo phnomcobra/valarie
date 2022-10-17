@@ -644,7 +644,7 @@ def worker():
             procedure.set()
 
         if procedure.object["enabled"] in (True, "true"):
-            for epoch_time in range(int(last_worker_time), int(time())):
+            for epoch_time in range(int(last_worker_time), int(time()) + 1):
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
