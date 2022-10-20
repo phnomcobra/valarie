@@ -26,7 +26,8 @@ from valarie.controller.host import get_hosts
 
 JOBS = {}
 JOB_LOCK = Lock()
-LAST_WORKER_TIME = time()
+PREV_WORKER_TIME = time()
+NEXT_WORKER_TIME = time()
 DISPLAY_ROW_LOCK = Lock()
 OCCUPIED_DISPLAY_ROWS = []
 
@@ -597,9 +598,10 @@ def worker():
     This function conditions and evaluates CRON strings. This function also
     conditions and obeys host and console level concurrency limits.
     """
-    global LAST_WORKER_TIME # pylint: disable=global-statement
-    last_worker_time = LAST_WORKER_TIME # pylint: disable=used-before-assignment
-    LAST_WORKER_TIME = time()
+    global PREV_WORKER_TIME # pylint: disable=global-statement
+    global NEXT_WORKER_TIME # pylint: disable=global-statement
+    PREV_WORKER_TIME = NEXT_WORKER_TIME # pylint: disable=used-before-assignment
+    NEXT_WORKER_TIME = time()
 
     running_jobs_count = 0
 
@@ -644,7 +646,7 @@ def worker():
             procedure.set()
 
         if procedure.object["enabled"] in (True, "true"):
-            for epoch_time in range(int(last_worker_time), int(time())):
+            for epoch_time in range(int(PREV_WORKER_TIME), int(NEXT_WORKER_TIME)):
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
