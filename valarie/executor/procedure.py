@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """This module implements functions for scheduling, queuing, and executing
 procedures."""
+import math
 import logging as builtin_logging
 from logging.handlers import TimedRotatingFileHandler
 import os
@@ -646,7 +647,7 @@ def worker():
             procedure.set()
 
         if procedure.object["enabled"] in (True, "true"):
-            for epoch_time in range(int(PREV_WORKER_TIME), int(NEXT_WORKER_TIME)):
+            for epoch_time in range(math.floor(PREV_WORKER_TIME), math.ceil(NEXT_WORKER_TIME)):
                 now = datetime.fromtimestamp(epoch_time).now()
                 # pylint: disable=too-many-boolean-expressions
                 if (
